@@ -1,11 +1,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
-import "./PotatoEgg.css";
 import { createPortal } from "react-dom";
 import { registerDiscovery } from "../collection/collectionStorage";
+import {
+  advanceRegisteredTrigger,
+  createRegisteredClickTrigger,
+  type RegisteredTrigger,
+} from "../engine/triggerRegistry";
+import "./PotatoEgg.css";
 
-const REQUIRED_CLICKS = 18;
+const POTATO_TRIGGER_ID = "potato-exe";
+
+function createPotatoTrigger(): RegisteredTrigger {
+  return createRegisteredClickTrigger(POTATO_TRIGGER_ID, {
+    type: "click-count",
+    requiredClicks: 18,
+  });
+}
 
 type FloatingMessage = {
   id: number;
@@ -32,7 +44,9 @@ function getFeedback(click: number): {
 }
 
 export default function PotatoEgg() {
-  const [clicks, setClicks] = useState(0);
+  const [trigger, setTrigger] = useState<RegisteredTrigger>(
+    createPotatoTrigger,
+  );
   const [revealed, setRevealed] = useState(false);
   const [floatingMessages, setFloatingMessages] = useState<
     FloatingMessage[]
@@ -46,22 +60,24 @@ export default function PotatoEgg() {
       timers.current.forEach((timer) => clearTimeout(timer));
     };
   }, []);
-  useEffect(() => {
-  if (!revealed) return;
 
-  void registerDiscovery("potato-exe").catch((error) => {
-    console.error("Failed to save Potato.EXE discovery:", error);
-  });
-}, [revealed]);
+  useEffect(() => {
+    if (!revealed) return;
+
+    void registerDiscovery(POTATO_TRIGGER_ID).catch((error) => {
+      console.error("Failed to save Potato.EXE discovery:", error);
+    });
+  }, [revealed]);
 
   function handleLogoClick(event: MouseEvent<HTMLButtonElement>) {
-    if (revealed) return;
+    if (revealed || trigger.state.completed) return;
 
-    const nextClicks = clicks + 1;
+    const nextTrigger = advanceRegisteredTrigger(trigger);
+    const nextClicks = nextTrigger.state.currentClicks;
     const feedback = getFeedback(nextClicks);
     const id = ++nextId.current;
 
-    setClicks(nextClicks);
+    setTrigger(nextTrigger);
 
     setFloatingMessages((current) => [
       ...current,
@@ -76,13 +92,13 @@ export default function PotatoEgg() {
 
     const removeTimer = setTimeout(() => {
       setFloatingMessages((current) =>
-        current.filter((message) => message.id !== id)
+        current.filter((message) => message.id !== id),
       );
     }, 1100);
 
     timers.current.push(removeTimer);
 
-    if (nextClicks === REQUIRED_CLICKS) {
+    if (nextTrigger.state.completed) {
       const revealTimer = setTimeout(() => {
         setRevealed(true);
       }, 450);
@@ -93,7 +109,7 @@ export default function PotatoEgg() {
 
   function resetEgg() {
     setRevealed(false);
-    setClicks(0);
+    setTrigger(createPotatoTrigger());
     setFloatingMessages([]);
   }
 
@@ -109,25 +125,23 @@ export default function PotatoEgg() {
         ✦
       </button>
 
-      
-{createPortal(
-  <div className="potato-feedback" aria-hidden="true">
-    {floatingMessages.map((message) => (
-      <span
-        key={message.id}
-        className={`potato-float potato-float--${message.variant}`}
-        style={{
-          left: message.x,
-          top: message.y,
-        }}
-      >
-        {message.text}
-      </span>
-    ))}
-  </div>,
-  document.body
-)}
-
+      {createPortal(
+        <div className="potato-feedback" aria-hidden="true">
+          {floatingMessages.map((message) => (
+            <span
+              key={message.id}
+              className={`potato-float potato-float--${message.variant}`}
+              style={{
+                left: message.x,
+                top: message.y,
+              }}
+            >
+              {message.text}
+            </span>
+          ))}
+        </div>,
+        document.body,
+      )}
 
       {revealed && (
         <div
