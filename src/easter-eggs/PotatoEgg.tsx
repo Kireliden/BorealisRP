@@ -3,21 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { registerDiscovery } from "../collection/collectionStorage";
-import { useTriggerRegistry } from "../engine/TriggerRegistryContext";
-import {
-  createRegisteredClickTrigger,
-  type RegisteredTrigger,
-} from "../engine/triggerRegistry";
+import { useRegisteredClickTrigger } from "../engine/useRegisteredClickTrigger";
 import "./PotatoEgg.css";
 
 const POTATO_TRIGGER_ID = "potato-exe";
-
-function createPotatoTrigger(): RegisteredTrigger {
-  return createRegisteredClickTrigger(POTATO_TRIGGER_ID, {
-    type: "click-count",
-    requiredClicks: 18,
-  });
-}
 
 type FloatingMessage = {
   id: number;
@@ -44,16 +33,16 @@ function getFeedback(click: number): {
 }
 
 export default function PotatoEgg() {
-  const registry = useTriggerRegistry();
-
-  const [trigger, setTrigger] = useState<RegisteredTrigger>(() => {
-    return (
-      registry.get(POTATO_TRIGGER_ID) ?? createPotatoTrigger()
-    );
-  });
+  const { trigger, advance, reset } = useRegisteredClickTrigger(
+    POTATO_TRIGGER_ID,
+    {
+      type: "click-count",
+      requiredClicks: 18,
+    },
+  );
 
   const [revealed, setRevealed] = useState(
-    () => registry.get(POTATO_TRIGGER_ID)?.state.completed ?? false,
+    () => trigger.state.completed,
   );
 
   const [floatingMessages, setFloatingMessages] = useState<
@@ -62,18 +51,6 @@ export default function PotatoEgg() {
 
   const nextId = useRef(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  useEffect(() => {
-    if (!registry.has(POTATO_TRIGGER_ID)) {
-      registry.register(trigger);
-    }
-
-    const registeredTrigger = registry.get(POTATO_TRIGGER_ID);
-
-    if (registeredTrigger) {
-      setTrigger(registeredTrigger);
-    }
-  }, [registry, trigger]);
 
   useEffect(() => {
     return () => {
@@ -90,18 +67,12 @@ export default function PotatoEgg() {
   }, [revealed]);
 
   function handleLogoClick(event: MouseEvent<HTMLButtonElement>) {
-    const currentTrigger = registry.get(POTATO_TRIGGER_ID);
+    if (revealed || trigger.state.completed) return;
 
-    if (revealed || !currentTrigger || currentTrigger.state.completed) {
-      return;
-    }
-
-    const nextTrigger = registry.advance(POTATO_TRIGGER_ID);
+    const nextTrigger = advance();
     const nextClicks = nextTrigger.state.currentClicks;
     const feedback = getFeedback(nextClicks);
     const id = ++nextId.current;
-
-    setTrigger(nextTrigger);
 
     setFloatingMessages((current) => [
       ...current,
@@ -133,7 +104,7 @@ export default function PotatoEgg() {
 
   function resetEgg() {
     setRevealed(false);
-    setTrigger(registry.reset(POTATO_TRIGGER_ID));
+    reset();
     setFloatingMessages([]);
   }
 
