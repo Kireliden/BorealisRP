@@ -314,7 +314,28 @@ function App() {
 
               <form className="composer" onSubmit={sendMessage}>
                 <div className="composer-tools">
-                  <label className="toolbar-select-wrap" title="Passage type"><span className="toolbar-symbol">¶</span><select aria-label="Passage type" value={selectedRole} onChange={(event) => setSelectedRole(event.target.value as Role)}><option value="Narration">Narration</option><option value="Dialogue">Dialogue</option></select></label>
+                  <div className="composer-role-switch" role="group" aria-label="Passage type">
+                    <button
+                      type="button"
+                      className={`role-switch-option ${selectedRole === "Narration" ? "active" : ""}`}
+                      aria-pressed={selectedRole === "Narration"}
+                      onClick={() => setSelectedRole("Narration")}
+                      title="Switch to narration"
+                    >
+                      <span className="role-switch-icon" aria-hidden="true">¶</span>
+                      <span>Narration</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`role-switch-option ${selectedRole === "Dialogue" ? "active" : ""}`}
+                      aria-pressed={selectedRole === "Dialogue"}
+                      onClick={() => setSelectedRole("Dialogue")}
+                      title="Switch to dialogue"
+                    >
+                      <span className="role-switch-icon" aria-hidden="true">“ ”</span>
+                      <span>Dialogue</span>
+                    </button>
+                  </div>
                   <span className="toolbar-divider" />
                   <button type="button" title="Bold" aria-label="Bold" onMouseDown={(event) => event.preventDefault()} onClick={() => formatText("bold")}><strong>B</strong></button>
                   <button type="button" title="Italic" aria-label="Italic" onMouseDown={(event) => event.preventDefault()} onClick={() => formatText("italic")}><em>I</em></button>
