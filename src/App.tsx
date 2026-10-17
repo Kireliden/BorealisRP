@@ -165,7 +165,7 @@ function App() {
       <div className="custom-titlebar" data-tauri-drag-region>
         <div className="titlebar-brand" data-tauri-drag-region>
         <PotatoEgg />
-        <NudgeEgg />
+        
         <span data-tauri-drag-region>Borealis Roleplay Den</span>
     </div>
         <div className="titlebar-controls">
