@@ -5,6 +5,7 @@ import type { CollectionEntry } from "./collectionTypes";
 import HolographicSticker from "./components/HolographicSticker";
 import "./CollectionModal.css";
 import potatoSticker from "../easter-eggs/assets/ee_001.png";
+import nudgeSticker from "../easter-eggs/assets/ee_002.png";
 
 type CollectionsModalProps = {
   onClose: () => void;
@@ -19,7 +20,16 @@ const COLLECTION_ITEMS = [
     imageSrc: potatoSticker,
     imageAlt: "POTATO.EXE, the pink potato sticker",
   },
+  {
+    id: "the-nudge",
+    name: "THE NUDGE",
+    description: "A little shake, a familiar sound, and a wave of nostalgia.",
+    icon: "😵‍💫",
+    imageSrc: nudgeSticker,
+    imageAlt: "THE NUDGE, the classic MSN nudge sticker",
+  },
 ] as const;
+
 
 type CollectionItem = (typeof COLLECTION_ITEMS)[number];
 
@@ -197,7 +207,7 @@ export default function CollectionsModal({
                         isDiscovered ? "" : "collection-entry-art-button--locked"
                       }`}
                       type="button"
-                      disabled={!isDiscovered}
+                      disabled={!isDiscovered || !item.imageSrc}
                       onClick={() => {
                         if (isDiscovered) setSelectedSticker(item);
                       }}
@@ -212,20 +222,24 @@ export default function CollectionsModal({
                       </span>
 
                       {isDiscovered ? (
-                        <img
-                          className="collection-sticker-image"
-                          src={item.imageSrc}
-                          alt=""
-                          draggable={false}
-                        />
+                        item.imageSrc ? (
+                          <img
+                            className="collection-sticker-image"
+                            src={item.imageSrc}
+                            alt=""
+                            draggable={false}
+                          />
                       ) : (
-                        <div
-                          className="collection-entry-icon"
-                          aria-hidden="true"
-                        >
-                          ?
+                        <div className="collection-entry-icon" aria-hidden="true">
+                          {item.icon}
                         </div>
-                      )}
+                      )
+                    ) : (
+                      <div className="collection-entry-icon" aria-hidden="true">
+                        ?
+                      </div>
+                    )}
+
 
                       <span className="collection-entry-art-label">
                         {isDiscovered ? "UNLOCKED · VIEW" : "UNDISCOVERED"}
@@ -289,7 +303,7 @@ export default function CollectionsModal({
         </footer>
       </section>
 
-      {selectedSticker && (
+      {selectedSticker?.imageSrc && (
         <HolographicSticker
           imageSrc={selectedSticker.imageSrc}
           alt={selectedSticker.imageAlt}

@@ -4,6 +4,7 @@ import "./App.css";
 import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
+import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy } from "lucide-react";
 
 const appWindow = getCurrentWindow();
@@ -164,6 +165,7 @@ function App() {
       <div className="custom-titlebar" data-tauri-drag-region>
         <div className="titlebar-brand" data-tauri-drag-region>
         <PotatoEgg />
+        <NudgeEgg />
         <span data-tauri-drag-region>Borealis Roleplay Den</span>
     </div>
         <div className="titlebar-controls">
@@ -255,8 +257,19 @@ function App() {
                   <span className="toolbar-divider" />
                   <label className="colour-picker" title="Text colour"><span>A</span><input aria-label="Text colour" type="color" defaultValue="#babbf1" onChange={(event) => changeTextColour(event.target.value)} /></label>
                   <span className="toolbar-divider" />
-                  <button type="button" title="Insert image (coming soon)" aria-label="Insert image" disabled>▧</button>
-                  <span className="toolbar-spacer" />
+                  <button
+                    type="button"
+                    title="Insert image (coming soon)"
+                    aria-label="Insert image"
+                    disabled
+                  >
+                  ▧
+                  </button>
+
+<NudgeEgg />
+
+<span className="toolbar-spacer" />
+<span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
                 <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label="Write a roleplay message" aria-multiline="true" data-placeholder="Write your next passage..." onInput={(event) => setDraftHtml(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
