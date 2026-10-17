@@ -199,6 +199,7 @@ function sanitiseHtml(html: string) {
   const [showExpressions, setShowExpressions] = useState(false);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+  const [avatarTilt, setAvatarTilt] = useState({ x: 0, y: 0, shineX: 50, shineY: 35 });
   const [isMaximized, setIsMaximized] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const conversationRef = useRef<HTMLElement>(null);
@@ -597,6 +598,18 @@ function sanitiseHtml(html: string) {
             role="dialog"
             aria-modal="true"
             aria-label={`${character.name} avatar preview`}
+            style={{
+              transform: `perspective(1100px) rotateX(${avatarTilt.x}deg) rotateY(${avatarTilt.y}deg)`,
+              "--shine-x": `${avatarTilt.shineX}%`,
+              "--shine-y": `${avatarTilt.shineY}%`,
+            } as React.CSSProperties}
+            onMouseMove={(event) => {
+              const bounds = event.currentTarget.getBoundingClientRect();
+              const x = (event.clientX - bounds.left) / bounds.width;
+              const y = (event.clientY - bounds.top) / bounds.height;
+              setAvatarTilt({ x: (0.5 - y) * 12, y: (x - 0.5) * 12, shineX: x * 100, shineY: y * 100 });
+            }}
+            onMouseLeave={() => setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 })}
           >
             <button
               className="avatar-preview-close"
