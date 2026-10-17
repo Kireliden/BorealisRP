@@ -468,6 +468,18 @@
   transform: scaleY(.58) rotate(32deg);
 }
 
+.avatar-preview-image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 112%;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 10px 26px rgb(186 169 255 / 16%));
+  pointer-events: none;
+}
+
 .avatar-preview-initials {
   z-index: 1;
   color: #f3eaff;
