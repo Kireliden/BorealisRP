@@ -10,6 +10,7 @@ import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
+import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 
 const appWindow = getCurrentWindow();
 
@@ -623,7 +624,11 @@ function sanitiseHtml(html: string) {
               <div className="avatar-preview-art">
                 <div className="avatar-preview-orbit avatar-preview-orbit-one" />
                 <div className="avatar-preview-orbit avatar-preview-orbit-two" />
-                <span className="avatar-preview-initials">{character.initials}</span>
+                {character.name === "Keira" ? (
+                  <img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" />
+                ) : (
+                  <span className="avatar-preview-initials">{character.initials}</span>
+                )}
                 <span
                   className="avatar-preview-expression"
                   aria-label={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
