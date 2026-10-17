@@ -429,15 +429,21 @@
   position: absolute;
   inset: -1px 0;
   z-index: 2;
-  background: linear-gradient(
-    180deg,
-    #242338 0%,
-    rgb(36 35 56 / 88%) 5%,
-    transparent 24%,
-    transparent 66%,
-    rgb(29 32 51 / 55%) 83%,
-    #29253d 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      #242338 0%,
+      rgb(36 35 56 / 92%) 8%,
+      rgb(36 35 56 / 58%) 18%,
+      transparent 38%
+    ),
+    linear-gradient(
+      0deg,
+      #29253d 0%,
+      rgb(41 37 61 / 92%) 8%,
+      rgb(29 32 51 / 58%) 20%,
+      transparent 42%
+    );
   content: "";
   pointer-events: none;
 }
@@ -446,8 +452,7 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(135deg, transparent 15%, rgb(192 219 255 / 7%) 42%, transparent 56%),
-    linear-gradient(180deg, transparent 58%, rgb(29 32 51 / 20%) 100%);
+    linear-gradient(135deg, transparent 15%, rgb(192 219 255 / 7%) 42%, transparent 56%);
   content: "";
 }
 
