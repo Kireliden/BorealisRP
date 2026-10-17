@@ -332,7 +332,16 @@ function App() {
                       onClick={() => setSelectedRole("Dialogue")}
                       title="Switch to dialogue"
                     >
-                      <span className="role-switch-icon" aria-hidden="true">“ ”</span>
+                      <span className="role-switch-icon role-switch-openmoji" aria-hidden="true">
+                        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M17.09 50.75c-3.184-4.073-5.088-9.191-5.088-14.75 0-13.23 10.77-24 24-24s24 10.77 24 24-10.77 24-24 24c-1.955 0-3.855-.2406-5.676-.6839-5.919-1.481-10.33-4.341-13.24-8.567" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M31.54 58.56c1.442.2858 2.93.4391 4.455.4391 12.68 0 23-10.32 23-23s-10.32-23-23-23-23 10.32-23 23c0 4.913 1.552 9.467 4.187 13.21" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <circle cx="26.79" cy="36" r="2" fill="currentColor" />
+                          <circle cx="36" cy="36" r="2" fill="currentColor" />
+                          <circle cx="45.21" cy="36" r="2" fill="currentColor" />
+                          <circle cx="26.79" cy="36" r="2" fill="currentColor" />
+                        </svg>
+                      </span>
                       <span>Dialogue</span>
                     </button>
                   </div>
