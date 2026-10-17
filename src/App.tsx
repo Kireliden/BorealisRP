@@ -60,6 +60,54 @@ const scenes = [
   { name: "The Aftermath", detail: "12 October · 8 messages", icon: "◌" },
 ];
 
+function markdownSourceFromHtml(html: string) {
+  const parsed = new DOMParser().parseFromString(html, "text/html");
+
+  function convert(node: Node): Node[] {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return [document.createTextNode(node.textContent ?? "")];
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return [...node.childNodes].flatMap(convert);
+    }
+
+    const source = node as HTMLElement;
+    const tag = source.tagName;
+    const wrappers: Record<string, string> = {
+      B: "**", STRONG: "**", I: "*", EM: "*", U: "__",
+      S: "~~", DEL: "~~", CODE: "`",
+    };
+
+    if (wrappers[tag]) {
+      return [
+        document.createTextNode(wrappers[tag]),
+        ...[...source.childNodes].flatMap(convert),
+        document.createTextNode(wrappers[tag]),
+      ];
+    }
+
+    if (tag === "SPAN" && source.style.color) {
+      const span = document.createElement("span");
+      span.style.color = source.style.color;
+      [...source.childNodes].forEach((child) => span.append(...convert(child)));
+      return [span];
+    }
+
+    if (tag === "BR") return [document.createElement("br")];
+    if (tag === "DIV" || tag === "P") {
+      const block = document.createElement(tag.toLowerCase());
+      [...source.childNodes].forEach((child) => block.append(...convert(child)));
+      return [block];
+    }
+
+    return [...source.childNodes].flatMap(convert);
+  }
+
+  const output = document.createElement("div");
+  [...parsed.body.childNodes].forEach((child) => output.append(...convert(child)));
+  return output.innerHTML;
+}
+
 function applyMarkdownToTextNodes(root: HTMLElement) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const textNodes: Text[] = [];
@@ -151,11 +199,52 @@ function sanitiseHtml(html: string) {
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+  const conversationRef = useRef<HTMLElement>(null);
+  const previousMessageCountRef = useRef(messages.length);
+  const [isAtLatestMessage, setIsAtLatestMessage] = useState(true);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
 
 
   const character = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
+
+  useEffect(() => {
+    const conversation = conversationRef.current;
+    if (conversation) conversation.scrollTop = conversation.scrollHeight;
+  }, []);
+
+  useEffect(() => {
+    if (messages.length <= previousMessageCountRef.current) {
+      previousMessageCountRef.current = messages.length;
+      return;
+    }
+    previousMessageCountRef.current = messages.length;
+
+    if (isAtLatestMessage) {
+      const conversation = conversationRef.current;
+      if (conversation) conversation.scrollTop = conversation.scrollHeight;
+      setHasNewMessages(false);
+    } else {
+      setHasNewMessages(true);
+    }
+  }, [messages.length, isAtLatestMessage]);
+
+  function handleConversationScroll() {
+    const conversation = conversationRef.current;
+    if (!conversation) return;
+    const atBottom = conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 80;
+    setIsAtLatestMessage(atBottom);
+    if (atBottom) setHasNewMessages(false);
+  }
+
+  function scrollToLatestMessage() {
+    const conversation = conversationRef.current;
+    if (!conversation) return;
+    conversation.scrollTo({ top: conversation.scrollHeight, behavior: "smooth" });
+    setIsAtLatestMessage(true);
+    setHasNewMessages(false);
+  }
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let cancelled = false;
@@ -192,12 +281,13 @@ function sanitiseHtml(html: string) {
 
   function beginEditingMessage(message: Message) {
     setEditingMessageId(message.id);
-    setDraftHtml(message.content);
+    const editableSource = message.source ?? markdownSourceFromHtml(message.content);
+    setDraftHtml(editableSource);
     setShowCharacterPicker(false);
     setShowExpressions(false);
 
     if (editorRef.current) {
-      editorRef.current.innerHTML = message.content;
+      editorRef.current.innerHTML = editableSource;
       editorRef.current.focus();
     }
   }
@@ -214,8 +304,9 @@ function sanitiseHtml(html: string) {
     const plainText = editor?.innerText.trim() ?? "";
     if (!plainText) return;
 
+    const source = markdownSourceFromHtml(editor?.innerHTML ?? plainText);
     const contentRoot = document.createElement("div");
-    contentRoot.innerHTML = editor?.innerHTML ?? plainText;
+    contentRoot.innerHTML = source;
     applyMarkdownToTextNodes(contentRoot);
     const content = sanitiseHtml(contentRoot.innerHTML);
 
@@ -226,6 +317,7 @@ function sanitiseHtml(html: string) {
             ? {
                 ...message,
                 content,
+                source,
                 history: [...(message.history ?? []), message.content],
               }
             : message,
@@ -242,6 +334,7 @@ function sanitiseHtml(html: string) {
           role: selectedRole,
           time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
           content,
+          source,
           avatar: character.avatar,
           expression: selectedExpression,
         },
@@ -314,7 +407,7 @@ function sanitiseHtml(html: string) {
           <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">◈</div><div><h1>{activeScene}</h1><p>Neon Requiem <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button><button className="secondary-button">↗ <span>Share</span></button></div></div>
           <div className="demo-notice"><span className="notice-icon">i</span><span><strong>Preview mode.</strong> These messages are temporary and will reset when the app restarts.</span></div>
 
-          <section className="conversation" aria-label="Scene conversation">
+          <section ref={conversationRef} className="conversation" aria-label="Scene conversation" onScroll={handleConversationScroll}>
             <div className="date-divider"><span /><p>15 OCTOBER 2026</p><span /></div>
             {messages.map((message) => <article className="message" key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{message.expression && (
                       <span
@@ -331,6 +424,7 @@ function sanitiseHtml(html: string) {
                         }}
                       />
                     )}<span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span><time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
+            {hasNewMessages && <button className="scroll-to-latest" type="button" onClick={scrollToLatestMessage}>↓ New messages · Jump to latest</button>}
           </section>
 
           <footer className="composer-area">
