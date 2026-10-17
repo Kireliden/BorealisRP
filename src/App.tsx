@@ -24,6 +24,7 @@ type Message = {
   content: string;
   avatar: string;
   expression?: string;
+  history?: string[];
 };
 
 const characters: Character[] = [
@@ -62,37 +63,45 @@ const scenes = [
 function sanitiseHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
   const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "SPAN", "BR", "DIV", "P"]);
-  const cleanNode = (node: Node) => {
-    [...node.childNodes].forEach((child) => {
-      if (child instanceof Element) {
-        if (!allowedTags.has(child.tagName)) {
-          cleanNode(child);
-          child.replaceWith(...child.childNodes);
-          return;
-        }
-        [...child.attributes].forEach((attribute) => {
-          if (child.tagName !== "SPAN" || attribute.name !== "style") {
-            child.removeAttribute(attribute.name);
-          } else {
-            const colour = (child as HTMLElement).style.color;
-            child.removeAttribute("style");
-            if (/^(#[0-9a-f]{3,8}|rgb\([\d\s,%]+\)|rgba\([\d\s,.%]+\)|[a-z]+)$/i.test(colour)) {
-              (child as HTMLElement).style.color;
-            }
-          }
-        });
-        cleanNode(child);
-      }
-    });
-  };
-  cleanNode(parsed.body);
-  return parsed.body.innerHTML;
-}
+  const validColour = /^(#[0-9a-f]{3,8}|rgb\([\d\s,%]+\)|rgba\([\d\s,.%]+\)|[a-z]+)$/i;
 
+  function cleanNode(node: Node): Node[] {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return [document.createTextNode(node.textContent ?? "")];
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return [...node.childNodes].flatMap(cleanNode);
+    }
+
+    const source = node as HTMLElement;
+    if (!allowedTags.has(source.tagName)) {
+      return [...source.childNodes].flatMap(cleanNode);
+    }
+
+    const clean = document.createElement(source.tagName.toLowerCase());
+    if (source.tagName === "SPAN") {
+      const colour = source.style.color;
+      if (validColour.test(colour)) clean.style.color = colour;
+    }
+
+    [...source.childNodes].forEach((child) => {
+      clean.append(...cleanNode(child));
+    });
+    return [clean];
+  }
+
+  const output = document.createElement("div");
+  [...parsed.body.childNodes].forEach((child) => {
+    output.append(...cleanNode(child));
+  });
+  return output.innerHTML;
+}
 function App() {
   const [activeScene, setActiveScene] = useState("The Neon District");
   const [messages, setMessages] = useState(initialMessages);
   const [draftHtml, setDraftHtml] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
@@ -139,29 +148,67 @@ function App() {
     if (editorRef.current) setDraftHtml(editorRef.current.innerHTML);
   }
 
+  function beginEditingMessage(message: Message) {
+    setEditingMessageId(message.id);
+    setSelectedRole(message.role);
+    setSelectedCharacter(message.author);
+    setSelectedExpression(message.expression ?? defaultExpression.emoji);
+    setDraftHtml(message.content);
+    setShowCharacterPicker(false);
+    setShowExpressions(false);
+
+    if (editorRef.current) {
+      editorRef.current.innerHTML = message.content;
+      editorRef.current.focus();
+    }
+  }
+
+  function cancelEditingMessage() {
+    setEditingMessageId(null);
+    setDraftHtml("");
+    if (editorRef.current) editorRef.current.innerHTML = "";
+  }
+
   function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const editor = editorRef.current;
     const plainText = editor?.innerText.trim() ?? "";
     if (!plainText) return;
 
-    setMessages((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        author: character.name,
-        initials: character.initials,
-        role: selectedRole,
-        time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-        content: sanitiseHtml(editor?.innerHTML ?? plainText),
-        avatar: character.avatar,
-        expression: selectedExpression,
-      },
-    ]);
+    const content = sanitiseHtml(editor?.innerHTML ?? plainText);
+
+    if (editingMessageId !== null) {
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === editingMessageId
+            ? {
+                ...message,
+                content,
+                history: [...(message.history ?? []), message.content],
+              }
+            : message,
+        ),
+      );
+      setEditingMessageId(null);
+    } else {
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now(),
+          author: character.name,
+          initials: character.initials,
+          role: selectedRole,
+          time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+          content,
+          avatar: character.avatar,
+          expression: selectedExpression,
+        },
+      ]);
+    }
+
     setDraftHtml("");
     if (editor) editor.innerHTML = "";
   }
-
   return (
     <main className="app-shell">
       <div className="custom-titlebar" data-tauri-drag-region>
@@ -241,7 +288,7 @@ function App() {
                           )?.image ?? ""}")`,
                         }}
                       />
-                    )}<span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span><time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" title="Message options">⋯</button></article>)}
+                    )}<span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span><time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
           </section>
 
           <footer className="composer-area">
@@ -366,8 +413,8 @@ function App() {
 <span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
-                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label="Write a roleplay message" aria-multiline="true" data-placeholder="Write your next passage..." onInput={(event) => setDraftHtml(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
-                <div className="composer-bottom"><span className="composer-hint"><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line</span><button className="send-button" type="submit" disabled={!draftHtml.replace(/<[^>]*>/g, "").trim()}>Send passage <span>↑</span></button></div>
+                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : "Write your next passage..."} onInput={(event) => setDraftHtml(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                <div className="composer-bottom"><span className="composer-hint">{editingMessageId !== null ? <>Editing message <span>·</span> <kbd>Enter</kbd> to save</> : <><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line <span>·</span> <kbd>↑</kbd> to edit latest</>}</span>{editingMessageId !== null && <button className="cancel-edit-button" type="button" onClick={cancelEditingMessage}>Cancel</button>}<button className="send-button" type="submit" disabled={!draftHtml.replace(/<[^>]*>/g, "").trim()}>{editingMessageId !== null ? "Save changes" : "Send passage"} <span>↑</span></button></div>
               </form>
             </div>
             <p className="composer-footnote">Your story, your pace. Take it one passage at a time.</p>
