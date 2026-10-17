@@ -78,6 +78,7 @@ export default function NudgeEgg() {
     }
 
     try {
+      audio.volume = 0.7
       audio.currentTime = 0;
       await audio.play();
     } catch (error) {

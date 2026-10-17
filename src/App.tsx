@@ -2,13 +2,14 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./themes/themes.css";
 import "./App.css";
-import "./composer/AvatarComp.css";
 import "./composer/Composer.css";
+import "./composer/AvatarComp.css";
 import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy } from "lucide-react";
+import { expressions, defaultExpression } from "./composer/expressions";
 
 const appWindow = getCurrentWindow();
 
@@ -58,8 +59,6 @@ const scenes = [
   { name: "The Aftermath", detail: "12 October · 8 messages", icon: "◌" },
 ];
 
-const expressions = ["😐", "🙂", "😏", "😠", "😢", "😳"];
-
 function sanitiseHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
   const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "SPAN", "BR", "DIV", "P"]);
@@ -96,7 +95,7 @@ function App() {
   const [draftHtml, setDraftHtml] = useState("");
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
-  const [selectedExpression, setSelectedExpression] = useState("😐");
+  const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
   const [showExpressions, setShowExpressions] = useState(false);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -238,7 +237,30 @@ function App() {
                 <div className={`character-portrait avatar-${character.avatar}`}>
                   <span>{character.initials}</span>
                   <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}>👤</button>
-                  <button className="portrait-picker-button expression-picker-button" type="button" aria-label="Choose expression" title={`Expression: ${selectedExpression}`} aria-expanded={showExpressions} onClick={() => { setShowExpressions((visible) => !visible); setShowCharacterPicker(false); }}>{selectedExpression}</button>
+                  <button
+                    className="portrait-picker-button expression-picker-button"
+                    type="button"
+                    aria-label="Choose expression"
+                    title={`Expression: ${selectedExpression}`}
+                    aria-expanded={showExpressions}
+                    onClick={() => {
+                      setShowExpressions((visible) => !visible);
+                      setShowCharacterPicker(false);
+                    }}
+                  >
+                    <span
+                      className="expression-image"
+                      style={{
+                        maskImage: `url("${expressions.find(
+                          (expression) => expression.emoji === selectedExpression
+                        )?.image}")`,
+                        WebkitMaskImage: `url("${expressions.find(
+                          (expression) => expression.emoji === selectedExpression
+                        )?.image}")`,
+                      }}
+                      aria-hidden="true"
+                    />
+                  </button>
                 </div>
                 {showCharacterPicker && <div className="portrait-popover character-picker-popover">
                   <span className="portrait-popover-label">WRITING AS</span>
@@ -246,8 +268,34 @@ function App() {
                 </div>}
                 {showExpressions && <div className="portrait-popover expression-picker-popover">
                   <span className="portrait-popover-label">EXPRESSION</span>
-                  <div className="expression-grid" aria-label="Choose character expression">{expressions.map((expression) => <button key={expression} type="button" className={`expression-button ${selectedExpression === expression ? "active" : ""}`} title={`Use expression ${expression}`} aria-pressed={selectedExpression === expression} onClick={() => { setSelectedExpression(expression); setShowExpressions(false); }}>{expression}</button>)}</div>
-                </div>}
+                  <div className="expression-grid" aria-label="Choose character expression">
+                    {expressions.map((expression) => (
+                      <button
+                        key={expression.emoji}
+                        type="button"
+                        className={`expression-button ${
+                          selectedExpression === expression.emoji ? "active" : ""
+                        }`}
+                        title={`Use expression ${expression.label}`}
+                        aria-label={`Use expression ${expression.label}`}
+                        aria-pressed={selectedExpression === expression.emoji}
+                        onClick={() => {
+                          setSelectedExpression(expression.emoji);
+                          setShowExpressions(false);
+                        }}
+                      >
+                        <span
+                          className="expression-image"
+                          style={{
+                            maskImage: `url("${expression.image}")`,
+                            WebkitMaskImage: `url("${expression.image}")`,
+                          }}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                                  </div>}
               </aside>
 
               <form className="composer" onSubmit={sendMessage}>
