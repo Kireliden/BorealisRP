@@ -198,6 +198,7 @@ function sanitiseHtml(html: string) {
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
   const [showExpressions, setShowExpressions] = useState(false);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const conversationRef = useRef<HTMLElement>(null);
@@ -433,7 +434,23 @@ function sanitiseHtml(html: string) {
             <div className="composer-layout">
               <aside className="character-panel">
                 <div className={`character-portrait avatar-${character.avatar}`}>
-                  <span>{character.initials}</span>
+                  <button
+                    className="character-portrait-preview"
+                    type="button"
+                    aria-label={`View ${character.name}'s avatar`}
+                    title={`View ${character.name}'s avatar`}
+                    onClick={() => { setShowAvatarPreview(true); setShowCharacterPicker(false); setShowExpressions(false); }}
+                  >
+                    <span className="character-portrait-initials">{character.initials}</span>
+                    <span
+                      className="character-portrait-expression"
+                      aria-hidden="true"
+                      style={{
+                        maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                        WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                      }}
+                    />
+                  </button>
                   <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}>👤</button>
                   <button
                     className="portrait-picker-button expression-picker-button"
@@ -558,6 +575,54 @@ function sanitiseHtml(html: string) {
           </footer>
         </section>
             </div>
+      {showAvatarPreview && (
+        <div
+          className="avatar-preview-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowAvatarPreview(false);
+          }}
+        >
+          <section
+            className={`avatar-preview-card avatar-preview-${character.avatar}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${character.name} avatar preview`}
+          >
+            <button
+              className="avatar-preview-close"
+              type="button"
+              aria-label="Close avatar preview"
+              title="Close"
+              onClick={() => setShowAvatarPreview(false)}
+            >×</button>
+            <div className="avatar-preview-card-inner">
+              <div className="avatar-preview-topline">BOREALIS · CHARACTER FILE</div>
+              <div className="avatar-preview-art">
+                <div className="avatar-preview-orbit avatar-preview-orbit-one" />
+                <div className="avatar-preview-orbit avatar-preview-orbit-two" />
+                <span className="avatar-preview-initials">{character.initials}</span>
+                <span
+                  className="avatar-preview-expression"
+                  aria-label={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
+                  style={{
+                    maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                    WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                  }}
+                />
+              </div>
+              <div className="avatar-preview-details">
+                <span className="avatar-preview-kicker">CURRENT CHARACTER</span>
+                <h2>{character.name}</h2>
+                <span className="avatar-preview-expression-label">
+                  {expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Neutral"}
+                </span>
+              </div>
+              <div className="avatar-preview-footer"><span>BRD</span><span>HOLOGRAPHIC EDITION</span></div>
+            </div>
+          </section>
+        </div>
+      )}
       {isSettingsOpen && (
         <SettingsModal onClose={() => setIsSettingsOpen(false)} />
       )}
