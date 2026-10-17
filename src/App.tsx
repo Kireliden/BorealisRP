@@ -60,9 +60,44 @@ const scenes = [
   { name: "The Aftermath", detail: "12 October · 8 messages", icon: "◌" },
 ];
 
+function applyMarkdownToTextNodes(root: HTMLElement) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
+
+  const pattern = /\*\*(.+?)\*\*|__(.+?)__|~~(.+?)~~|\*(.+?)\*|_(.+?)_|\`([^\`]+)\`/g;
+
+  for (const textNode of textNodes) {
+    const text = textNode.textContent ?? "";
+    pattern.lastIndex = 0;
+    if (!pattern.test(text)) continue;
+    pattern.lastIndex = 0;
+
+    const fragment = document.createDocumentFragment();
+    let lastIndex = 0;
+    for (const match of text.matchAll(pattern)) {
+      const index = match.index ?? 0;
+      if (index > lastIndex) fragment.append(document.createTextNode(text.slice(lastIndex, index)));
+
+      const tag = match[1] !== undefined ? "strong"
+        : match[2] !== undefined ? "u"
+        : match[3] !== undefined ? "s"
+        : match[4] !== undefined ? "em"
+        : match[5] !== undefined ? "em"
+        : "code";
+      const element = document.createElement(tag);
+      element.textContent = match[1] ?? match[2] ?? match[3] ?? match[4] ?? match[5] ?? match[6] ?? "";
+      fragment.append(element);
+      lastIndex = index + match[0].length;
+    }
+    if (lastIndex < text.length) fragment.append(document.createTextNode(text.slice(lastIndex)));
+    textNode.replaceWith(fragment);
+  }
+}
+
 function sanitiseHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
-  const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "SPAN", "BR", "DIV", "P"]);
+  const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "S", "DEL", "CODE", "SPAN", "BR", "DIV", "P"]);
   const validColour = /^(#[0-9a-f]{3,8}|rgb\([\d\s,%]+\)|rgba\([\d\s,.%]+\)|[a-z]+)$/i;
 
   function cleanNode(node: Node): Node[] {
@@ -75,6 +110,14 @@ function sanitiseHtml(html: string) {
     }
 
     const source = node as HTMLElement;
+    if (source.tagName === "FONT") {
+      const span = document.createElement("span");
+      const colour = source.getAttribute("color") ?? "";
+      if (validColour.test(colour)) span.style.color = colour;
+      [...source.childNodes].forEach((child) => span.append(...cleanNode(child)));
+      return [span];
+    }
+
     if (!allowedTags.has(source.tagName)) {
       return [...source.childNodes].flatMap(cleanNode);
     }
@@ -96,8 +139,7 @@ function sanitiseHtml(html: string) {
     output.append(...cleanNode(child));
   });
   return output.innerHTML;
-}
-function App() {
+}function App() {
   const [activeScene, setActiveScene] = useState("The Neon District");
   const [messages, setMessages] = useState(initialMessages);
   const [draftHtml, setDraftHtml] = useState("");
@@ -172,7 +214,10 @@ function App() {
     const plainText = editor?.innerText.trim() ?? "";
     if (!plainText) return;
 
-    const content = sanitiseHtml(editor?.innerHTML ?? plainText);
+    const contentRoot = document.createElement("div");
+    contentRoot.innerHTML = editor?.innerHTML ?? plainText;
+    applyMarkdownToTextNodes(contentRoot);
+    const content = sanitiseHtml(contentRoot.innerHTML);
 
     if (editingMessageId !== null) {
       setMessages((current) =>
