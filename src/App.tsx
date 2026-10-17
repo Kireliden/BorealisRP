@@ -227,7 +227,21 @@ function App() {
 
           <section className="conversation" aria-label="Scene conversation">
             <div className="date-divider"><span /><p>15 OCTOBER 2026</p><span /></div>
-            {messages.map((message) => <article className="message" key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{message.expression && <span className="message-expression" title="Character expression">{message.expression}</span>}<span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span><time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" title="Message options">⋯</button></article>)}
+            {messages.map((message) => <article className="message" key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{message.expression && (
+                      <span
+                        className="message-expression"
+                        title="Character expression"
+                        aria-label="Character expression"
+                        style={{
+                          maskImage: `url("${expressions.find(
+                            (expression) => expression.emoji === message.expression
+                          )?.image ?? ""}")`,
+                          WebkitMaskImage: `url("${expressions.find(
+                            (expression) => expression.emoji === message.expression
+                          )?.image ?? ""}")`,
+                        }}
+                      />
+                    )}<span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span><time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" title="Message options">⋯</button></article>)}
           </section>
 
           <footer className="composer-area">
