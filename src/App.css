@@ -687,6 +687,22 @@ button:disabled {
   opacity: 1;
 }
 
+.cancel-edit-button {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ctp-subtext1);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cancel-edit-button:hover {
+  background: var(--surface);
+  color: var(--ctp-text);
+}
+
 /* Composer */
 
 .composer-area {
