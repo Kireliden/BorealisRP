@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./themes/themes.css";
 import "./App.css";
+import "./composer/AvatarComp.css";
 import "./composer/Composer.css";
 import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
