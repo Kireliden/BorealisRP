@@ -634,11 +634,7 @@ function sanitiseHtml(html: string) {
                 />
               </div>
               <div className="avatar-preview-details">
-                <span className="avatar-preview-kicker">CURRENT CHARACTER</span>
                 <h2>{character.name}</h2>
-                <span className="avatar-preview-expression-label">
-                  {expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Neutral"}
-                </span>
               </div>
               <div className="avatar-preview-footer"><span>BRD</span><span>HOLOGRAPHIC EDITION</span></div>
             </div>
