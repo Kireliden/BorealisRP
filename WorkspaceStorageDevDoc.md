@@ -62,19 +62,19 @@ BRD - Neon Requiem/
 │   ├── appearance.json
 │   └── theme.json
 ├── Characters/
-│   └── Keira/
+│   └── Character01/
 │       ├── character.json
 │       ├── avatar.png
 │       └── Expressions/
 │           ├── happy.png
 │           └── sad.png
 ├── Stories/
-│   └── Neon Requiem/
+│   └── Story Name/
 │       ├── story.json
 │       ├── Scenes/
 │       └── Assets/
 ├── Chats/
-│   └── Neon Requiem/
+│   └── Chat name/
 │       └── messages.json
 ├── Themes/
 │   └── My Custom Theme/
