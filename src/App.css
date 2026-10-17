@@ -1262,3 +1262,18 @@ textarea:focus-visible {
 .app-content {
   zoom: var(--ui-scale, 1);
 }
+
+.message-expression {
+  display: inline-block;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--accent);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  vertical-align: middle;
+}
