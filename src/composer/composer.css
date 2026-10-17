@@ -265,3 +265,60 @@
 .message-expression {
   font-size: 12px;
 }
+
+@media (max-width: 1000px) {
+  .composer-layout {
+    gap: 8px;
+  }
+
+  .character-panel {
+    flex-basis: 132px;
+    padding: 9px;
+  }
+
+  .editor-mode-label {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .character-panel {
+    flex-basis: 112px;
+    padding: 7px;
+  }
+
+  .character-select {
+    font-size: 10px;
+  }
+
+  .composer-tools {
+    gap: 1px;
+    padding-right: 5px;
+    padding-left: 5px;
+  }
+
+  .toolbar-select-wrap select {
+    width: 76px;
+  }
+}
+
+@media (max-height: 700px) {
+  .character-portrait {
+    max-height: 95px;
+  }
+
+  .character-label,
+  .expression-heading {
+    margin-top: 7px;
+  }
+
+  .expression-grid {
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .expression-button {
+    font-size: 14px;
+  }
+}
+
