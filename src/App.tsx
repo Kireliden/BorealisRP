@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import "./themes/themes.css";
 import "./App.css";
 import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy } from "lucide-react";
-import "./themes/themes.css";
-import "./App.css";
 
 const appWindow = getCurrentWindow();
 
