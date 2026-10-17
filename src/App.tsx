@@ -607,7 +607,7 @@ function sanitiseHtml(html: string) {
               const bounds = event.currentTarget.getBoundingClientRect();
               const x = (event.clientX - bounds.left) / bounds.width;
               const y = (event.clientY - bounds.top) / bounds.height;
-              setAvatarTilt({ x: (0.5 - y) * 12, y: (x - 0.5) * 12, shineX: x * 100, shineY: y * 100 });
+              setAvatarTilt({ x: (0.5 - y) * 18, y: (x - 0.5) * 18, shineX: x * 160 - 30, shineY: y * 150 - 25 });
             }}
             onMouseLeave={() => setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 })}
           >
