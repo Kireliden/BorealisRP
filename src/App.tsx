@@ -25,6 +25,7 @@ type Message = {
   avatar: string;
   expression?: string;
   history?: string[];
+  source?: string;
 };
 
 const characters: Character[] = [
