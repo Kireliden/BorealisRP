@@ -150,9 +150,6 @@ function App() {
 
   function beginEditingMessage(message: Message) {
     setEditingMessageId(message.id);
-    setSelectedRole(message.role);
-    setSelectedCharacter(message.author);
-    setSelectedExpression(message.expression ?? defaultExpression.emoji);
     setDraftHtml(message.content);
     setShowCharacterPicker(false);
     setShowExpressions(false);
