@@ -217,6 +217,15 @@ function sanitiseHtml(html: string) {
   }, []);
 
   useEffect(() => {
+    if (!showAvatarPreview) return;
+    function handlePreviewKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setShowAvatarPreview(false);
+    }
+    window.addEventListener("keydown", handlePreviewKeyDown);
+    return () => window.removeEventListener("keydown", handlePreviewKeyDown);
+  }, [showAvatarPreview]);
+
+  useEffect(() => {
     if (messages.length <= previousMessageCountRef.current) {
       previousMessageCountRef.current = messages.length;
       return;
