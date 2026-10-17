@@ -369,8 +369,9 @@
       transparent 49%
     ),
     linear-gradient(155deg, rgb(255 255 255 / 14%), transparent 35%, rgb(186 169 255 / 9%) 65%, transparent 75%);
-  background-size: 220% 220%, 100% 100%;
-  background-position: var(--shine-x, 50%) var(--shine-y, 35%), center;
+  background-size: 260% 100%, 100% 100%;
+  /* Keep the holographic band at a fixed diagonal; slide it sideways with the cursor. */
+  background-position: var(--shine-x, 50%) center, center;
   transition: background-position 100ms ease-out;
   content: "";
   pointer-events: none;
