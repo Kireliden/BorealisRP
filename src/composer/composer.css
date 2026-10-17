@@ -322,3 +322,24 @@
   }
 }
 
+/* Theme-aware character panel and portrait */
+.character-panel {
+  background: transparent;
+  border-color: var(--border);
+}
+
+.character-portrait {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--ctp-mauve) 55%, var(--ctp-base)),
+    color-mix(in srgb, var(--ctp-pink) 30%, var(--ctp-mantle))
+  );
+  border-color: color-mix(in srgb, var(--ctp-mauve) 60%, var(--border));
+  color: var(--ctp-text);
+}
+
+.character-portrait.avatar-blue {
+  background: var(--ctp-surface1);
+  border-color: var(--ctp-blue);
+  color: var(--ctp-blue);
+}
