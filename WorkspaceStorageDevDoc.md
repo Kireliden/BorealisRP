@@ -4,7 +4,7 @@
 **Status:** Approved architectural decision  
 **Date:** 17 October 2026  
 **Scope:** Workspace discovery, storage, portability, open formats and backup/restore  
-**Implementation status:** Storage foundation implemented on `feature/workspace-storage-foundation`; workspace-manager UI and application integration remain pending
+**Implementation status:** Initial storage foundation and workspace-manager UI implemented on `feature/workspace-storage-foundation`; persistent content integration remains pending
 
 ---
 
@@ -97,7 +97,7 @@ The initial implementation uses a root `workspace.json` with these fields:
 - `name`: display name chosen by the user.
 - `createdAt` and `updatedAt`: ISO 8601 UTC timestamps.
 
-The first native storage commands are `create_workspace(parentPath, name)` and `inspect_workspace(path)`. Creation refuses to overwrite an existing folder, builds the initial directory structure, and removes the newly created folder if initialization fails. Inspection validates the manifest and is read-only. These commands are the storage foundation only; the UI must not imply that workspace management is available until it is connected to them.
+The first native storage commands are `create_workspace(parentPath, name)` and `inspect_workspace(path)`. Creation refuses to overwrite an existing folder, builds the initial directory structure, and removes the newly created folder if initialization fails. Inspection validates the manifest and is read-only. The initial workspace manager UI now supports creating a workspace, opening and validating an existing folder, switching the selected workspace, and keeping a lightweight recent list. Removing an entry from that list never deletes workspace files. The current roleplay characters, scenes and messages remain preview/demo data; selecting a workspace does not yet load or persist those content types.
 
 ### Data expected to live in the workspace
 
