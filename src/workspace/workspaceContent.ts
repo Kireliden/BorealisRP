@@ -15,16 +15,23 @@ export type WorkspaceMessage = {
   source?: string;
 };
 
+export type WorkspaceFolder = {
+  id: string;
+  name: string;
+};
+
 export type WorkspaceScene = {
   id: string;
   name: string;
   icon: string;
   messages: WorkspaceMessage[];
+  folderId?: string | null;
 };
 
 export type WorkspaceContent = {
   schemaVersion: 1;
   scenes: WorkspaceScene[];
+  folders?: WorkspaceFolder[];
 };
 
 export function loadWorkspaceContent(path: string): Promise<WorkspaceContent> {
