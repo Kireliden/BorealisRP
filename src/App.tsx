@@ -12,13 +12,13 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom } from "lucide-react";
+import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
-import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene } from "./workspace/workspaceContent";
+import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder } from "./workspace/workspaceContent";
 import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath } from "./workspace/workspaceStorage";
 import "./popup-motion.css";
 
@@ -163,7 +163,14 @@ function sanitiseHtml(html: string) {
   return output.innerHTML;
 }function App() {
   const [scenes, setScenes] = useState<WorkspaceScene[]>([]);
+  const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
   const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
+  const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [scenePendingDeletion, setScenePendingDeletion] = useState<WorkspaceScene | null>(null);
+  const [folderPendingDeletion, setFolderPendingDeletion] = useState<WorkspaceFolder | null>(null);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [folderNameDraft, setFolderNameDraft] = useState("");
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
@@ -258,6 +265,9 @@ function sanitiseHtml(html: string) {
     setEditingMessageId(null);
     if (!activeWorkspace) {
       setScenes([]);
+      setFolders([]);
+      setExpandedFolderIds([]);
+      setActiveFolderId(null);
       setActiveSceneId(null);
       setMessages([]);
       setWorkspaceLoading(false);
@@ -266,6 +276,9 @@ function sanitiseHtml(html: string) {
 
     setWorkspaceLoading(true);
     setScenes([]);
+    setFolders([]);
+    setExpandedFolderIds([]);
+    setActiveFolderId(null);
     setActiveSceneId(null);
     setMessages([]);
     loadWorkspaceContent(activeWorkspace.path)
@@ -273,6 +286,10 @@ function sanitiseHtml(html: string) {
         if (cancelled) return;
         const validScenes = Array.isArray(content.scenes) ? content.scenes : [];
         setScenes(validScenes);
+        const validFolders = Array.isArray(content.folders) ? content.folders : [];
+        setFolders(validFolders);
+        setExpandedFolderIds(validFolders.map((folder) => folder.id));
+        setActiveFolderId(null);
         setActiveSceneId(validScenes[0]?.id ?? null);
         setMessages(validScenes[0]?.messages ?? []);
       })
@@ -391,79 +408,13 @@ function sanitiseHtml(html: string) {
     setHasNewMessages(false);
   }
   useEffect(() => {
-    let cancelled = false;
     let stopResize: (() => void) | undefined;
-    let stopMove: (() => void) | undefined;
-    let latestSize: PhysicalSize | null = null;
-    let latestPosition: PhysicalPosition | null = null;
-    let currentlyMaximized = false;
-
-    function persistWindowBounds() {
-      try {
-        localStorage.setItem("brd-window-maximized", String(currentlyMaximized));
-        if (currentlyMaximized || !latestSize || !latestPosition) return;
-        localStorage.setItem("brd-window-bounds", JSON.stringify({
-          width: latestSize.width,
-          height: latestSize.height,
-          x: latestPosition.x,
-          y: latestPosition.y,
-        }));
-      } catch (error) {
-        console.warn("Could not save the current window bounds:", error);
-      }
-    }
-
-    async function refreshMaximizedState() {
-      try {
-        currentlyMaximized = await appWindow.isMaximized();
-        if (!cancelled) setIsMaximized(currentlyMaximized);
-        persistWindowBounds();
-      } catch (error) {
-        console.warn("Could not check the window state:", error);
-      }
-    }
-
-    async function restoreWindowBounds() {
-      try {
-        const saved = localStorage.getItem("brd-window-bounds");
-        if (saved) {
-          const bounds = JSON.parse(saved) as { width?: number; height?: number; x?: number; y?: number };
-          if (Number.isFinite(bounds.width) && Number.isFinite(bounds.height) && (bounds.width ?? 0) >= 760 && (bounds.height ?? 0) >= 560) {
-            await appWindow.setSize(new PhysicalSize(bounds.width!, bounds.height!));
-          }
-          if (Number.isFinite(bounds.x) && Number.isFinite(bounds.y)) {
-            await appWindow.setPosition(new PhysicalPosition(bounds.x!, bounds.y!));
-          }
-        }
-        if (localStorage.getItem("brd-window-maximized") === "true") {
-          await appWindow.maximize();
-        }
-        [latestSize, latestPosition] = await Promise.all([appWindow.outerSize(), appWindow.outerPosition()]);
-        currentlyMaximized = await appWindow.isMaximized();
-        if (!cancelled) setIsMaximized(currentlyMaximized);
-      } catch (error) {
-        console.warn("Could not restore the previous window bounds:", error);
-      }
-    }
-
-    void (async () => {
-      await restoreWindowBounds();
-      if (cancelled) return;
-      stopResize = await appWindow.onResized((event) => {
-        latestSize = event.payload;
-        void refreshMaximizedState();
-      });
-      stopMove = await appWindow.onMoved((event) => {
-        latestPosition = event.payload;
-        void refreshMaximizedState();
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-      stopResize?.();
-      stopMove?.();
-    };
+    let cancelled = false;
+    void appWindow.isMaximized().then((value) => { if (!cancelled) setIsMaximized(value); }).catch((error) => console.warn("Could not check maximised state:", error));
+    void appWindow.onResized(() => {
+      void appWindow.isMaximized().then((value) => { if (!cancelled) setIsMaximized(value); }).catch(() => undefined);
+    }).then((unlisten) => { if (cancelled) unlisten(); else stopResize = unlisten; });
+    return () => { cancelled = true; stopResize?.(); };
   }, []);
 
   async function toggleMaximize() {
@@ -554,7 +505,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.map((scene) =>
       scene.id === activeSceneId ? { ...scene, messages: nextMessages } : scene,
     );
-    const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes };
+    const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes, folders };
     setScenes(nextScenes);
     setMessages(nextMessages);
     try {
@@ -573,10 +524,10 @@ function sanitiseHtml(html: string) {
       setWorkspaceError("A scene with that name already exists in this workspace.");
       return;
     }
-    const scene: WorkspaceScene = { id: crypto.randomUUID(), name, icon: "◈", messages: [] };
+    const scene: WorkspaceScene = { id: crypto.randomUUID(), name, icon: "◈", messages: [], folderId: activeFolderId };
     const nextScenes = [...scenes, scene];
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
       setScenes(nextScenes);
       setActiveSceneId(scene.id);
       setMessages([]);
@@ -590,11 +541,15 @@ function sanitiseHtml(html: string) {
 
   async function deleteScene(scene: WorkspaceScene) {
     if (!activeWorkspace || workspaceLoading) return;
-    const confirmed = window.confirm(`Delete the scene “${scene.name}” and all ${scene.messages.length} message(s) inside it? This cannot be undone.`);
-    if (!confirmed) return;
+    setScenePendingDeletion(scene);
+  }
+
+  async function confirmDeleteScene() {
+    const scene = scenePendingDeletion;
+    if (!scene || !activeWorkspace || workspaceLoading) return;
     const nextScenes = scenes.filter((item) => item.id !== scene.id);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
       setScenes(nextScenes);
       if (activeSceneId === scene.id) {
         const nextActiveScene = nextScenes[0] ?? null;
@@ -604,6 +559,48 @@ function sanitiseHtml(html: string) {
         setEditingMessageId(null);
         setOpenMessageActionsId(null);
       }
+      setWorkspaceError("");
+      setScenePendingDeletion(null);
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  async function createFolder() {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = folderNameDraft.trim();
+    if (!name) return;
+    if (folders.some((folder) => folder.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setWorkspaceError("A folder with that name already exists in this roleplay space.");
+      return;
+    }
+    const folder: WorkspaceFolder = { id: crypto.randomUUID(), name };
+    const nextFolders = [...folders, folder];
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders });
+      setFolders(nextFolders);
+      setExpandedFolderIds((current) => [...current, folder.id]);
+      setActiveFolderId(folder.id);
+      setFolderNameDraft("");
+      setIsCreatingFolder(false);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  async function confirmDeleteFolder() {
+    const folder = folderPendingDeletion;
+    if (!folder || !activeWorkspace || workspaceLoading) return;
+    const nextFolders = folders.filter((item) => item.id !== folder.id);
+    const nextScenes = scenes.map((scene) => scene.folderId === folder.id ? { ...scene, folderId: null } : scene);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders: nextFolders });
+      setFolders(nextFolders);
+      setScenes(nextScenes);
+      setExpandedFolderIds((current) => current.filter((id) => id !== folder.id));
+      if (activeFolderId === folder.id) setActiveFolderId(null);
+      setFolderPendingDeletion(null);
       setWorkspaceError("");
     } catch (reason) {
       setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
@@ -641,8 +638,6 @@ function sanitiseHtml(html: string) {
       setEditingMessageId(null);
     } else {
       const newMessageId = Date.now();
-      setEnteringMessageId(newMessageId);
-      window.setTimeout(() => setEnteringMessageId((current) => current === newMessageId ? null : current), 600);
       nextMessages = [
         ...messages,
         {
@@ -662,6 +657,13 @@ function sanitiseHtml(html: string) {
     }
 
     await persistSceneMessages(nextMessages);
+    if (editingMessageId === null) {
+      const newMessageId = nextMessages[nextMessages.length - 1]?.id;
+      if (typeof newMessageId === "number") {
+        setEnteringMessageId(newMessageId);
+        window.setTimeout(() => setEnteringMessageId((current) => current === newMessageId ? null : current), 900);
+      }
+    }
     setDraftHtml("");
     if (editor) editor.innerHTML = "";
   }
@@ -686,10 +688,38 @@ function sanitiseHtml(html: string) {
           <WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} />
           <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className="nav-item"><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item"><span className="nav-icon">♧</span>Characters</button><button className="nav-item"><span className="nav-icon">▧</span>Resources</button></div>
           <div className={`sidebar-section scenes-section ${isScenesCollapsed ? "scenes-collapsed" : ""}`}>
-            <div className="section-heading"><button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}><span>YOUR PROJECTS</span><span className="scenes-collapse-chevron">{isScenesCollapsed ? "›" : "⌄"}</span></button><button className="tiny-button" title="Add project">＋</button></div>
-            <div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>{activeWorkspace?.manifest.name ?? "Your story"}</span></div>
-            {!isScenesCollapsed && <div className="scene-list">{scenes.map((scene) => <div key={scene.id} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""}`}><button type="button" className={`scene-item ${activeSceneId === scene.id ? "selected" : ""}`} onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
-            <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
+            <div className="section-heading roleplay-space-heading">
+              <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
+                <span>ROLEPLAY SPACE</span>{isScenesCollapsed ? <ChevronRight size={14} className="scenes-collapse-chevron" /> : <ChevronDown size={14} className="scenes-collapse-chevron" />}
+              </button>
+            </div>
+            {!isScenesCollapsed && <>
+              <button type="button" className="project-label project-label-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed(true)} disabled={!activeWorkspace}>
+                <ChevronDown size={14} className="project-chevron" /><span className="project-symbol">✦</span><span className="project-label-name">{activeWorkspace?.manifest.name ?? "Choose a roleplay"}</span>
+              </button>
+              <div className="roleplay-tree">
+                {folders.map((folder) => {
+                  const folderScenes = scenes.filter((scene) => scene.folderId === folder.id);
+                  const expanded = expandedFolderIds.includes(folder.id);
+                  return <div className={`folder-group ${activeFolderId === folder.id ? "folder-active" : ""}`} key={folder.id}>
+                    <div className="folder-row">
+                      <button type="button" className="folder-expand-button" aria-label={`${expanded ? "Collapse" : "Expand"} folder ${folder.name}`} aria-expanded={expanded} onClick={() => setExpandedFolderIds((current) => expanded ? current.filter((id) => id !== folder.id) : [...current, folder.id])}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>
+                      <button type="button" className="folder-select-button" onClick={() => { setActiveFolderId(folder.id); setExpandedFolderIds((current) => current.includes(folder.id) ? current : [...current, folder.id]); }}><Folder size={14} /><span>{folder.name}</span><small>{folderScenes.length}</small></button>
+                      <button type="button" className="folder-delete-button" title={`Delete folder ${folder.name}`} aria-label={`Delete folder ${folder.name}`} onClick={() => setFolderPendingDeletion(folder)}><Trash2 size={13} /></button>
+                    </div>
+                    {expanded && <div className="folder-scenes">{folderScenes.map((scene) => <div key={scene.id} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => setScenePendingDeletion(scene)}><Trash2 size={14} /></button></div>)}</div>}
+                  </div>;
+                })}
+                <div className="folder-group unfiled-scenes">
+                  <div className="folder-row"><Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">Scenes</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small></div>
+                  <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => <div key={scene.id} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => setScenePendingDeletion(scene)}><Trash2 size={14} /></button></div>)}</div>
+                </div>
+              </div>
+              <div className="scene-creation-actions">
+                <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
+                <button className="new-folder-button" type="button" title="Create folder" aria-label="Create folder" onClick={() => { setFolderNameDraft(""); setIsCreatingFolder(true); }} disabled={!activeWorkspace || workspaceLoading}><FolderPlus size={16} /></button>
+              </div>
+            </>}
           </div>
           
 <div className="sidebar-spacer" />
@@ -907,6 +937,49 @@ function sanitiseHtml(html: string) {
           </footer>
         </section>
             </div>
+      {scenePendingDeletion && (
+        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setScenePendingDeletion(null); }}>
+          <section className="clean-confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-scene-title" aria-describedby="delete-scene-description">
+            <div className="clean-confirmation-icon"><AlertTriangle size={21} /></div>
+            <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · DELETE SCENE</span>
+            <h2 id="delete-scene-title">Delete “{scenePendingDeletion.name}”?</h2>
+            <p id="delete-scene-description">This permanently deletes the scene and all {scenePendingDeletion.messages.length} message(s) inside it. This action cannot be undone.</p>
+            <div className="clean-confirmation-actions">
+              <button type="button" className="clean-cancel-button" onClick={() => setScenePendingDeletion(null)}>Cancel</button>
+              <button type="button" className="clean-continue-button" onClick={() => void confirmDeleteScene()}>Delete scene</button>
+            </div>
+          </section>
+        </div>
+      )}
+      {folderPendingDeletion && (
+        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setFolderPendingDeletion(null); }}>
+          <section className="clean-confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-folder-title" aria-describedby="delete-folder-description">
+            <div className="clean-confirmation-icon"><AlertTriangle size={21} /></div>
+            <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · DELETE FOLDER</span>
+            <h2 id="delete-folder-title">Delete “{folderPendingDeletion.name}”?</h2>
+            <p id="delete-folder-description">The folder will be removed. Scenes inside it will be moved back to the general Scenes list; their messages will be kept.</p>
+            <div className="clean-confirmation-actions">
+              <button type="button" className="clean-cancel-button" onClick={() => setFolderPendingDeletion(null)}>Cancel</button>
+              <button type="button" className="clean-continue-button" onClick={() => void confirmDeleteFolder()}>Delete folder</button>
+            </div>
+          </section>
+        </div>
+      )}
+      {isCreatingFolder && (
+        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsCreatingFolder(false); }}>
+          <form className="clean-confirmation-dialog folder-create-dialog" onSubmit={(event) => { event.preventDefault(); void createFolder(); }}>
+            <div className="clean-confirmation-icon"><FolderPlus size={21} /></div>
+            <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · ORGANISATION</span>
+            <h2>Create a folder</h2>
+            <p>Use folders for acts, arcs, chapters, or any structure that helps organise your roleplay.</p>
+            <input autoFocus className="folder-name-input" value={folderNameDraft} onChange={(event) => setFolderNameDraft(event.target.value)} placeholder="e.g. Act I" aria-label="Folder name" maxLength={80} />
+            <div className="clean-confirmation-actions">
+              <button type="button" className="clean-cancel-button" onClick={() => setIsCreatingFolder(false)}>Cancel</button>
+              <button type="submit" className="clean-continue-button" disabled={!folderNameDraft.trim()}>Create folder</button>
+            </div>
+          </form>
+        </div>
+      )}
       {cleanConfirmationStep !== null && (
         <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCleanConfirmationStep(null); }}>
           <section className="clean-confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="clean-confirmation-title" aria-describedby="clean-confirmation-description">
