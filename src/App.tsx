@@ -453,6 +453,7 @@ function sanitiseHtml(html: string) {
           source,
           avatar: character.avatar,
           expression: selectedCharacter === "You" ? "" : selectedExpression,
+          avatarAssetPath: character.avatarAssetPath ?? null,
         },
       ];
     }
@@ -530,7 +531,7 @@ function sanitiseHtml(html: string) {
           <section ref={conversationRef} className="conversation" aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => <article className="message" key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{message.expression && (
+            {messages.map((message) => <article className={`message chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.avatarAssetPath && profileMediaSource(message.avatarAssetPath) ? <img src={profileMediaSource(message.avatarAssetPath) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
@@ -544,7 +545,7 @@ function sanitiseHtml(html: string) {
                           )?.image ?? ""}")`,
                         }}
                       />
-                    )}<span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span><time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
+                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
             {hasNewMessages && <button className="scroll-to-latest" type="button" onClick={scrollToLatestMessage}>↓ New messages · Jump to latest</button>}
           </section>
 
@@ -739,14 +740,16 @@ function sanitiseHtml(html: string) {
                 ) : (
                   <span className="avatar-preview-initials">{character.initials}</span>
                 )}
-                <span
-                  className="avatar-preview-expression"
-                  aria-label={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
-                  style={{
-                    maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
-                    WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
-                  }}
-                />
+                {selectedCharacter !== "You" && (
+                  <span
+                    className="avatar-preview-expression"
+                    aria-label={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
+                    style={{
+                      maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                      WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                    }}
+                  />
+                )}
               </div>
               <div className="avatar-preview-details">
                 <h2>{character.name}</h2>
