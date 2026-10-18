@@ -2484,3 +2484,22 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
     transition: none;
   }
 }
+
+/* Keep the drag affordance in the indentation gutter instead of over the disclosure icon. */
+.roleplay-tree .category-row {
+  padding-left: 14px;
+}
+
+.roleplay-tree .category-row > .tree-drag-handle {
+  left: 2px;
+}
+
+.roleplay-tree .folder-row,
+.roleplay-tree .scene-row {
+  position: relative;
+}
+
+.roleplay-tree .folder-row > .tree-drag-handle,
+.roleplay-tree .scene-row > .tree-drag-handle {
+  left: -14px;
+}
