@@ -17,7 +17,8 @@
 - `src/characters/CharactersPage.tsx`: editorial gallery, search, tags, create/edit/delete, accent and portrait selection.
 - `src/resources/resources.types.ts`: resource metadata and media classification.
 - `src/resources/resources.storage.ts`: resource-library database operations.
-- `src/resources/ResourcesPage.tsx`: drag-and-drop/import gallery, image thumbnails, audio/video preview, filtering, per-resource tagging, multi-select and bulk tag addition.
+- `src/resources/ResourcesPage.tsx`: drag-and-drop/import gallery, image thumbnails, enlarged audio/video/image preview, filtering, per-resource tagging, multi-select and bulk tag addition.
+- Native OS drag-and-drop uses Tauri's window drop events and a guarded native file reader (128 MB per-file limit) to import dropped paths into the webview resource library.
 - `src/GlobalSearch.tsx`: search overlay for both global libraries.
 
 ## Persistence in this milestone
