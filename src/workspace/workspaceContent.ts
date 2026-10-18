@@ -8,6 +8,7 @@ export type WorkspaceMessage = {
   time: string;
   content: string;
   avatar: string;
+  avatarAssetPath?: string | null;
   expression?: string;
   history?: string[];
   source?: string;
