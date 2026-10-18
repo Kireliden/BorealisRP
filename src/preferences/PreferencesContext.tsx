@@ -82,6 +82,8 @@ export function PreferencesProvider({
   root.style.setProperty("--ui-scale", `${scaleFactors[uiScale] ?? 1}`);
   root.style.setProperty("--profile-avatar-position", `${preferences.profile.avatarPositionX}% ${preferences.profile.avatarPositionY}%`);
   root.style.setProperty("--profile-banner-position", `${preferences.profile.bannerPositionX}% ${preferences.profile.bannerPositionY}%`);
+  root.style.setProperty("--profile-avatar-zoom", `${preferences.profile.avatarZoom / 100}`);
+  root.style.setProperty("--profile-banner-zoom", `${preferences.profile.bannerZoom / 100}`);
   root.style.setProperty(
   "--chat-font-size",
   `${preferences.appearance.chatFontSize}px`,
@@ -97,6 +99,8 @@ export function PreferencesProvider({
   preferences.profile.avatarPositionY,
   preferences.profile.bannerPositionX,
   preferences.profile.bannerPositionY,
+  preferences.profile.avatarZoom,
+  preferences.profile.bannerZoom,
 ]);
 
   useEffect(() => {
