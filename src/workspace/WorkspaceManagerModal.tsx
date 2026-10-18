@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { load } from "@tauri-apps/plugin-store";
 import { FolderOpen, FolderPlus, Trash2, X } from "lucide-react";
@@ -95,7 +95,7 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
     }
   }
 
-  async function handleCreateWorkspace(event: React.FormEvent<HTMLFormElement>) {
+  async function handleCreateWorkspace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     const name = workspaceName.trim();
