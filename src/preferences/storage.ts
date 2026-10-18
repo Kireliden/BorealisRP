@@ -183,11 +183,13 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
           isOneOf(value, ["ubuntu", "inter", "system"]),
         defaults.appearance.interfaceFont,
       ),
-      chatFontSize: validOr(
-        appearance.chatFontSize,
-        (value): value is number => isBoundedNumber(value, 11, 24),
-        defaults.appearance.chatFontSize,
-      ),
+      chatFontSize: appearance.chatFontSize === 12
+        ? defaults.appearance.chatFontSize
+        : validOr(
+            appearance.chatFontSize,
+            (value): value is number => isBoundedNumber(value, 11, 24),
+            defaults.appearance.chatFontSize,
+          ),
     },
 
     profile: {
