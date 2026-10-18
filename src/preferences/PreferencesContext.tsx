@@ -78,8 +78,10 @@ export function PreferencesProvider({
   root.dataset.density = density;
   root.dataset.font = interfaceFont;
   root.dataset.animations = preferences.accessibility.animationsEnabled ? "on" : "off";
-  const scaleFactors: Record<number, number> = { 80: 0.7, 90: 0.8, 100: 0.9, 110: 1, 125: 1.15, 150: 1.4 };
+  const scaleFactors: Record<number, number> = { 80: 0.8, 90: 0.9, 100: 1, 110: 1.1, 125: 1.25, 150: 1.5 };
   root.style.setProperty("--ui-scale", `${scaleFactors[uiScale] ?? 1}`);
+  root.style.setProperty("--profile-avatar-position", `${preferences.profile.avatarPositionX}% ${preferences.profile.avatarPositionY}%`);
+  root.style.setProperty("--profile-banner-position", `${preferences.profile.bannerPositionX}% ${preferences.profile.bannerPositionY}%`);
   root.style.setProperty(
   "--chat-font-size",
   `${preferences.appearance.chatFontSize}px`,
@@ -91,6 +93,10 @@ export function PreferencesProvider({
   preferences.appearance.density,
   preferences.appearance.chatFontSize,
   preferences.accessibility.animationsEnabled,
+  preferences.profile.avatarPositionX,
+  preferences.profile.avatarPositionY,
+  preferences.profile.bannerPositionX,
+  preferences.profile.bannerPositionY,
 ]);
 
   useEffect(() => {
