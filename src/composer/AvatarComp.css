@@ -465,6 +465,8 @@
   max-width: none;
   object-fit: cover;
   object-position: var(--profile-avatar-position, 50% 50%);
+  transform: scale(var(--profile-avatar-zoom, 1));
+  transform-origin: var(--profile-avatar-position, 50% 50%);
   mask-image:
     linear-gradient(to bottom, transparent 0%, #000 19%, #000 77%, transparent 100%),
     radial-gradient(ellipse 76% 78% at 50% 45%, #000 56%, transparent 100%);
@@ -607,6 +609,8 @@
   height: 100%;
   object-fit: cover;
   object-position: var(--profile-avatar-position, 50% 50%);
+  transform: scale(var(--profile-avatar-zoom, 1));
+  transform-origin: var(--profile-avatar-position, 50% 50%);
   pointer-events: none;
 }
 .character-portrait-media-action {
