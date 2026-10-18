@@ -43,6 +43,7 @@ export default function ResourcesPage({ onClose }: Props) {
   }
   async function openPreview(resource: ResourceRecord) {
     setSelected(resource);
+    setTagDraft(resource.tags.join(", "));
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     const blob = await getResourceBlob(resource.id);
     setPreviewUrl(blob ? URL.createObjectURL(blob) : null);
@@ -90,7 +91,7 @@ export default function ResourcesPage({ onClose }: Props) {
       {selected && <aside className="resource-inspector"><div className="character-editor-top"><span>RESOURCE DETAILS</span><button type="button" onClick={() => { setSelected(null); setPreviewUrl(null); }} aria-label="Close resource details"><X size={16} /></button></div>
         <div className="resource-preview-large">{previewUrl && selected.kind === "image" ? <img src={previewUrl} alt={selected.fileName} /> : previewUrl && selected.kind === "audio" ? <audio controls src={previewUrl} /> : previewUrl && selected.kind === "video" ? <video controls src={previewUrl} /> : iconFor(selected)}</div>
         <h2>{selected.name}</h2><p className="resource-file-name">{selected.fileName}</p><div className="resource-metadata"><span>Type</span><strong>{selected.mimeType || "Unknown"}</strong><span>Size</span><strong>{(selected.size / 1024 / 1024).toFixed(2)} MB</strong></div>
-        <label className="character-field"><span>Tags · comma separated</span><input value={tagDraft || selected.tags.join(", ")} onChange={(event) => setTagDraft(event.target.value)} placeholder="Reference, Keira, Background" /></label>
+        <label className="character-field"><span>Tags · comma separated</span><input value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} placeholder="Reference, Keira, Background" /></label>
         <button className="library-primary resource-save-tags" type="button" onClick={() => void saveTags()}>Save tags</button>
         <button className="library-danger resource-delete" type="button" onClick={() => void remove(selected)}><Trash2 size={14} /> Delete resource</button>
       </aside>}
