@@ -298,6 +298,7 @@ function sanitiseHtml(html: string) {
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
 
+  useEffect(() => { if (!characters.some((item) => item.name === selectedCharacter)) setSelectedCharacter(characters[0]?.name ?? "You"); }, [characters, selectedCharacter]);
   const selectedCharacterBase = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
   const selectedPortraitResourceId = selectedCharacter === "You" ? null : selectedCharacterBase?.portraitResourceId ?? null;
   const [characterResourcePortraitUrl, setCharacterResourcePortraitUrl] = useState<string | null>(null);
