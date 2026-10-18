@@ -619,7 +619,7 @@ function sanitiseHtml(html: string) {
     } else {
       const newMessageId = Date.now();
       setEnteringMessageId(newMessageId);
-      window.setTimeout(() => setEnteringMessageId((current) => current === newMessageId ? null : current), 420);
+      window.setTimeout(() => setEnteringMessageId((current) => current === newMessageId ? null : current), 600);
       nextMessages = [
         ...messages,
         {
