@@ -144,12 +144,12 @@ export default function ResourcesPage({ onClose }: Props) {
   return <div className="library-overlay">
     <header className="library-topbar">
       <button className="library-back" onClick={onClose} type="button"><ArrowLeft size={16} /> Back to Workspace</button>
-      <div className="library-brand"><span>BOREALIS</span><strong>Resources</strong></div>
+      <div className="library-brand"><strong>Resources</strong></div>
       <button className="library-close" onClick={onClose} type="button" aria-label="Close Resources"><X size={18} /></button>
     </header>
     <main className="resources-layout">
       <section className="resources-main">
-        <div className="library-eyebrow">GLOBAL LIBRARY · {resources.length.toString().padStart(2, "0")} FILES</div>
+        <div className="library-eyebrow">GLOBAL ATELIER · {resources.length.toString().padStart(2, "0")} ASSETS</div>
         <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
         <div className={`resource-dropzone ${dragging ? "is-dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); if (event.dataTransfer.files.length) void addFiles(event.dataTransfer.files); }}><Upload size={19} /><div><strong>Drop anything you want to keep close</strong><span>Images, audio, video and other files · stored in this app's local library</span></div><button type="button" onClick={() => inputRef.current?.click()}>Browse files</button></div>
