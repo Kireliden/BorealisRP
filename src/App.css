@@ -2117,3 +2117,96 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
   opacity: .45;
   cursor: not-allowed;
 }
+
+
+/* Roleplay tree editing and drag ordering. */
+.roleplay-space-heading {
+  justify-content: space-between;
+  gap: 8px;
+}
+.roleplay-create-button {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  flex: 0 0 27px;
+  padding: 0;
+  border-radius: 7px;
+}
+.project-label-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+.project-label-row .project-label-button {
+  flex: 1;
+  min-width: 0;
+}
+.rename-node-button {
+  display: grid;
+  width: 24px;
+  height: 25px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ctp-overlay1);
+  opacity: .48;
+  cursor: pointer;
+  transition: opacity 120ms ease, color 120ms ease, background 120ms ease;
+}
+.rename-node-button:hover:not(:disabled),
+.rename-node-button:focus-visible {
+  opacity: 1;
+  color: var(--accent);
+  background: var(--control-hover);
+}
+.rename-node-button:disabled {
+  opacity: .25;
+  cursor: not-allowed;
+}
+.folder-row .folder-select-button {
+  flex: 1 1 auto;
+}
+.folder-row .folder-rename-button,
+.folder-row .folder-delete-button {
+  flex: 0 0 23px;
+  width: 23px;
+}
+.scene-row {
+  cursor: grab;
+}
+.scene-row:active {
+  cursor: grabbing;
+}
+.scene-row.scene-dragging {
+  opacity: .42;
+}
+.scene-row .scene-item {
+  padding-right: 61px;
+}
+.scene-row .scene-rename-button {
+  position: absolute;
+  top: 50%;
+  right: 31px;
+  transform: translateY(-50%);
+}
+.scene-row .scene-delete-button {
+  right: 4px;
+}
+.unfiled-scenes > .folder-row {
+  padding-left: 0;
+  gap: 3px;
+}
+.unfiled-scenes > .folder-row .unfiled-label {
+  flex: 1;
+}
+.unfiled-scenes > .folder-row .folder-expand-button {
+  color: var(--ctp-overlay1);
+}
+.scene-creation-actions {
+  margin-top: 17px;
+}
