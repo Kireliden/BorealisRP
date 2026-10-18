@@ -15,9 +15,12 @@ export type WorkspaceMessage = {
   source?: string;
 };
 
+export type WorkspaceCategory = { id: string; name: string; };
+
 export type WorkspaceFolder = {
   id: string;
   name: string;
+  categoryId?: string | null;
 };
 
 export type WorkspaceScene = {
@@ -32,6 +35,7 @@ export type WorkspaceContent = {
   schemaVersion: 1;
   scenes: WorkspaceScene[];
   folders?: WorkspaceFolder[];
+  categories?: WorkspaceCategory[];
 };
 
 export function loadWorkspaceContent(path: string): Promise<WorkspaceContent> {
