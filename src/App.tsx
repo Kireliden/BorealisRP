@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { usePreferences } from "./preferences/PreferencesContext";
+import ProfileModal from "./profile/ProfileModal";
+import { chooseProfileMedia, profileMediaSource } from "./profile/profileMedia";
 import "./themes/themes.css";
 import "./App.css";
 import "./composer/Composer.css";
@@ -20,7 +23,7 @@ import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, remembe
 const appWindow = getCurrentWindow();
 
 type Role = "Narration" | "Dialogue";
-type Character = { name: string; initials: string; avatar: string; description: string };
+type Character = { name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null };
 type Message = WorkspaceMessage;
 
 const characters: Character[] = [
@@ -178,12 +181,15 @@ function sanitiseHtml(html: string) {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { preferences, updatePreferences } = usePreferences();
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
 
-  const character = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
+  const selectedCharacterBase = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
+  const character: Character = { ...selectedCharacterBase, avatarAssetPath: preferences.characterAvatarPaths[selectedCharacter] ?? null };
   const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? null;
 
   // Restore the last active workspace once, before persisting later selections.
@@ -322,6 +328,23 @@ function sanitiseHtml(html: string) {
       unlisten?.();
     };
   }, []);
+
+  async function chooseCharacterPortrait() {
+    try {
+      const path = await chooseProfileMedia();
+      if (!path) return;
+      updatePreferences((current) => ({
+        ...current,
+        characterAvatarPaths: {
+          ...current.characterAvatarPaths,
+          [selectedCharacter]: path,
+        },
+      }));
+      setShowCharacterPicker(false);
+    } catch (reason) {
+      console.error("Could not import character portrait:", reason);
+    }
+  }
 
   async function toggleMaximize() {
     await appWindow.toggleMaximize();
@@ -477,12 +500,15 @@ function sanitiseHtml(html: string) {
 <div className="sidebar-spacer" />
 
 <div className="sidebar-footer">
-  <div className="profile-avatar">K</div>
-
-  <div className="profile-copy">
-    <span className="profile-name">Your profile</span>
-    <span className="profile-status">{activeWorkspace ? "Workspace selected" : "No workspace selected"}</span>
-  </div>
+  <button className="sidebar-profile-trigger" type="button" onClick={() => setIsProfileOpen(true)} title="Open your profile" aria-label="Open your profile">
+    <div className="profile-avatar">
+      {profileMediaSource(preferences.profile.avatarAssetPath) ? <img src={profileMediaSource(preferences.profile.avatarAssetPath) ?? undefined} alt="" /> : <span>{preferences.profile.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
+    </div>
+    <div className="profile-copy">
+      <span className="profile-name">{preferences.profile.displayName || "Your profile"}</span>
+      <span className="profile-status">{preferences.profile.title || "Personal profile"}</span>
+    </div>
+  </button>
 
   <button
     className="icon-button"
@@ -545,7 +571,7 @@ function sanitiseHtml(html: string) {
                     title={`View ${character.name}'s avatar`}
                     onClick={() => { setShowAvatarPreview(true); setShowCharacterPicker(false); setShowExpressions(false); }}
                   >
-                    <span className="character-portrait-initials">{character.initials}</span>
+                    {character.avatarAssetPath ? <img className="character-portrait-image" src={profileMediaSource(character.avatarAssetPath) ?? undefined} alt="" /> : <span className="character-portrait-initials">{character.initials}</span>}
                     <span
                       className="character-portrait-expression"
                       aria-hidden="true"
@@ -583,7 +609,7 @@ function sanitiseHtml(html: string) {
                 </div>
                 {showCharacterPicker && <div className="portrait-popover character-picker-popover">
                   <span className="portrait-popover-label">WRITING AS</span>
-                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => { setSelectedCharacter(event.target.value); setShowCharacterPicker(false); }}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select>
+                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => setSelectedCharacter(event.target.value)}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select><button className="character-portrait-media-action" type="button" onClick={() => void chooseCharacterPortrait()}>Choose portrait or GIF…</button>{character.avatarAssetPath && <button className="character-portrait-media-action secondary" type="button" onClick={() => updatePreferences((current) => ({ ...current, characterAvatarPaths: { ...current.characterAvatarPaths, [selectedCharacter]: null } }))}>Remove portrait</button>}
                 </div>}
                 {showExpressions && <div className="portrait-popover expression-picker-popover">
                   <span className="portrait-popover-label">EXPRESSION</span>
@@ -717,7 +743,9 @@ function sanitiseHtml(html: string) {
               <div className="avatar-preview-art">
                 <div className="avatar-preview-orbit avatar-preview-orbit-one" />
                 <div className="avatar-preview-orbit avatar-preview-orbit-two" />
-                {character.name === "Keira" ? (
+                {character.avatarAssetPath ? (
+                  <img className="avatar-preview-image" src={profileMediaSource(character.avatarAssetPath) ?? undefined} alt={character.name} />
+                ) : character.name === "Keira" ? (
                   <img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" />
                 ) : (
                   <span className="avatar-preview-initials">{character.initials}</span>
@@ -744,6 +772,13 @@ function sanitiseHtml(html: string) {
       )}
       {isCollectionsOpen && (
         <CollectionsModal onClose={() => setIsCollectionsOpen(false)} />
+      )}
+      {isProfileOpen && (
+        <ProfileModal
+          profile={preferences.profile}
+          onSave={(profile) => updatePreferences((current) => ({ ...current, profile }))}
+          onClose={() => setIsProfileOpen(false)}
+        />
       )}
       {isWorkspaceManagerOpen && (
         <WorkspaceManagerModal
