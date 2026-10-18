@@ -162,7 +162,7 @@
 }
 
 .message-rich-content {
-  margin-top: 9px;
+  margin-top: 3px;
   color: var(--ctp-subtext1);
   font-size: var(--chat-font-size, 12px);
   line-height: 1.9;
