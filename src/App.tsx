@@ -163,6 +163,7 @@ function sanitiseHtml(html: string) {
   return output.innerHTML;
 }function App() {
   const [scenes, setScenes] = useState<WorkspaceScene[]>([]);
+  const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
@@ -587,6 +588,28 @@ function sanitiseHtml(html: string) {
     }
   }
 
+  async function deleteScene(scene: WorkspaceScene) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const confirmed = window.confirm(`Delete the scene “${scene.name}” and all ${scene.messages.length} message(s) inside it? This cannot be undone.`);
+    if (!confirmed) return;
+    const nextScenes = scenes.filter((item) => item.id !== scene.id);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes });
+      setScenes(nextScenes);
+      if (activeSceneId === scene.id) {
+        const nextActiveScene = nextScenes[0] ?? null;
+        setActiveSceneId(nextActiveScene?.id ?? null);
+        setMessages(nextActiveScene?.messages ?? []);
+        setDraftHtml("");
+        setEditingMessageId(null);
+        setOpenMessageActionsId(null);
+      }
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
   function selectScene(scene: WorkspaceScene) {
     setActiveSceneId(scene.id);
     setMessages(scene.messages);
@@ -662,8 +685,10 @@ function sanitiseHtml(html: string) {
           <div className="brand"><div className="brand-mark">✦</div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
           <WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} />
           <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className="nav-item"><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item"><span className="nav-icon">♧</span>Characters</button><button className="nav-item"><span className="nav-icon">▧</span>Resources</button></div>
-          <div className="sidebar-section scenes-section"><div className="section-heading"><span>YOUR PROJECTS</span><button className="tiny-button" title="Add project">＋</button></div><div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>{activeWorkspace?.manifest.name ?? "Your story"}</span></div>
-            <div className="scene-list">{scenes.map((scene) => <button key={scene.id} className={`scene-item ${activeSceneId === scene.id ? "selected" : ""}`} onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button>)}</div>
+          <div className={`sidebar-section scenes-section ${isScenesCollapsed ? "scenes-collapsed" : ""}`}>
+            <div className="section-heading"><button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}><span>YOUR PROJECTS</span><span className="scenes-collapse-chevron">{isScenesCollapsed ? "›" : "⌄"}</span></button><button className="tiny-button" title="Add project">＋</button></div>
+            <div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>{activeWorkspace?.manifest.name ?? "Your story"}</span></div>
+            {!isScenesCollapsed && <div className="scene-list">{scenes.map((scene) => <div key={scene.id} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""}`}><button type="button" className={`scene-item ${activeSceneId === scene.id ? "selected" : ""}`} onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
             <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
           </div>
           
