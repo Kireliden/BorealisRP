@@ -4,5 +4,5 @@
 .resource-card{width:100%;height:100%;cursor:pointer}
 
 /* Give the selected asset a genuinely useful side preview while preserving the app navigation. */
-.resource-inspector{width:360px;flex-basis:360px}.resource-preview-large{min-height:320px;max-height:460px}.resource-preview-large img,.resource-preview-large video{max-height:440px;object-fit:contain}
+.resource-inspector{width:360px;flex-basis:360px}.resource-preview-large{min-height:150px;max-height:460px}.resource-preview-large:has(img),.resource-preview-large:has(video){min-height:320px}.resource-preview-large img,.resource-preview-large video{max-height:440px;object-fit:contain}
 @media(max-width:1000px){.resource-inspector{width:290px;flex-basis:290px}}
