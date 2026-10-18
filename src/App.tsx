@@ -11,7 +11,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2 } from "lucide-react";
+import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -167,6 +167,7 @@ function sanitiseHtml(html: string) {
   const [draftHtml, setDraftHtml] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
+  const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
@@ -280,6 +281,22 @@ function sanitiseHtml(html: string) {
     const conversation = conversationRef.current;
     if (conversation) conversation.scrollTop = conversation.scrollHeight;
   }, []);
+
+  useEffect(() => {
+    if (!isSceneOptionsOpen) return;
+    function closeSceneOptions(event: PointerEvent) {
+      if (!(event.target as Element | null)?.closest(".scene-options-menu")) setIsSceneOptionsOpen(false);
+    }
+    function closeSceneOptionsOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsSceneOptionsOpen(false);
+    }
+    document.addEventListener("pointerdown", closeSceneOptions);
+    window.addEventListener("keydown", closeSceneOptionsOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeSceneOptions);
+      window.removeEventListener("keydown", closeSceneOptionsOnEscape);
+    };
+  }, [isSceneOptionsOpen]);
 
   useEffect(() => {
     if (openMessageActionsId === null) return;
@@ -443,6 +460,20 @@ function sanitiseHtml(html: string) {
     await persistSceneMessages(nextMessages);
   }
 
+  async function cleanConversation() {
+    if (!activeWorkspace || !activeSceneId || workspaceLoading || !activeScene) return;
+    setIsSceneOptionsOpen(false);
+    const firstConfirmation = window.confirm(`Clean the conversation in “${activeScene.name}”? This will permanently delete all messages in this scene, but the scene itself will remain.`);
+    if (!firstConfirmation) return;
+    const secondConfirmation = window.confirm("Final confirmation: permanently delete every message in this scene? This cannot be undone.");
+    if (!secondConfirmation) return;
+    setOpenMessageActionsId(null);
+    cancelEditingMessage();
+    setHasNewMessages(false);
+    setIsAtLatestMessage(true);
+    await persistSceneMessages([]);
+  }
+
   async function persistSceneMessages(nextMessages: Message[]) {
     if (!activeWorkspace || !activeSceneId) return;
     const nextScenes = scenes.map((scene) =>
@@ -596,8 +627,8 @@ function sanitiseHtml(html: string) {
         </aside>
 
         <section className="main-panel">
-          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><button className="icon-button" title="More options">⋯</button></div></header>
-          <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button><button className="secondary-button">↗ <span>Share</span></button></div></div>
+          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={() => void cleanConversation()}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
+          <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button></div></div>
           <div className="demo-notice"><span className="notice-icon">i</span><span><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span></div>
 
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
