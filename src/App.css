@@ -4,6 +4,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   --scaled-font-size: calc(12px * var(--ui-scale));
+  --sidebar-width: 254px;
   
 
 }
@@ -72,7 +73,7 @@ button:disabled {
 
 .sidebar {
   display: flex;
-  flex: 0 0 254px;
+  flex: 0 0 var(--sidebar-width);
   flex-direction: column;
   min-width: 0;
   padding: 18px 12px 12px;
@@ -1159,8 +1160,9 @@ button:disabled {
 }
 
 @media (max-width: 1000px) {
+  :root { --sidebar-width: 220px; }
   .sidebar {
-    flex-basis: 220px;
+    flex-basis: var(--sidebar-width);
   }
 
   .topbar {
