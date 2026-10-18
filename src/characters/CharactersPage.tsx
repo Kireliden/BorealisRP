@@ -1,0 +1,90 @@
+import { useMemo, useState } from "react";
+import { ArrowLeft, Plus, Search, Tag, Trash2, X } from "lucide-react";
+import { loadCharacters, saveCharacters } from "./characters.storage";
+import { makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
+import "./characters.css";
+
+type Props = { onClose: () => void };
+
+const emptyDraft: CharacterDraft = {
+  name: "",
+  subtitle: "",
+  description: "",
+  initials: "",
+  accent: "lavender",
+  portraitResourceId: null,
+  tags: [],
+};
+
+export default function CharactersPage({ onClose }: Props) {
+  const [characters, setCharacters] = useState<CharacterRecord[]>(loadCharacters);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [tagDraft, setTagDraft] = useState("");
+  const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
+  const [isCreating, setIsCreating] = useState(false);
+  const selected = characters.find((character) => character.id === selectedId) ?? null;
+  const allTags = useMemo(() => [...new Set(characters.flatMap((character) => character.tags))].sort(), [characters]);
+  const filtered = characters.filter((character) => [character.name, character.subtitle, character.description, ...character.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+
+  function persist(next: CharacterRecord[]) { setCharacters(next); saveCharacters(next); }
+  function openCharacter(character: CharacterRecord) {
+    setSelectedId(character.id);
+    setDraft({ name: character.name, subtitle: character.subtitle, description: character.description, initials: character.initials, accent: character.accent, portraitResourceId: character.portraitResourceId, tags: character.tags });
+    setIsCreating(false);
+  }
+  function startCreate() { setSelectedId(null); setDraft(emptyDraft); setTagDraft(""); setIsCreating(true); }
+  function save() {
+    if (!draft.name.trim()) return;
+    if (isCreating) {
+      const next = [...characters, makeCharacterRecord(draft)];
+      persist(next);
+      setSelectedId(next[next.length - 1].id);
+      setIsCreating(false);
+    } else if (selected) {
+      persist(characters.map((character) => character.id === selected.id ? makeCharacterRecord(draft, character) : character));
+    }
+  }
+  function addTag() {
+    const tag = tagDraft.trim();
+    if (tag && !draft.tags.some((item) => item.toLowerCase() === tag.toLowerCase())) setDraft({ ...draft, tags: [...draft.tags, tag] });
+    setTagDraft("");
+  }
+  function removeSelected() {
+    if (!selected) return;
+    const next = characters.filter((character) => character.id !== selected.id);
+    persist(next); setSelectedId(null); setDraft(emptyDraft);
+  }
+
+  return <div className="library-overlay">
+    <header className="library-topbar">
+      <button className="library-back" onClick={onClose} type="button"><ArrowLeft size={16} /> Back to Workspace</button>
+      <div className="library-brand"><span>BOREALIS</span><strong>Characters</strong></div>
+      <button className="library-close" onClick={onClose} type="button" aria-label="Close Characters"><X size={18} /></button>
+    </header>
+    <main className="characters-layout">
+      <section className="characters-library">
+        <div className="library-eyebrow">GLOBAL LIBRARY · {characters.length.toString().padStart(2, "0")} FILES</div>
+        <div className="library-heading-row"><div><h1>Characters</h1><p>A cast of characters, ready for any story.</p></div><button className="library-primary" type="button" onClick={startCreate}><Plus size={16} /> New character</button></div>
+        <label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search names, descriptions and tags…" /></label>
+        {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
+        {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
+          <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card accent-${character.accent} ${selectedId === character.id ? "is-selected" : ""}`} onClick={() => openCharacter(character)}>
+            <div className="character-card-art"><span>{character.initials || character.name.slice(0, 2).toUpperCase()}</span><small>BRD · CHARACTER FILE</small></div>
+            <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
+          </button>)}</div>}
+      </section>
+      {(selected || isCreating) && <aside className="character-editor">
+        <div className="character-editor-top"><span>{isCreating ? "NEW CHARACTER" : "CHARACTER PROFILE"}</span><button type="button" onClick={() => { setSelectedId(null); setIsCreating(false); }} aria-label="Close editor"><X size={16} /></button></div>
+        <div className={`character-editor-portrait accent-${draft.accent}`}><span>{draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"}</span><small>PORTRAIT PREVIEW</small></div>
+        <label className="character-field"><span>Character name *</span><input autoFocus value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, initials: draft.initials || event.target.value.slice(0, 2).toUpperCase() })} placeholder="e.g. Keira" /></label>
+        <label className="character-field"><span>Subtitle</span><input value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} placeholder="Story · Role" /></label>
+        <label className="character-field"><span>Initials</span><input maxLength={3} value={draft.initials} onChange={(event) => setDraft({ ...draft, initials: event.target.value.toUpperCase() })} placeholder="KR" /></label>
+        <label className="character-field"><span>Accent</span><select value={draft.accent} onChange={(event) => setDraft({ ...draft, accent: event.target.value as CharacterDraft["accent"] })}><option value="lavender">Lavender</option><option value="blue">Blue</option><option value="pink">Pink</option><option value="green">Green</option></select></label>
+        <label className="character-field"><span>Description</span><textarea rows={4} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} placeholder="Who are they? What should you remember?" /></label>
+        <div className="character-field"><span>Tags</span><div className="character-tag-input"><input value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag(); } }} placeholder="Add a tag…" /><button type="button" onClick={addTag}><Plus size={14} /></button></div><div className="character-edit-tags">{draft.tags.map((tag) => <button type="button" key={tag} onClick={() => setDraft({ ...draft, tags: draft.tags.filter((item) => item !== tag) })}>{tag}<X size={11} /></button>)}</div></div>
+        <div className="character-editor-actions">{selected && <button type="button" className="library-danger" onClick={removeSelected}><Trash2 size={14} /> Delete</button>}<button type="button" className="library-primary" onClick={save} disabled={!draft.name.trim()}>{isCreating ? "Create character" : "Save changes"}</button></div>
+      </aside>}
+    </main>
+  </div>;
+}
