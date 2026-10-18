@@ -731,10 +731,15 @@ function sanitiseHtml(html: string) {
     }
 
     const enteringId = editingMessageId === null ? nextMessages[nextMessages.length - 1]?.id : null;
-    if (typeof enteringId === "number") setEnteringMessageId(enteringId);
+    if (typeof enteringId === "number") setEnteringMessageId(null);
     await persistSceneMessages(nextMessages);
     if (typeof enteringId === "number") {
-      window.setTimeout(() => setEnteringMessageId((current) => current === enteringId ? null : current), 900);
+      // Let React mount the message first, then apply the animation class on a later frame.
+      // This reliably restarts the keyframes instead of mounting the element already animated.
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        setEnteringMessageId(enteringId);
+        window.setTimeout(() => setEnteringMessageId((current) => current === enteringId ? null : current), 900);
+      }));
     }
     setDraftHtml("");
     if (editor) editor.innerHTML = "";
@@ -793,7 +798,7 @@ function sanitiseHtml(html: string) {
                     <button type="button" className="folder-expand-button" aria-label={`${isUnfiledScenesCollapsed ? "Expand" : "Collapse"} No category`} aria-expanded={!isUnfiledScenesCollapsed} onClick={() => setIsUnfiledScenesCollapsed((collapsed) => !collapsed)}>{isUnfiledScenesCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}</button>
                     <Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">No category</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small>
                   </div>
-                  {!isUnfiledScenesCollapsed && <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => <div key={scene.id} draggable onDragStart={() => setDraggingSceneId(scene.id)} onDragEnd={() => setDraggingSceneId(null)} onDragOver={(event) => { const dragged = scenes.find((item) => item.id === draggingSceneId); if (dragged && (dragged.folderId ?? null) === (scene.folderId ?? null)) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingSceneId) void reorderScenes(draggingSceneId, scene.id); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
+                  {!isUnfiledScenesCollapsed && <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => <div key={scene.id} draggable onDragStart={() => setDraggingSceneId(scene.id)} onDragEnd={() => setDraggingSceneId(null)} onDragOver={(event) => { const dragged = scenes.find((item) => item.id === draggingSceneId); if (dragged && (dragged.folderId ?? null) === (scene.folderId ?? null)) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingSceneId) void reorderScenes(draggingSceneId, scene.id); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
                 </div>
               </div>
               <div className="scene-creation-actions">
