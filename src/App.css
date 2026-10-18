@@ -1667,3 +1667,80 @@ textarea:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+
+/* ========================================
+   BRD — Soft pop-up motion
+   ======================================== */
+
+@keyframes brd-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.94);
+  }
+  68% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.012);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes brd-modal-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.965);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.008);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes brd-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Small contextual menus and popovers share one gentle, springy entrance. */
+.scene-options-popover,
+.message-actions-popover,
+.portrait-popover,
+.colour-picker {
+  transform-origin: top right;
+  animation: brd-pop-in 210ms cubic-bezier(0.2, 0.85, 0.25, 1.12) both;
+  will-change: opacity, transform;
+}
+
+/* Confirmation and preview overlays ease in without making the whole UI jump. */
+.clean-confirmation-backdrop,
+.avatar-preview-backdrop {
+  animation: brd-backdrop-in 150ms ease-out both;
+}
+
+.clean-confirmation-dialog,
+.avatar-preview-card-inner {
+  transform-origin: center;
+  animation: brd-modal-in 260ms cubic-bezier(0.2, 0.85, 0.25, 1.08) both;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-options-popover,
+  .message-actions-popover,
+  .portrait-popover,
+  .colour-picker,
+  .clean-confirmation-backdrop,
+  .avatar-preview-backdrop,
+  .clean-confirmation-dialog,
+  .avatar-preview-card-inner {
+    animation: none;
+    will-change: auto;
+  }
+}
+
