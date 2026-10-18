@@ -113,7 +113,7 @@ export default function CharactersPage({ onClose }: Props) {
           <div className="portrait-framing-controls">
             <label className="profile-framing-control">Horizontal <span>{draft.portraitPositionX}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionX} onChange={(event) => setDraft({ ...draft, portraitPositionX: Number(event.target.value) })} /></label>
             <label className="profile-framing-control">Vertical <span>{draft.portraitPositionY}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionY} onChange={(event) => setDraft({ ...draft, portraitPositionY: Number(event.target.value) })} /></label>
-            <label className="profile-framing-control">Zoom <span>{draft.portraitZoom}%</span><input type="range" min="50" max="200" step="1" value={draft.portraitZoom} onChange={(event) => setDraft({ ...draft, portraitZoom: Number(event.target.value) })} /></label>
+            <label className="profile-framing-control">Zoom <span>{draft.portraitZoom}%</span><input type="range" min="25" max="300" step="1" value={draft.portraitZoom} onChange={(event) => setDraft({ ...draft, portraitZoom: Number(event.target.value) })} /></label>
           </div>
           <div className="portrait-adjust-actions"><button type="button" className="library-primary" onClick={() => setPortraitAdjustOpen(false)}>Done</button></div>
         </section>
