@@ -149,9 +149,13 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
   const roleplay = isRecord(saved.roleplay) ? saved.roleplay : {};
 
   const defaults = DEFAULT_PREFERENCES;
+  const legacyScaleMap: Record<number, number> = { 90: 100, 100: 110, 110: 125, 125: 125, 150: 150 };
+  const normalizedUiScale = saved.schemaVersion === 2
+    ? appearance.uiScale
+    : legacyScaleMap[Number(appearance.uiScale)] ?? appearance.uiScale;
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
 
     appearance: {
       theme: validOr(
@@ -166,7 +170,7 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
         defaults.appearance.accentColor,
       ),
      uiScale: validOr(
-  appearance.uiScale,
+  normalizedUiScale,
   (value): value is AppPreferences["appearance"]["uiScale"] =>
     typeof value === "number" &&
     [80, 90, 100, 110, 125, 150].includes(value),
