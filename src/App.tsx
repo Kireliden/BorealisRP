@@ -168,6 +168,7 @@ function sanitiseHtml(html: string) {
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
+  const [cleanConfirmationStep, setCleanConfirmationStep] = useState<1 | 2 | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
@@ -460,13 +461,19 @@ function sanitiseHtml(html: string) {
     await persistSceneMessages(nextMessages);
   }
 
-  async function cleanConversation() {
-    if (!activeWorkspace || !activeSceneId || workspaceLoading || !activeScene) return;
+  function requestCleanConversation() {
+    if (!activeWorkspace || !activeSceneId || workspaceLoading || !activeScene || !messages.length) return;
     setIsSceneOptionsOpen(false);
-    const firstConfirmation = window.confirm(`Clean the conversation in “${activeScene.name}”? This will permanently delete all messages in this scene, but the scene itself will remain.`);
-    if (!firstConfirmation) return;
-    const secondConfirmation = window.confirm("Final confirmation: permanently delete every message in this scene? This cannot be undone.");
-    if (!secondConfirmation) return;
+    setCleanConfirmationStep(1);
+  }
+
+  async function confirmCleanConversation() {
+    if (cleanConfirmationStep === 1) {
+      setCleanConfirmationStep(2);
+      return;
+    }
+    if (cleanConfirmationStep !== 2 || !activeWorkspace || !activeSceneId || workspaceLoading || !activeScene) return;
+    setCleanConfirmationStep(null);
     setOpenMessageActionsId(null);
     cancelEditingMessage();
     setHasNewMessages(false);
@@ -627,7 +634,7 @@ function sanitiseHtml(html: string) {
         </aside>
 
         <section className="main-panel">
-          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={() => void cleanConversation()}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
+          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
           <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button></div></div>
           <div className="demo-notice"><span className="notice-icon">i</span><span><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span></div>
 
@@ -805,6 +812,20 @@ function sanitiseHtml(html: string) {
           </footer>
         </section>
             </div>
+      {cleanConfirmationStep !== null && (
+        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCleanConfirmationStep(null); }}>
+          <section className="clean-confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="clean-confirmation-title" aria-describedby="clean-confirmation-description">
+            <div className="clean-confirmation-icon"><Broom size={21} /></div>
+            <span className="clean-confirmation-eyebrow">SCENE MAINTENANCE · {cleanConfirmationStep === 1 ? "STEP 1 OF 2" : "STEP 2 OF 2"}</span>
+            <h2 id="clean-confirmation-title">{cleanConfirmationStep === 1 ? "Clean this conversation?" : "Are you absolutely sure?"}</h2>
+            <p id="clean-confirmation-description">{cleanConfirmationStep === 1 ? `All messages in “${activeScene?.name ?? "this scene"}” will be removed. The scene and all other scenes will remain.` : "This permanently deletes every message in this scene. This action cannot be undone."}</p>
+            <div className="clean-confirmation-actions">
+              <button type="button" className="clean-cancel-button" onClick={() => setCleanConfirmationStep(null)}>Cancel</button>
+              <button type="button" className="clean-continue-button" onClick={() => void confirmCleanConversation()}>{cleanConfirmationStep === 1 ? "Continue" : "Yes, clean conversation"}</button>
+            </div>
+          </section>
+        </div>
+      )}
       {showAvatarPreview && (
         <div
           className="avatar-preview-backdrop"
