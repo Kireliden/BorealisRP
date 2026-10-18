@@ -16,7 +16,10 @@ const emptyDraft: CharacterDraft = {
   initials: "",
   accent: "lavender",
   portraitResourceId: null,
-  portraitFit: "cover",
+  portraitFit: "contain",
+  portraitPositionX: 50,
+  portraitPositionY: 50,
+  portraitZoom: 100,
   tags: [],
 };
 
@@ -47,7 +50,7 @@ export default function CharactersPage({ onClose }: Props) {
   function persist(next: CharacterRecord[]) { setCharacters(next); saveCharacters(next); }
   function openCharacter(character: CharacterRecord) {
     setSelectedId(character.id);
-    setDraft({ name: character.name, subtitle: character.subtitle, description: character.description, initials: character.initials, accent: character.accent, portraitResourceId: character.portraitResourceId, portraitFit: character.portraitFit ?? "cover", tags: character.tags });
+    setDraft({ name: character.name, subtitle: character.subtitle, description: character.description, initials: character.initials, accent: character.accent, portraitResourceId: character.portraitResourceId, portraitFit: character.portraitFit ?? "contain", portraitPositionX: character.portraitPositionX ?? 50, portraitPositionY: character.portraitPositionY ?? 50, portraitZoom: character.portraitZoom ?? 100, tags: character.tags });
     setIsCreating(false);
   }
   function startCreate() { setSelectedId(null); setDraft(emptyDraft); setTagDraft(""); setIsCreating(true); }
@@ -87,13 +90,13 @@ export default function CharactersPage({ onClose }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
           <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card accent-${character.accent} ${selectedId === character.id ? "is-selected" : ""}`} onClick={() => openCharacter(character)}>
-            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "cover"} /><small>BRD · CHARACTER FILE</small></div>
+            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "contain"} positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} /><small>BRD · CHARACTER FILE</small></div>
             <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
       </section>
       {(selected || isCreating) && <aside className="character-editor">
         <div className="character-editor-top"><span>{isCreating ? "NEW CHARACTER" : "CHARACTER PROFILE"}</span><button type="button" onClick={() => { setSelectedId(null); setIsCreating(false); }} aria-label="Close editor"><X size={16} /></button></div>
-        <button type="button" className={`character-editor-portrait accent-${draft.accent}`} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} aria-label="Adjust portrait image" title={draft.portraitResourceId ? "Click to adjust portrait image" : "Choose a portrait image first"}><CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] : null} alt={draft.name} fit={draft.portraitFit} /><small>{draft.portraitResourceId ? "CLICK TO ADJUST" : "PORTRAIT PREVIEW"}</small></button>
+        <button type="button" className={`character-editor-portrait accent-${draft.accent}`} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} aria-label="Adjust portrait image" title={draft.portraitResourceId ? "Click to adjust portrait image" : "Choose a portrait image first"}><CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] : null} alt={draft.name} fit={draft.portraitFit} positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} /><small>{draft.portraitResourceId ? "CLICK TO ADJUST" : "PORTRAIT PREVIEW"}</small></button>
         <label className="character-field"><span>Character name *</span><input autoFocus value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, initials: draft.initials || event.target.value.slice(0, 2).toUpperCase() })} placeholder="e.g. Keira" /><small className="character-field-hint">“You” is reserved for your personal profile.</small></label>
         <label className="character-field"><span>Subtitle</span><input value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} placeholder="Story · Role" /></label>
         <label className="character-field"><span>Initials</span><input maxLength={3} value={draft.initials} onChange={(event) => setDraft({ ...draft, initials: event.target.value.toUpperCase() })} placeholder="KR" /></label>
@@ -105,11 +108,12 @@ export default function CharactersPage({ onClose }: Props) {
       </aside>}
       {portraitAdjustOpen && draft.portraitResourceId && <div className="portrait-adjust-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPortraitAdjustOpen(false); }}>
         <section className="portrait-adjust-modal" role="dialog" aria-modal="true" aria-labelledby="portrait-adjust-title">
-          <div className="portrait-adjust-heading"><div><span>CHARACTER PORTRAIT</span><h2 id="portrait-adjust-title">Adjust image</h2><p>Choose how the image fits its frame. Your original file stays untouched.</p></div><button type="button" onClick={() => setPortraitAdjustOpen(false)} aria-label="Close portrait adjustment"><X size={18} /></button></div>
-          <div className={`portrait-adjust-preview accent-${draft.accent}`}><CharacterPortraitArt initials={draft.initials || "✦"} imageSrc={portraitUrls[draft.portraitResourceId] ?? null} alt={draft.name} fit={draft.portraitFit} /></div>
-          <div className="portrait-fit-options">
-            <button type="button" className={draft.portraitFit === "cover" ? "is-active" : ""} onClick={() => setDraft({ ...draft, portraitFit: "cover" })}><strong>Fill frame</strong><span>Uses the full frame; edges may be cropped.</span></button>
-            <button type="button" className={draft.portraitFit === "contain" ? "is-active" : ""} onClick={() => setDraft({ ...draft, portraitFit: "contain" })}><strong>Show entire image</strong><span>Keeps the whole image visible, with space around it if needed.</span></button>
+          <div className="portrait-adjust-heading"><div><span>CHARACTER PORTRAIT</span><h2 id="portrait-adjust-title">Adjust image</h2><p>Use the sliders to position and zoom the image. Your original file stays untouched.</p></div><button type="button" onClick={() => setPortraitAdjustOpen(false)} aria-label="Close portrait adjustment"><X size={18} /></button></div>
+          <div className={`portrait-adjust-preview accent-${draft.accent}`}><CharacterPortraitArt initials={draft.initials || "✦"} imageSrc={portraitUrls[draft.portraitResourceId] ?? null} alt={draft.name} fit={draft.portraitFit} positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} /></div>
+          <div className="portrait-framing-controls">
+            <label className="profile-framing-control">Horizontal <span>{draft.portraitPositionX}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionX} onChange={(event) => setDraft({ ...draft, portraitPositionX: Number(event.target.value) })} /></label>
+            <label className="profile-framing-control">Vertical <span>{draft.portraitPositionY}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionY} onChange={(event) => setDraft({ ...draft, portraitPositionY: Number(event.target.value) })} /></label>
+            <label className="profile-framing-control">Zoom <span>{draft.portraitZoom}%</span><input type="range" min="50" max="200" step="1" value={draft.portraitZoom} onChange={(event) => setDraft({ ...draft, portraitZoom: Number(event.target.value) })} /></label>
           </div>
           <div className="portrait-adjust-actions"><button type="button" className="library-primary" onClick={() => setPortraitAdjustOpen(false)}>Done</button></div>
         </section>
