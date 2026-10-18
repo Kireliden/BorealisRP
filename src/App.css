@@ -1787,16 +1787,6 @@ textarea:focus-visible {
     transform: translate3d(0, 22px, 0);
     filter: blur(2px);
   }
-  58% {
-    opacity: 1;
-    transform: translate3d(0, 3px, 0);
-    filter: blur(0);
-  }
-  82% {
-    opacity: 1;
-    transform: translate3d(0, -0.5px, 0);
-    filter: none;
-  }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -2215,3 +2205,15 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 .scene-creation-actions {
   margin-top: 17px;
 }
+
+
+/* Roleplay Space category hierarchy and drop targets. */
+.category-group { min-width: 0; border-radius: 8px; }
+.category-row { display: flex; align-items: center; min-height: 32px; gap: 3px; border-radius: 7px; color: var(--ctp-subtext1); }
+.category-row:hover { background: var(--control-hover); }
+.category-row .folder-select-button { flex: 1 1 auto; }
+.category-children { margin-left: 13px; padding-left: 5px; border-left: 1px solid var(--border); }
+.category-add-folder { display: inline-flex; align-items: center; gap: 6px; margin: 3px 0 6px 5px; padding: 5px 7px; border: 0; border-radius: 6px; background: transparent; color: var(--ctp-overlay1); font: inherit; font-size: 10px; cursor: pointer; }
+.category-add-folder:hover { color: var(--accent); background: var(--control-hover); }
+.category-group[draggable="true"], .folder-row[draggable="true"] { cursor: grab; }
+.category-group:has(.folder-group:hover), .folder-group[draggable="true"]:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
