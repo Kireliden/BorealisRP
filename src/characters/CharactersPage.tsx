@@ -16,6 +16,7 @@ const emptyDraft: CharacterDraft = {
   initials: "",
   accent: "lavender",
   portraitResourceId: null,
+  portraitFit: "cover",
   tags: [],
 };
 
@@ -28,6 +29,7 @@ export default function CharactersPage({ onClose }: Props) {
   const [tagDraft, setTagDraft] = useState("");
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
   const [isCreating, setIsCreating] = useState(false);
+  const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
   useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +47,7 @@ export default function CharactersPage({ onClose }: Props) {
   function persist(next: CharacterRecord[]) { setCharacters(next); saveCharacters(next); }
   function openCharacter(character: CharacterRecord) {
     setSelectedId(character.id);
-    setDraft({ name: character.name, subtitle: character.subtitle, description: character.description, initials: character.initials, accent: character.accent, portraitResourceId: character.portraitResourceId, tags: character.tags });
+    setDraft({ name: character.name, subtitle: character.subtitle, description: character.description, initials: character.initials, accent: character.accent, portraitResourceId: character.portraitResourceId, portraitFit: character.portraitFit ?? "cover", tags: character.tags });
     setIsCreating(false);
   }
   function startCreate() { setSelectedId(null); setDraft(emptyDraft); setTagDraft(""); setIsCreating(true); }
@@ -85,13 +87,13 @@ export default function CharactersPage({ onClose }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
           <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card accent-${character.accent} ${selectedId === character.id ? "is-selected" : ""}`} onClick={() => openCharacter(character)}>
-            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} /><small>BRD · CHARACTER FILE</small></div>
+            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "cover"} /><small>BRD · CHARACTER FILE</small></div>
             <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
       </section>
       {(selected || isCreating) && <aside className="character-editor">
         <div className="character-editor-top"><span>{isCreating ? "NEW CHARACTER" : "CHARACTER PROFILE"}</span><button type="button" onClick={() => { setSelectedId(null); setIsCreating(false); }} aria-label="Close editor"><X size={16} /></button></div>
-        <div className={`character-editor-portrait accent-${draft.accent}`}><CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] : null} alt={draft.name} /><small>PORTRAIT PREVIEW</small></div>
+        <button type="button" className={`character-editor-portrait accent-${draft.accent}`} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} aria-label="Adjust portrait image" title={draft.portraitResourceId ? "Click to adjust portrait image" : "Choose a portrait image first"}><CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] : null} alt={draft.name} fit={draft.portraitFit} /><small>{draft.portraitResourceId ? "CLICK TO ADJUST" : "PORTRAIT PREVIEW"}</small></button>
         <label className="character-field"><span>Character name *</span><input autoFocus value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, initials: draft.initials || event.target.value.slice(0, 2).toUpperCase() })} placeholder="e.g. Keira" /><small className="character-field-hint">“You” is reserved for your personal profile.</small></label>
         <label className="character-field"><span>Subtitle</span><input value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} placeholder="Story · Role" /></label>
         <label className="character-field"><span>Initials</span><input maxLength={3} value={draft.initials} onChange={(event) => setDraft({ ...draft, initials: event.target.value.toUpperCase() })} placeholder="KR" /></label>
