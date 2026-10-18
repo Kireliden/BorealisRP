@@ -128,6 +128,17 @@ function readCharacterDisplayDefaults(
   };
 }
 
+function normalizeCharacterAvatarPaths(saved: unknown): Record<string, string | null> {
+  if (!isRecord(saved)) return {};
+  const paths: Record<string, string | null> = {};
+  for (const [name, path] of Object.entries(saved)) {
+    if (name.length <= 80 && (path === null || (isString(path) && path.length <= 1024))) {
+      paths[name] = path as string | null;
+    }
+  }
+  return paths;
+}
+
 function normalizePreferences(saved: UnknownRecord): AppPreferences {
   const appearance = isRecord(saved.appearance)
     ? saved.appearance
@@ -193,6 +204,34 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
           (isString(value) && value.length <= 200),
         defaults.profile.avatarAssetId,
       ),
+      avatarAssetPath: validOr(
+        profile.avatarAssetPath,
+        (value): value is string | null =>
+          value === null || (isString(value) && value.length <= 1024),
+        defaults.profile.avatarAssetPath,
+      ),
+      bannerAssetPath: validOr(
+        profile.bannerAssetPath,
+        (value): value is string | null =>
+          value === null || (isString(value) && value.length <= 1024),
+        defaults.profile.bannerAssetPath,
+      ),
+      title: validOr(
+        profile.title,
+        (value): value is string => isString(value) && value.length <= 80,
+        defaults.profile.title,
+      ),
+      motto: validOr(
+        profile.motto,
+        (value): value is string => isString(value) && value.length <= 160,
+        defaults.profile.motto,
+      ),
+      frameStyle: validOr(
+        profile.frameStyle,
+        (value): value is AppPreferences["profile"]["frameStyle"] =>
+          isOneOf(value, ["none", "lavender", "ornate"]),
+        defaults.profile.frameStyle,
+      ),
       description: validOr(
         profile.description,
         (value): value is string =>
@@ -200,6 +239,8 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
         defaults.profile.description,
       ),
     },
+
+    characterAvatarPaths: normalizeCharacterAvatarPaths(saved.characterAvatarPaths),
 
     editor: {
       fontSize: validOr(
