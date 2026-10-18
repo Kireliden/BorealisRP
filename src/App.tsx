@@ -11,6 +11,8 @@ import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import avatarPlaceholder from "./assets/Avatar_placeholder.png";
+import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
+import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 
 const appWindow = getCurrentWindow();
 
@@ -209,6 +211,8 @@ function sanitiseHtml(html: string) {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
+  const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
 
 
   const character = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
@@ -374,8 +378,8 @@ function sanitiseHtml(html: string) {
 
       <div className="app-content">
         <aside className="sidebar">
-          <div className="brand"><div className="brand-mark">✦</div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" title="Workspace menu">⋯</button></div>
-          <button className="workspace-button"><span className="workspace-dot" /><span>My workspace</span><span className="chevron">⌄</span></button>
+          <div className="brand"><div className="brand-mark">✦</div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
+          <button className="workspace-button" type="button" onClick={() => setIsWorkspaceManagerOpen(true)} aria-label="Manage workspaces"><span className="workspace-dot" /><span className="workspace-button-name">{activeWorkspace?.manifest.name ?? "Choose workspace"}</span><span className="chevron">⌄</span></button>
           <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className="nav-item"><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item"><span className="nav-icon">♧</span>Characters</button><button className="nav-item"><span className="nav-icon">▧</span>Resources</button></div>
           <div className="sidebar-section scenes-section"><div className="section-heading"><span>YOUR PROJECTS</span><button className="tiny-button" title="Add project">＋</button></div><div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>Neon Requiem</span></div>
             <div className="scene-list">{scenes.map((scene) => <button key={scene.name} className={`scene-item ${activeScene === scene.name ? "selected" : ""}`} onClick={() => setActiveScene(scene.name)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.detail}</span></span></button>)}</div>
@@ -389,7 +393,7 @@ function sanitiseHtml(html: string) {
 
   <div className="profile-copy">
     <span className="profile-name">Your profile</span>
-    <span className="profile-status">Local workspace</span>
+    <span className="profile-status">{activeWorkspace ? "Workspace selected" : "No workspace selected"}</span>
   </div>
 
   <button
