@@ -15,6 +15,7 @@ import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene } from "./workspace/workspaceContent";
+import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath } from "./workspace/workspaceStorage";
 
 const appWindow = getCurrentWindow();
 
@@ -179,9 +180,52 @@ function sanitiseHtml(html: string) {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
+  const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
+  const workspaceSelectionMadeRef = useRef(false);
 
   const character = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
   const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? null;
+
+  // Restore the last active workspace once, before persisting later selections.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreLastWorkspace() {
+      let savedPath: string | null = null;
+      try {
+        savedPath = await getLastWorkspacePath();
+        if (savedPath) {
+          const workspace = await inspectWorkspace(savedPath);
+          if (!cancelled && !workspaceSelectionMadeRef.current) {
+            setActiveWorkspace(workspace);
+          }
+        }
+      } catch (reason) {
+        if (savedPath) {
+          try { await clearLastWorkspacePath(); } catch { /* Best effort: allow manual selection. */ }
+          if (!cancelled && !workspaceSelectionMadeRef.current) {
+            setWorkspaceError("Your last workspace could not be opened. Please choose a workspace or create a new one.");
+            setIsWorkspaceManagerOpen(true);
+          }
+        }
+      } finally {
+        if (!cancelled) setWorkspaceRestoreComplete(true);
+      }
+    }
+
+    void restoreLastWorkspace();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Store the active path only after restoration has finished, so the initial
+  // empty state cannot overwrite the path we're trying to restore.
+  useEffect(() => {
+    if (!workspaceRestoreComplete) return;
+    if (!activeWorkspace) return;
+    void rememberLastWorkspacePath(activeWorkspace.path).catch((reason: unknown) => {
+      console.error("Could not remember the active workspace:", reason);
+    });
+  }, [activeWorkspace?.path, workspaceRestoreComplete]);
 
   useEffect(() => {
     let cancelled = false;
@@ -423,7 +467,7 @@ function sanitiseHtml(html: string) {
       <div className="app-content">
         <aside className="sidebar">
           <div className="brand"><div className="brand-mark">✦</div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
-          <WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => setActiveWorkspace(workspace)} onAddNew={() => setIsWorkspaceManagerOpen(true)} />
+          <WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} />
           <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className="nav-item"><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item"><span className="nav-icon">♧</span>Characters</button><button className="nav-item"><span className="nav-icon">▧</span>Resources</button></div>
           <div className="sidebar-section scenes-section"><div className="section-heading"><span>YOUR PROJECTS</span><button className="tiny-button" title="Add project">＋</button></div><div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>{activeWorkspace?.manifest.name ?? "Your story"}</span></div>
             <div className="scene-list">{scenes.map((scene) => <button key={scene.id} className={`scene-item ${activeSceneId === scene.id ? "selected" : ""}`} onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button>)}</div>
@@ -705,7 +749,7 @@ function sanitiseHtml(html: string) {
         <WorkspaceManagerModal
           onClose={() => setIsWorkspaceManagerOpen(false)}
           activeWorkspace={activeWorkspace}
-          onSelect={(workspace: WorkspaceInfo) => setActiveWorkspace(workspace)}
+          onSelect={(workspace: WorkspaceInfo) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
         />
       )}
     </main>
