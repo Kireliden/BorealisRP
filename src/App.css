@@ -2495,3 +2495,12 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
   left: -14px;
 }
 
+
+
+/* Global library navigation */
+.app-shell{position:relative}
+.workspace-switcher-row{display:flex;align-items:stretch;gap:6px;margin-bottom:8px}
+.workspace-switcher-slot{flex:1;min-width:0}
+.workspace-switcher-slot>*{width:100%;min-width:0}
+.workspace-search-button{display:grid;flex:0 0 38px;width:38px;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--muted);transition:color .15s,border-color .15s,background .15s}
+.workspace-search-button:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
