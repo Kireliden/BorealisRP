@@ -59,7 +59,7 @@
 .brd-popup,
 .brd-menu,
 .brd-popover {
-  animation: brd-menu-enter 190ms cubic-bezier(0.2, 0.8, 0.25, 1.08) both;
+  animation: brd-menu-enter 230ms cubic-bezier(0.2, 0.8, 0.25, 1.08) both;
   will-change: auto;
 }
 
