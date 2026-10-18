@@ -11,13 +11,13 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Plus, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
-import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder } from "./workspace/workspaceContent";
+import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder, type WorkspaceCategory } from "./workspace/workspaceContent";
 import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath, renameWorkspace } from "./workspace/workspaceStorage";
 import "./popup-motion.css";
 
@@ -163,6 +163,12 @@ function sanitiseHtml(html: string) {
 }function App() {
   const [scenes, setScenes] = useState<WorkspaceScene[]>([]);
   const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
+  const [categories, setCategories] = useState<WorkspaceCategory[]>([]);
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [categoryNameDraft, setCategoryNameDraft] = useState("");
+  const [draggingNode, setDraggingNode] = useState<{ type: "scene" | "folder" | "category"; id: string } | null>(null);
   const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
   const [isWorkspaceContentsCollapsed, setIsWorkspaceContentsCollapsed] = useState(false);
   const [isUnfiledScenesCollapsed, setIsUnfiledScenesCollapsed] = useState(false);
@@ -268,6 +274,9 @@ function sanitiseHtml(html: string) {
     if (!activeWorkspace) {
       setScenes([]);
       setFolders([]);
+      setCategories([]);
+      setExpandedCategoryIds([]);
+      setActiveCategoryId(null);
       setExpandedFolderIds([]);
       setActiveFolderId(null);
       setActiveSceneId(null);
@@ -279,6 +288,9 @@ function sanitiseHtml(html: string) {
     setWorkspaceLoading(true);
     setScenes([]);
     setFolders([]);
+    setCategories([]);
+    setExpandedCategoryIds([]);
+    setActiveCategoryId(null);
     setExpandedFolderIds([]);
     setActiveFolderId(null);
     setActiveSceneId(null);
@@ -290,6 +302,9 @@ function sanitiseHtml(html: string) {
         setScenes(validScenes);
         const validFolders = Array.isArray(content.folders) ? content.folders : [];
         setFolders(validFolders);
+        const validCategories = Array.isArray(content.categories) ? content.categories : [];
+        setCategories(validCategories);
+        setExpandedCategoryIds(validCategories.map((category) => category.id));
         setExpandedFolderIds(validFolders.map((folder) => folder.id));
         setActiveFolderId(null);
         setActiveSceneId(validScenes[0]?.id ?? null);
@@ -529,7 +544,7 @@ function sanitiseHtml(html: string) {
     const scene: WorkspaceScene = { id: crypto.randomUUID(), name, icon: "◈", messages: [], folderId: activeFolderId };
     const nextScenes = [...scenes, scene];
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
       setScenes(nextScenes);
       setActiveSceneId(scene.id);
       setMessages([]);
@@ -551,7 +566,7 @@ function sanitiseHtml(html: string) {
     if (!scene || !activeWorkspace || workspaceLoading) return;
     const nextScenes = scenes.filter((item) => item.id !== scene.id);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
       setScenes(nextScenes);
       if (activeSceneId === scene.id) {
         const nextActiveScene = nextScenes[0] ?? null;
@@ -591,7 +606,7 @@ function sanitiseHtml(html: string) {
     }
     const nextFolders = folders.map((item) => item.id === folder.id ? { ...item, name } : item);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
       setFolders(nextFolders);
       setWorkspaceError("");
     } catch (reason) {
@@ -609,7 +624,7 @@ function sanitiseHtml(html: string) {
     }
     const nextScenes = scenes.map((item) => item.id === scene.id ? { ...item, name } : item);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
       setScenes(nextScenes);
       setWorkspaceError("");
     } catch (reason) {
@@ -621,23 +636,87 @@ function sanitiseHtml(html: string) {
     if (!activeWorkspace || workspaceLoading || draggedId === targetId) return;
     const dragged = scenes.find((scene) => scene.id === draggedId);
     const target = scenes.find((scene) => scene.id === targetId);
-    if (!dragged || !target || (dragged.folderId ?? null) !== (target.folderId ?? null)) return;
-    const siblings = scenes.filter((scene) => (scene.folderId ?? null) === (dragged.folderId ?? null));
-    const from = siblings.findIndex((scene) => scene.id === draggedId);
-    const to = siblings.findIndex((scene) => scene.id === targetId);
-    if (from < 0 || to < 0) return;
-    const reordered = [...siblings];
-    const [moved] = reordered.splice(from, 1);
-    reordered.splice(to, 0, moved);
-    let index = 0;
-    const nextScenes = scenes.map((scene) => (scene.folderId ?? null) === (dragged.folderId ?? null) ? reordered[index++] : scene);
+    if (!dragged || !target) return;
+    const targetFolderId = target.folderId ?? null;
+    const siblings = scenes.filter((scene) => scene.id !== draggedId && (scene.folderId ?? null) === targetFolderId);
+    const targetIndex = siblings.findIndex((scene) => scene.id === targetId);
+    siblings.splice(Math.max(0, targetIndex), 0, { ...dragged, folderId: targetFolderId });
+    const nextScenes = scenes.filter((scene) => (scene.folderId ?? null) !== targetFolderId && scene.id !== draggedId).concat(siblings);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
       setScenes(nextScenes);
       setWorkspaceError("");
-    } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+  }
+
+  async function moveSceneToFolder(sceneId: string, folderId: string | null) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const nextScenes = scenes.map((scene) => scene.id === sceneId ? { ...scene, folderId } : scene);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      setScenes(nextScenes);
+      setWorkspaceError("");
+    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+  }
+
+  async function createCategory() {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = categoryNameDraft.trim();
+    if (!name) return;
+    if (categories.some((item) => item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setWorkspaceError("A category with that name already exists in this roleplay space.");
+      return;
     }
+    const category: WorkspaceCategory = { id: crypto.randomUUID(), name };
+    const nextCategories = [...categories, category];
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders, categories: nextCategories });
+      setCategories(nextCategories);
+      setExpandedCategoryIds((current) => [...current, category.id]);
+      setActiveCategoryId(category.id);
+      setCategoryNameDraft("");
+      setIsCreatingCategory(false);
+      setWorkspaceError("");
+    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+  }
+
+  async function renameCategory(category: WorkspaceCategory) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = window.prompt("Rename category", category.name)?.trim();
+    if (!name || name === category.name) return;
+    if (categories.some((item) => item.id !== category.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setWorkspaceError("A category with that name already exists in this roleplay space.");
+      return;
+    }
+    const nextCategories = categories.map((item) => item.id === category.id ? { ...item, name } : item);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders, categories: nextCategories });
+      setCategories(nextCategories);
+      setWorkspaceError("");
+    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+  }
+
+  async function moveFolder(folderId: string, categoryId: string | null) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const nextFolders = folders.map((folder) => folder.id === folderId ? { ...folder, categoryId } : folder);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
+      setFolders(nextFolders);
+      setWorkspaceError("");
+    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+  }
+
+  async function reorderCategories(draggedId: string, targetId: string) {
+    if (!activeWorkspace || workspaceLoading || draggedId === targetId) return;
+    const from = categories.findIndex((item) => item.id === draggedId), to = categories.findIndex((item) => item.id === targetId);
+    if (from < 0 || to < 0) return;
+    const nextCategories = [...categories], [moved] = nextCategories.splice(from, 1);
+    nextCategories.splice(to, 0, moved);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders, categories: nextCategories });
+      setCategories(nextCategories);
+      setWorkspaceError("");
+    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function createFolder() {
@@ -648,10 +727,10 @@ function sanitiseHtml(html: string) {
       setWorkspaceError("A folder with that name already exists in this roleplay space.");
       return;
     }
-    const folder: WorkspaceFolder = { id: crypto.randomUUID(), name };
+    const folder: WorkspaceFolder = { id: crypto.randomUUID(), name, categoryId: activeCategoryId };
     const nextFolders = [...folders, folder];
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
       setFolders(nextFolders);
       setExpandedFolderIds((current) => [...current, folder.id]);
       setActiveFolderId(folder.id);
@@ -669,7 +748,7 @@ function sanitiseHtml(html: string) {
     const nextFolders = folders.filter((item) => item.id !== folder.id);
     const nextScenes = scenes.map((scene) => scene.folderId === folder.id ? { ...scene, folderId: null } : scene);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders: nextFolders });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders: nextFolders, categories });
       setFolders(nextFolders);
       setScenes(nextScenes);
       setExpandedFolderIds((current) => current.filter((id) => id !== folder.id));
@@ -769,7 +848,7 @@ function sanitiseHtml(html: string) {
               <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
                 <span>ROLEPLAY SPACE</span>{isScenesCollapsed ? <ChevronRight size={14} className="scenes-collapse-chevron" /> : <ChevronDown size={14} className="scenes-collapse-chevron" />}
               </button>
-              <button type="button" className="tiny-button roleplay-create-button" title="Create or open a roleplay" aria-label="Create or open a roleplay" onClick={() => setIsWorkspaceManagerOpen(true)}><FolderPlus size={15} /></button>
+              <button type="button" className="tiny-button roleplay-create-button" title="Create or open a roleplay" aria-label="Create or open a roleplay" onClick={() => { setCategoryNameDraft(""); setIsCreatingCategory(true); }}><Plus size={15} /></button>
             </div>
             {!isScenesCollapsed && <>
               <div className="project-label-row">
@@ -779,26 +858,46 @@ function sanitiseHtml(html: string) {
                 <button type="button" className="rename-node-button" title="Rename roleplay" aria-label="Rename roleplay" onClick={() => void renameRoleplay()} disabled={!activeWorkspace || workspaceLoading}><Pencil size={12} /></button>
               </div>
               {!isWorkspaceContentsCollapsed && <>
-              <div className="roleplay-tree">
-                {folders.map((folder) => {
-                  const folderScenes = scenes.filter((scene) => scene.folderId === folder.id);
-                  const expanded = expandedFolderIds.includes(folder.id);
-                  return <div className={`folder-group ${activeFolderId === folder.id ? "folder-active" : ""}`} key={folder.id}>
-                    <div className="folder-row">
-                      <button type="button" className="folder-expand-button" aria-label={`${expanded ? "Collapse" : "Expand"} folder ${folder.name}`} aria-expanded={expanded} onClick={() => setExpandedFolderIds((current) => expanded ? current.filter((id) => id !== folder.id) : [...current, folder.id])}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>
-                      <button type="button" className="folder-select-button" onClick={() => { setActiveFolderId(folder.id); setExpandedFolderIds((current) => current.includes(folder.id) ? current : [...current, folder.id]); }}><Folder size={14} /><span>{folder.name}</span><small>{folderScenes.length}</small></button>
-                      <button type="button" className="rename-node-button folder-rename-button" title={`Rename folder ${folder.name}`} aria-label={`Rename folder ${folder.name}`} onClick={() => void renameFolder(folder)}><Pencil size={12} /></button>
-                      <button type="button" className="folder-delete-button" title={`Delete folder ${folder.name}`} aria-label={`Delete folder ${folder.name}`} onClick={() => setFolderPendingDeletion(folder)}><Trash2 size={13} /></button>
+              <div className="roleplay-tree" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, null); if (draggingNode?.type === "scene") void moveSceneToFolder(draggingNode.id, null); setDraggingNode(null); }}>
+                {categories.map((category) => {
+                  const expanded = expandedCategoryIds.includes(category.id);
+                  const categoryFolders = folders.filter((folder) => folder.categoryId === category.id);
+                  return <div key={category.id} className="category-group" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, category.id); if (draggingNode?.type === "scene") { const firstFolder = categoryFolders[0]; if (firstFolder) void moveSceneToFolder(draggingNode.id, firstFolder.id); else { setActiveCategoryId(category.id); setFolderNameDraft("Scenes"); setIsCreatingFolder(true); } } if (draggingNode?.type === "category") void reorderCategories(draggingNode.id, category.id); setDraggingNode(null); }}>
+                    <div className="category-row" draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "category", id: category.id }); }} onDragEnd={() => setDraggingNode(null)}>
+                      <button type="button" className="folder-expand-button" aria-expanded={expanded} onClick={() => setExpandedCategoryIds((current) => expanded ? current.filter((id) => id !== category.id) : [...current, category.id])}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>
+                      <button type="button" className="folder-select-button" onClick={() => { setActiveCategoryId(category.id); setActiveFolderId(null); }}><Folder size={14} /><span>{category.name}</span><small>{scenes.filter((scene) => categoryFolders.some((folder) => folder.id === scene.folderId)).length}</small></button>
+                      <button type="button" className="rename-node-button" title="Rename category" aria-label="Rename category" onClick={() => void renameCategory(category)}><Pencil size={12} /></button>
+                      <button type="button" className="folder-delete-button" title="Delete category" aria-label="Delete category" onClick={() => { if (window.confirm(`Delete category "${category.name}"? Its folders will return to No category; scenes and messages will be kept.`)) { const nextFolders = folders.map((folder) => folder.categoryId === category.id ? { ...folder, categoryId: null } : folder); const nextCategories = categories.filter((item) => item.id !== category.id); void saveWorkspaceContent(activeWorkspace!.path, { schemaVersion: 1, scenes, folders: nextFolders, categories: nextCategories }).then(() => { setFolders(nextFolders); setCategories(nextCategories); }).catch((reason) => setWorkspaceError(reason instanceof Error ? reason.message : String(reason))); } }}><Trash2 size={13} /></button>
                     </div>
-                    {expanded && <div className="folder-scenes">{folderScenes.map((scene) => <div key={scene.id} draggable onDragStart={() => setDraggingSceneId(scene.id)} onDragEnd={() => setDraggingSceneId(null)} onDragOver={(event) => { const dragged = scenes.find((item) => item.id === draggingSceneId); if (dragged && (dragged.folderId ?? null) === (scene.folderId ?? null)) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingSceneId) void reorderScenes(draggingSceneId, scene.id); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
+                    {expanded && <div className="category-children">
+                      {categoryFolders.map((folder) => {
+                        const folderScenes = scenes.filter((scene) => scene.folderId === folder.id);
+                        const folderExpanded = expandedFolderIds.includes(folder.id);
+                        return <div key={folder.id} className="folder-group" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, category.id); if (draggingNode?.type === "scene") void moveSceneToFolder(draggingNode.id, folder.id); setDraggingNode(null); }}>
+                          <div className="folder-row" draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "folder", id: folder.id }); }} onDragEnd={() => setDraggingNode(null)}>
+                            <button type="button" className="folder-expand-button" onClick={() => setExpandedFolderIds((current) => folderExpanded ? current.filter((id) => id !== folder.id) : [...current, folder.id])}>{folderExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>
+                            <button type="button" className="folder-select-button" onClick={() => { setActiveFolderId(folder.id); setActiveCategoryId(category.id); }}><Folder size={14} /><span>{folder.name}</span><small>{folderScenes.length}</small></button>
+                            <button type="button" className="rename-node-button folder-rename-button" title="Rename folder" aria-label="Rename folder" onClick={() => void renameFolder(folder)}><Pencil size={12} /></button>
+                            <button type="button" className="folder-delete-button" title="Delete folder" aria-label="Delete folder" onClick={() => setFolderPendingDeletion(folder)}><Trash2 size={13} /></button>
+                          </div>
+                          {folderExpanded && <div className="folder-scenes">{folderScenes.map((scene) => (<div key={scene.id} draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "scene", id: scene.id }); setDraggingSceneId(scene.id); }} onDragEnd={() => { setDraggingNode(null); setDraggingSceneId(null); }} onDragOver={(event) => { if (draggingNode?.type === "scene") event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "scene") void reorderScenes(draggingNode.id, scene.id); setDraggingNode(null); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title="Rename scene" aria-label="Rename scene" onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title="Delete scene" aria-label="Delete scene" onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>))}</div>}
+                        </div>;
+                      })}
+                      <button type="button" className="category-add-folder" onClick={() => { setActiveCategoryId(category.id); setActiveFolderId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }}><FolderPlus size={13} /> New folder</button>
+                    </div>}
                   </div>;
                 })}
-                <div className="folder-group unfiled-scenes">
-                  <div className="folder-row" onClick={() => setActiveFolderId(null)}>
-                    <button type="button" className="folder-expand-button" aria-label={`${isUnfiledScenesCollapsed ? "Expand" : "Collapse"} No category`} aria-expanded={!isUnfiledScenesCollapsed} onClick={() => setIsUnfiledScenesCollapsed((collapsed) => !collapsed)}>{isUnfiledScenesCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}</button>
-                    <Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">No category</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small>
-                  </div>
-                  {!isUnfiledScenesCollapsed && <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => <div key={scene.id} draggable onDragStart={() => setDraggingSceneId(scene.id)} onDragEnd={() => setDraggingSceneId(null)} onDragOver={(event) => { const dragged = scenes.find((item) => item.id === draggingSceneId); if (dragged && (dragged.folderId ?? null) === (scene.folderId ?? null)) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingSceneId) void reorderScenes(draggingSceneId, scene.id); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
+                {folders.filter((folder) => !folder.categoryId || !categories.some((category) => category.id === folder.categoryId)).map((folder) => {
+                  const folderScenes = scenes.filter((scene) => scene.folderId === folder.id);
+                  const expanded = expandedFolderIds.includes(folder.id);
+                  return <div key={folder.id} className="folder-group" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, null); if (draggingNode?.type === "scene") void moveSceneToFolder(draggingNode.id, folder.id); setDraggingNode(null); }}>
+                    <div className="folder-row" draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "folder", id: folder.id }); }} onDragEnd={() => setDraggingNode(null)}><button type="button" className="folder-expand-button" onClick={() => setExpandedFolderIds((current) => expanded ? current.filter((id) => id !== folder.id) : [...current, folder.id])}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button><button type="button" className="folder-select-button" onClick={() => { setActiveFolderId(folder.id); setActiveCategoryId(null); }}><Folder size={14} /><span>{folder.name}</span><small>{folderScenes.length}</small></button><button type="button" className="rename-node-button folder-rename-button" title="Rename folder" aria-label="Rename folder" onClick={() => void renameFolder(folder)}><Pencil size={12} /></button></div>
+                    {expanded && <div className="folder-scenes">{folderScenes.map((scene) => (<div key={scene.id} draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "scene", id: scene.id }); setDraggingSceneId(scene.id); }} onDragEnd={() => { setDraggingNode(null); setDraggingSceneId(null); }} onDragOver={(event) => { if (draggingNode?.type === "scene") event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "scene") void reorderScenes(draggingNode.id, scene.id); setDraggingNode(null); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title="Rename scene" aria-label="Rename scene" onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title="Delete scene" aria-label="Delete scene" onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>))}</div>}
+                  </div>;
+                })}
+                <div className="folder-group unfiled-scenes" onDragOver={(event) => { if (draggingNode?.type === "scene") event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "scene") void moveSceneToFolder(draggingNode.id, null); setDraggingNode(null); }}>
+                  <div className="folder-row" onClick={() => setActiveFolderId(null)}><button type="button" className="folder-expand-button" onClick={() => setIsUnfiledScenesCollapsed((collapsed) => !collapsed)}>{isUnfiledScenesCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}</button><Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">No category</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small></div>
+                  {!isUnfiledScenesCollapsed && <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => (<div key={scene.id} draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "scene", id: scene.id }); setDraggingSceneId(scene.id); }} onDragEnd={() => { setDraggingNode(null); setDraggingSceneId(null); }} onDragOver={(event) => { if (draggingNode?.type === "scene") event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "scene") void reorderScenes(draggingNode.id, scene.id); setDraggingNode(null); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title="Rename scene" aria-label="Rename scene" onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title="Delete scene" aria-label="Delete scene" onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>))}</div>}
                 </div>
               </div>
               <div className="scene-creation-actions">
@@ -1050,6 +1149,18 @@ function sanitiseHtml(html: string) {
               <button type="button" className="clean-continue-button" onClick={() => void confirmDeleteFolder()}>Delete folder</button>
             </div>
           </section>
+        </div>
+      )}
+      {isCreatingCategory && (
+        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsCreatingCategory(false); }}>
+          <form className="clean-confirmation-dialog folder-create-dialog" onSubmit={(event) => { event.preventDefault(); void createCategory(); }}>
+            <div className="clean-confirmation-icon"><FolderPlus size={21} /></div>
+            <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · ORGANISATION</span>
+            <h2>Create a category</h2>
+            <p>Categories contain folders, and folders contain scenes. Existing scenes and messages will be preserved.</p>
+            <input autoFocus className="folder-name-input" value={categoryNameDraft} onChange={(event) => setCategoryNameDraft(event.target.value)} placeholder="e.g. Main storyline" aria-label="Category name" maxLength={80} />
+            <div className="clean-confirmation-actions"><button type="button" className="clean-cancel-button" onClick={() => setIsCreatingCategory(false)}>Cancel</button><button type="submit" className="clean-continue-button" disabled={!categoryNameDraft.trim()}>Create category</button></div>
+          </form>
         </div>
       )}
       {isCreatingFolder && (
