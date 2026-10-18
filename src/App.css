@@ -349,7 +349,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 5px 3px;
+  padding: 13px 5px 6px;
   border-top: 1px solid var(--border);
   min-width: 0;
 }
@@ -370,9 +370,9 @@ button:disabled {
 .sidebar-profile-trigger:hover .profile-name { color: var(--ctp-lavender); }
 .sidebar-profile-trigger:focus-visible { outline-offset: 3px; }
 .sidebar-footer .profile-avatar {
-  width: 31.5px;
-  height: 39.375px;
-  flex-basis: 31.5px;
+  width: 42px;
+  height: 52.5px;
+  flex-basis: 42px;
   aspect-ratio: 4 / 5;
   overflow: hidden;
   border-radius: 8px;
@@ -388,6 +388,14 @@ button:disabled {
   width: 100%;
   height: 100%;
   place-items: center;
+}
+.sidebar-footer .profile-avatar.frame-border-lavender {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 10px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.sidebar-footer .profile-avatar.frame-border-ornate {
+  border: 3px double color-mix(in srgb, var(--accent) 78%, white);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 85%, white), 0 0 12px color-mix(in srgb, var(--accent) 42%, transparent), inset 0 0 7px color-mix(in srgb, var(--accent) 32%, transparent);
 }
 
 
@@ -790,6 +798,11 @@ button:disabled {
   color: var(--accent);
 }
 
+.message-meta > strong {
+  font-size: calc(14px * var(--ui-scale, 1));
+  font-weight: 750;
+}
+
 .message-meta time {
   color: var(--ctp-overlay1);
   font-size: 11px;
@@ -798,8 +811,8 @@ button:disabled {
 .role-tag {
   padding: 3px 6px;
   border-radius: 4px;
-  font-size: 9px;
-  font-weight: 650;
+  font-size: calc(11px * var(--ui-scale, 1));
+  font-weight: 700;
 }
 
 .role-dialogue {
@@ -1527,9 +1540,9 @@ textarea:focus-visible {
 
 .message-expression {
   display: inline-block;
-  flex: 0 0 16px;
-  width: 16px;
-  height: 16px;
+  flex: 0 0 calc(20px * var(--ui-scale, 1));
+  width: calc(20px * var(--ui-scale, 1));
+  height: calc(20px * var(--ui-scale, 1));
   background-color: var(--accent);
   mask-repeat: no-repeat;
   mask-position: center;
