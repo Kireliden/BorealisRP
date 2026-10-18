@@ -1925,3 +1925,195 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 @media (prefers-reduced-motion: reduce) {
   .scene-delete-button { transition: none; }
 }
+
+
+/* Roleplay Space tree: a real hierarchy for folders (acts) and scenes. */
+.roleplay-space-heading {
+  padding-bottom: 8px;
+}
+.roleplay-space-heading .scenes-collapse-button {
+  gap: 9px;
+  min-height: 22px;
+}
+.scenes-collapse-chevron {
+  display: inline-block;
+  flex: 0 0 auto;
+  transform: translateY(-1px);
+}
+.project-label-button {
+  width: 100%;
+  margin: 1px 0 4px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.project-label-button:hover {
+  background: var(--control-hover);
+  color: var(--ctp-text);
+}
+.project-label-button .project-label-name {
+  overflow: hidden;
+  flex: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.roleplay-tree {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 2px 4px 7px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+}
+.folder-group {
+  min-width: 0;
+}
+.folder-row {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  gap: 3px;
+  border-radius: 7px;
+  color: var(--ctp-subtext1);
+}
+.folder-row:hover,
+.folder-active > .folder-row {
+  background: var(--control-hover);
+}
+.folder-expand-button,
+.folder-select-button,
+.folder-delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.folder-expand-button {
+  width: 19px;
+  height: 28px;
+  padding: 0;
+  flex: 0 0 19px;
+}
+.folder-select-button {
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 5px 2px;
+  text-align: left;
+  font-size: 11px;
+}
+.folder-select-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.folder-select-button small,
+.unfiled-scenes > .folder-row small {
+  margin-left: auto;
+  padding-right: 6px;
+  color: var(--ctp-overlay0);
+  font-size: 9px;
+}
+.folder-delete-button {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border-radius: 6px;
+  color: var(--ctp-overlay1);
+  opacity: .45;
+}
+.folder-row:hover .folder-delete-button,
+.folder-delete-button:focus-visible {
+  opacity: 1;
+}
+.folder-delete-button:hover {
+  color: var(--ctp-red);
+  background: color-mix(in srgb, var(--ctp-red) 13%, transparent);
+}
+.folder-scenes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 1px 0 4px 17px;
+  padding-left: 5px;
+  border-left: 1px solid var(--border);
+}
+.folder-scenes .scene-item {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.folder-scenes .scene-detail {
+  font-size: 9px;
+}
+.unfiled-scenes {
+  margin-top: 6px;
+}
+.unfiled-scenes > .folder-row {
+  gap: 8px;
+  padding-left: 22px;
+  font-size: 10px;
+  color: var(--ctp-overlay1);
+}
+.unfiled-folder-icon {
+  flex: 0 0 auto;
+}
+.scene-creation-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  flex: 0 0 auto;
+  margin-top: 14px;
+  padding-bottom: 7px;
+}
+.scene-creation-actions .new-scene-button {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+.new-folder-button {
+  display: grid;
+  width: 39px;
+  min-width: 39px;
+  place-items: center;
+  border: 1px dashed var(--control-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ctp-overlay1);
+  cursor: pointer;
+}
+.new-folder-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--control-hover);
+}
+.new-folder-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.folder-name-input {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 18px;
+  padding: 0 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  outline: none;
+  background: var(--control-bg);
+  color: var(--ctp-text);
+  font: inherit;
+}
+.folder-name-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.folder-create-dialog .clean-continue-button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
