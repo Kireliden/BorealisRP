@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ArrowLeft, FileAudio, FileImage, FileVideo, File, Search, Tag, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { deleteResource, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
 import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
@@ -138,7 +138,7 @@ export default function ResourcesPage({ onClose }: Props) {
     if (resource.kind === "image") return <FileImage size={20} />;
     if (resource.kind === "audio") return <FileAudio size={20} />;
     if (resource.kind === "video") return <FileVideo size={20} />;
-    return <File size={20} />;
+    return <FileIcon size={20} />;
   }
 
   return <div className="library-overlay">
