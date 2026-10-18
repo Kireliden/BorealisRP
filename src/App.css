@@ -2503,3 +2503,21 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 .roleplay-tree .scene-row > .tree-drag-handle {
   left: -14px;
 }
+
+
+/* Keep the category counter compact so it doesn't steal space from the label. */
+.roleplay-tree .category-row .category-select-button {
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+
+.roleplay-tree .category-row .category-select-button > span {
+  flex: 1 1 0%;
+  width: 0;
+}
+
+.roleplay-tree .category-row .category-select-button > small {
+  flex: 0 0 auto;
+  margin-left: 3px;
+}
