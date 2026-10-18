@@ -40,3 +40,42 @@
 .profile-framing-control span { color: var(--ctp-lavender); font-variant-numeric: tabular-nums; }
 .profile-framing-control input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
 @media (max-width: 560px) { .profile-framing-group { grid-template-columns: 1fr; } }
+
+
+/* Keep the live crop preview and its controls visible together. */
+.profile-preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  align-items: start;
+  gap: 16px;
+}
+.profile-preview-layout .profile-image-framing {
+  position: sticky;
+  top: 0;
+}
+.profile-preview-layout .profile-framing-group {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+}
+.profile-preview-layout .profile-framing-group > strong {
+  margin-bottom: 1px;
+}
+.profile-preview-layout .profile-framing-control {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+@media (max-width: 900px) {
+  .profile-preview-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .profile-preview-layout .profile-image-framing {
+    position: static;
+  }
+  .profile-preview-layout .profile-framing-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .profile-preview-layout .profile-framing-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
