@@ -18,7 +18,7 @@ const densityOptions: { value: UiDensity; label: string }[] = [
   { value: "spacious", label: "Spacious" },
 ];
 
-const scaleOptions = [90, 100, 110, 125, 150] as const;
+const scaleOptions = [80, 90, 100, 110, 125, 150] as const;
 
 export default function AppearanceSettings() {
   const { preferences, updatePreferences } = usePreferences();
