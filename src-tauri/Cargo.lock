@@ -302,6 +302,8 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-opener",
  "tauri-plugin-store",
+ "time",
+ "uuid",
 ]
 
 [[package]]
