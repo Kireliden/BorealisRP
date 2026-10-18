@@ -656,13 +656,11 @@ function sanitiseHtml(html: string) {
       ];
     }
 
+    const enteringId = editingMessageId === null ? nextMessages[nextMessages.length - 1]?.id : null;
+    if (typeof enteringId === "number") setEnteringMessageId(enteringId);
     await persistSceneMessages(nextMessages);
-    if (editingMessageId === null) {
-      const newMessageId = nextMessages[nextMessages.length - 1]?.id;
-      if (typeof newMessageId === "number") {
-        setEnteringMessageId(newMessageId);
-        window.setTimeout(() => setEnteringMessageId((current) => current === newMessageId ? null : current), 900);
-      }
+    if (typeof enteringId === "number") {
+      window.setTimeout(() => setEnteringMessageId((current) => current === enteringId ? null : current), 900);
     }
     setDraftHtml("");
     if (editor) editor.innerHTML = "";
