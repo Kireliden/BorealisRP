@@ -1708,6 +1708,7 @@ textarea:focus-visible {
 }
 
 /* Small contextual menus and popovers share one gentle, springy entrance. */
+.brand-menu,
 .scene-options-popover,
 .message-actions-popover,
 .portrait-popover,
@@ -1731,6 +1732,7 @@ textarea:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .brand-menu,
   .scene-options-popover,
   .message-actions-popover,
   .portrait-popover,
