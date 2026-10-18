@@ -664,11 +664,34 @@ button:disabled {
 }
 
 .message-avatar {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 70px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  flex: 0 0 56px;
   border: 1px solid transparent;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 15px;
 }
+
+.message-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.message.chat-avatar-small .message-avatar { width: 44px; height: 55px; flex-basis: 44px; }
+.message.chat-avatar-medium .message-avatar { width: 56px; height: 70px; flex-basis: 56px; }
+.message.chat-avatar-large .message-avatar { width: 68px; height: 85px; flex-basis: 68px; }
+.message-no-avatar .message-avatar { display: none; }
+.message.chat-spacing-compact { gap: 10px; }
+.message.chat-spacing-compact .message-body p { margin-top: 5px; line-height: 1.6; }
+.message.chat-spacing-spacious { gap: 18px; }
+.message.chat-spacing-spacious .message-body p { margin-top: 14px; line-height: 2; }
+.conversation.chat-spacing-compact { gap: 14px; }
+.conversation.chat-spacing-comfortable { gap: 24px; }
+.conversation.chat-spacing-spacious { gap: 34px; }
 
 .avatar-mauve {
   border-color: #76618c;
@@ -685,7 +708,7 @@ button:disabled {
 .message-body p {
   margin: 9px 0 0;
   color: var(--ctp-subtext1);
-  font-size: var(--chat-font-size, 12px);
+  font-size: var(--chat-font-size, 16px);
   line-height: 1.9;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -700,13 +723,13 @@ button:disabled {
 
 .message-meta strong {
   color: var(--ctp-text);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .message-meta time {
   color: var(--ctp-overlay1);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .role-tag {
