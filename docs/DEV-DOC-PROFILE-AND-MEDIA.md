@@ -23,3 +23,10 @@ All profile and character imagery uses a fill/crop presentation (`object-fit: co
 ## Composer identity binding (updated)
 
 The composer resolves its current portrait from the selected identity. For **You**, it reads `preferences.profile.avatarAssetPath`, the same saved image used by the profile card and sidebar. This keeps the user portrait consistent everywhere and automatically reflects profile avatar changes without maintaining a duplicate copy. The temporary `characterAvatarPaths` preference is not used by the composer; character portrait editing is reserved for the future character-management workflow. User portrait frame styles apply only to the profile card, not to character portraits.
+
+## Chat display preferences (updated)
+
+The dedicated **Settings → Chat** section controls chat readability and layout. The default message text size is 16 px (configurable from 11–24 px); avatar size supports Small, Medium, and Large while keeping the composer's 4:5 portrait ratio. Compact, Comfortable, and Spacious layouts control message spacing. Users can also hide avatars, role labels, or character expressions independently.
+
+Chat messages can persist an optional `avatarAssetPath`. New messages snapshot the selected identity's portrait path; older messages authored as **You** fall back to the current saved profile portrait, and the built-in Keira demo character continues to use its placeholder artwork. User-authored messages have no expression, including in the expanded holographic avatar preview. These preferences are app-wide defaults and are stored through PreferencesContext; workspace messages retain their own content and optional avatar path.
+
