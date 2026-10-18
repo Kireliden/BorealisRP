@@ -794,7 +794,7 @@ function sanitiseHtml(html: string) {
                   </div>;
                 })}
                 <div className="folder-group unfiled-scenes">
-                  <div className="folder-row">
+                  <div className="folder-row" onClick={() => setActiveFolderId(null)}>
                     <button type="button" className="folder-expand-button" aria-label={`${isUnfiledScenesCollapsed ? "Expand" : "Collapse"} No category`} aria-expanded={!isUnfiledScenesCollapsed} onClick={() => setIsUnfiledScenesCollapsed((collapsed) => !collapsed)}>{isUnfiledScenesCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}</button>
                     <Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">No category</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small>
                   </div>
