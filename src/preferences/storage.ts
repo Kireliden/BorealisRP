@@ -149,13 +149,13 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
   const roleplay = isRecord(saved.roleplay) ? saved.roleplay : {};
 
   const defaults = DEFAULT_PREFERENCES;
-  const legacyScaleMap: Record<number, number> = { 90: 100, 100: 110, 110: 125, 125: 125, 150: 150 };
-  const normalizedUiScale = saved.schemaVersion === 2
+  const legacyScaleMap: Record<number, number> = { 80: 80, 90: 80, 100: 90, 110: 100, 125: 110, 150: 150 };
+  const normalizedUiScale = Number(saved.schemaVersion) >= 3
     ? appearance.uiScale
     : legacyScaleMap[Number(appearance.uiScale)] ?? appearance.uiScale;
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
 
     appearance: {
       theme: validOr(
@@ -237,6 +237,10 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
         (value): value is string => isString(value) && value.length <= 160,
         defaults.profile.motto,
       ),
+      avatarPositionX: validOr(profile.avatarPositionX, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.avatarPositionX),
+      avatarPositionY: validOr(profile.avatarPositionY, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.avatarPositionY),
+      bannerPositionX: validOr(profile.bannerPositionX, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.bannerPositionX),
+      bannerPositionY: validOr(profile.bannerPositionY, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.bannerPositionY),
       frameStyle: validOr(
         profile.frameStyle,
         (value): value is AppPreferences["profile"]["frameStyle"] =>
