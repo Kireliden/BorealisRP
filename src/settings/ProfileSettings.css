@@ -1,0 +1,31 @@
+.profile-settings { display: flex; flex-direction: column; gap: 16px; }
+.profile-settings-intro p { margin: 0; max-width: 650px; color: var(--ctp-subtext1); font-size: 12px; line-height: 1.7; }
+.profile-settings .profile-banner { height: 150px; }
+.profile-settings .profile-identity { gap: 16px; padding-right: 18px; padding-left: 18px; }
+.profile-settings .profile-avatar-column { flex-basis: 124px; margin-top: -68px; }
+.profile-settings .profile-portrait { width: 124px; aspect-ratio: 4 / 5; }
+.profile-settings .profile-details { padding: 4px 18px 18px; }
+.profile-settings-fields { display: flex; flex-direction: column; gap: 12px; }
+.profile-settings .profile-field-label input,
+.profile-settings .profile-field-label textarea,
+.profile-settings .profile-field-label select { box-sizing: border-box; }
+.profile-settings .profile-banner-edit { right: 12px; bottom: 12px; }
+.profile-settings .profile-banner-remove { position: absolute; right: 118px; bottom: 12px; }
+.profile-settings .profile-remove-media { background: transparent; color: var(--muted); }
+.profile-settings-details { gap: 12px; }
+.profile-settings-note { color: var(--muted); font-size: 10px; line-height: 1.6; }
+.profile-settings-error { margin: 0; }
+.profile-settings-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 2px; }
+.profile-settings-status { color: var(--muted); font-size: 11px; }
+.profile-settings-status.is-saved { color: var(--ctp-green); }
+.profile-settings-actions .profile-footer-actions { align-items: center; }
+.profile-settings-actions button:disabled { opacity: .4; cursor: not-allowed; }
+@media (max-width: 700px) {
+  .profile-settings .profile-banner { height: 120px; }
+  .profile-settings .profile-avatar-column { flex-basis: 100px; margin-top: -48px; }
+  .profile-settings .profile-portrait { width: 100px; }
+  .profile-settings .profile-identity { gap: 12px; padding-right: 12px; padding-left: 12px; }
+  .profile-settings .profile-details { padding-right: 12px; padding-left: 12px; }
+  .profile-settings-actions { align-items: flex-start; flex-direction: column; }
+  .profile-settings .profile-media-button { padding: 6px; font-size: 10px; }
+}
