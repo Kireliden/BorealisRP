@@ -38,7 +38,7 @@ function charactersFromLibrary(): Character[] {
   const libraryCharacters = loadCharacters().map((item) => ({
     name: item.name,
     initials: item.initials,
-    avatar: item.accent === "lavender" ? "mauve" : item.accent,
+    avatar: item.accent,
     description: item.subtitle || item.description,
     avatarAssetPath: null,
     portraitResourceId: item.portraitResourceId,
