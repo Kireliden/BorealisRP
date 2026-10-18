@@ -23,9 +23,8 @@ export async function listResources(): Promise<ResourceRecord[]> {
   const db = await openResourceDb();
   return new Promise((resolve, reject) => {
     const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll();
-    request.onsuccess = () => resolve((request.result as ResourceRecord[]).sort((a, b) => b.importedAt.localeCompare(a.importedAt)));
-    request.onerror = () => reject(request.error ?? new Error("Could not read the resource library."));
-    request.addEventListener("loadend", () => db.close(), { once: true });
+    request.onsuccess = () => { db.close(); resolve((request.result as ResourceRecord[]).sort((a, b) => b.importedAt.localeCompare(a.importedAt))); };
+    request.onerror = () => { db.close(); reject(request.error ?? new Error("Could not read the resource library.")); };
   });
 }
 
@@ -45,7 +44,7 @@ export async function importResource(file: File, tags: string[] = []): Promise<R
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     transaction.objectStore(STORE_NAME).put(record);
-    transaction.oncomplete = () => { db.close(); const { blob: _blob, ...metadata } = record; resolve(metadata); };
+    transaction.oncomplete = () => { db.close(); resolve({ id: record.id, name: record.name, fileName: record.fileName, mimeType: record.mimeType, kind: record.kind, size: record.size, tags: record.tags, importedAt: record.importedAt }); };
     transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Could not import resource.")); };
     transaction.onabort = () => { db.close(); reject(transaction.error ?? new Error("Resource import was cancelled.")); };
   });
@@ -57,10 +56,10 @@ export async function getResourceBlob(id: string): Promise<Blob | null> {
     const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(id);
     request.onsuccess = () => {
       const result = request.result as ({ blob?: Blob } & ResourceRecord) | undefined;
+      db.close();
       resolve(result?.blob ?? null);
     };
-    request.onerror = () => reject(request.error ?? new Error("Could not read resource."));
-    request.addEventListener("loadend", () => db.close(), { once: true });
+    request.onerror = () => { db.close(); reject(request.error ?? new Error("Could not read resource.")); };
   });
 }
 
