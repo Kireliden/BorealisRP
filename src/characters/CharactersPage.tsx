@@ -103,6 +103,17 @@ export default function CharactersPage({ onClose }: Props) {
         <div className="character-field"><span>Tags</span><div className="character-tag-input"><input value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag(); } }} placeholder="Add a tag…" /><button type="button" onClick={addTag}><Plus size={14} /></button></div><div className="character-edit-tags">{draft.tags.map((tag) => <button type="button" key={tag} onClick={() => setDraft({ ...draft, tags: draft.tags.filter((item) => item !== tag) })}>{tag}<X size={11} /></button>)}</div></div>
         <div className="character-editor-actions">{selected && <button type="button" className="library-danger" onClick={removeSelected}><Trash2 size={14} /> Delete</button>}<button type="button" className="library-primary" onClick={save} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button></div>
       </aside>}
+      {portraitAdjustOpen && draft.portraitResourceId && <div className="portrait-adjust-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPortraitAdjustOpen(false); }}>
+        <section className="portrait-adjust-modal" role="dialog" aria-modal="true" aria-labelledby="portrait-adjust-title">
+          <div className="portrait-adjust-heading"><div><span>CHARACTER PORTRAIT</span><h2 id="portrait-adjust-title">Adjust image</h2><p>Choose how the image fits its frame. Your original file stays untouched.</p></div><button type="button" onClick={() => setPortraitAdjustOpen(false)} aria-label="Close portrait adjustment"><X size={18} /></button></div>
+          <div className={`portrait-adjust-preview accent-${draft.accent}`}><CharacterPortraitArt initials={draft.initials || "✦"} imageSrc={portraitUrls[draft.portraitResourceId] ?? null} alt={draft.name} fit={draft.portraitFit} /></div>
+          <div className="portrait-fit-options">
+            <button type="button" className={draft.portraitFit === "cover" ? "is-active" : ""} onClick={() => setDraft({ ...draft, portraitFit: "cover" })}><strong>Fill frame</strong><span>Uses the full frame; edges may be cropped.</span></button>
+            <button type="button" className={draft.portraitFit === "contain" ? "is-active" : ""} onClick={() => setDraft({ ...draft, portraitFit: "contain" })}><strong>Show entire image</strong><span>Keeps the whole image visible, with space around it if needed.</span></button>
+          </div>
+          <div className="portrait-adjust-actions"><button type="button" className="library-primary" onClick={() => setPortraitAdjustOpen(false)}>Done</button></div>
+        </section>
+      </div>}
     </main>
   </div>;
 }
