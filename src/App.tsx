@@ -18,6 +18,7 @@ import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import CharactersPage from "./characters/CharactersPage";
 import { loadCharacters } from "./characters/characters.storage";
+import CharacterPortraitArt from "./characters/CharacterPortraitArt";
 import ResourcesPage from "./resources/ResourcesPage";
 import GlobalSearch from "./GlobalSearch";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
@@ -1119,15 +1120,12 @@ function sanitiseHtml(html: string) {
                     title={`View ${character.name}'s avatar`}
                     onClick={() => { setAvatarPreviewCharacter(null); setShowAvatarPreview(true); setShowCharacterPicker(false); setShowExpressions(false); }}
                   >
-                    {character.avatarAssetPath ? <img className="character-portrait-image" src={profileMediaSource(character.avatarAssetPath) ?? undefined} alt="" /> : <span className="character-portrait-initials">{character.initials}</span>}
-                    {selectedCharacter !== "You" && <span
-                      className="character-portrait-expression"
-                      aria-hidden="true"
-                      style={{
-                        maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
-                        WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
-                      }}
-                    />}
+                    <CharacterPortraitArt
+                      initials={character.initials}
+                      imageSrc={character.avatarAssetPath ? profileMediaSource(character.avatarAssetPath) : null}
+                      expressionImage={selectedCharacter !== "You" ? expressions.find((expression) => expression.emoji === selectedExpression)?.image : null}
+                      expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
+                    />
                   </button>
                   <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}>👤</button>
                   {selectedCharacter !== "You" && <button
