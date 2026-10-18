@@ -17,6 +17,7 @@ import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import CharactersPage from "./characters/CharactersPage";
+import { loadCharacters } from "./characters/characters.storage";
 import ResourcesPage from "./resources/ResourcesPage";
 import GlobalSearch from "./GlobalSearch";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
@@ -31,10 +32,16 @@ type Character = { name: string; initials: string; avatar: string; description: 
 type AvatarPreviewCharacter = Character & { expression?: string };
 type Message = WorkspaceMessage;
 
-const characters: Character[] = [
-  { name: "Keira", initials: "KR", avatar: "mauve", description: "Neon Requiem · Main character" },
-  { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" },
-];
+function charactersFromLibrary(): Character[] {
+  const libraryCharacters = loadCharacters().map((item) => ({
+    name: item.name,
+    initials: item.initials,
+    avatar: item.accent === "lavender" ? "mauve" : item.accent,
+    description: item.subtitle || item.description,
+    avatarAssetPath: null,
+  }));
+  return [...libraryCharacters, { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" }];
+}
 
 function markdownSourceFromHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
@@ -259,6 +266,7 @@ function sanitiseHtml(html: string) {
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
   const [cleanConfirmationStep, setCleanConfirmationStep] = useState<1 | 2 | null>(null);
+  const [characters, setCharacters] = useState<Character[]>(charactersFromLibrary);
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
@@ -1431,7 +1439,7 @@ function sanitiseHtml(html: string) {
           onSelect={(workspace: WorkspaceInfo) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
         />
       )}
-      {activeLibraryPage === "characters" && <CharactersPage onClose={() => setActiveLibraryPage(null)} />}
+      {activeLibraryPage === "characters" && <CharactersPage onClose={() => { setActiveLibraryPage(null); const refreshed = charactersFromLibrary(); setCharacters(refreshed); if (!refreshed.some((item) => item.name === selectedCharacter)) setSelectedCharacter(refreshed[0]?.name ?? "You"); }} />}
       {activeLibraryPage === "resources" && <ResourcesPage onClose={() => setActiveLibraryPage(null)} />}
       {isGlobalSearchOpen && <GlobalSearch onClose={() => setIsGlobalSearchOpen(false)} onOpenCharacters={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("characters"); }} onOpenResources={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("resources"); }} />}
     </main>
