@@ -1,7 +1,7 @@
 # Profile card and app-wide media — implementation note
 
 ## Profile identity
-The user profile is app-level and independent of workspaces and roleplay characters. It uses the existing PreferencesContext and is saved to the existing local preferences store. The profile card opens in read-only presentation mode first; the user explicitly enters edit mode and can save or cancel a draft.
+The user profile is app-level and independent of workspaces and roleplay characters. It uses the existing PreferencesContext and is saved to the existing local preferences store. The profile card opens as a standalone floating card with mouse-reactive 3D tilt and a soft holographic highlight. It is read-only; **Edit profile** opens the canonical Settings → Profile editor.
 
 Profile fields: display name (required), title, motto, description, avatar image path, banner image path, and portrait frame style. The portrait uses a fixed 4:5 aspect ratio inside a rounded rectangle. The banner is wide and crops with `object-fit: cover`. The initial card uses an atmospheric BRD gradient if no banner is selected.
 
@@ -11,7 +11,7 @@ The shared `src/profile/profileMedia.ts` helper opens a native file picker and c
 This helper is deliberately reusable for character portrait pickers and future scene/resource media. Character records are not yet implemented; the existing composer can use the same import helper and keep per-character portrait paths in app preferences as an interim bridge.
 
 ## Boundaries
-This is local profile identity only: no accounts, cloud sync, public profiles, or social functionality. Avatar frames are currently visual presets; badge collections and profile typography customization remain follow-up work.
+This is local profile identity only: no accounts, cloud sync, public profiles, or social functionality. Avatar frames are currently visual presets: Minimal, Theme Outline (uses the active theme accent), and Ornate glow (animated, stronger accent-coloured glow). Badge collections and profile typography customization remain follow-up work.
 
 
 ## Profile settings workflow (updated)
