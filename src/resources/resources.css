@@ -6,3 +6,12 @@
 /* Give the selected asset a genuinely useful side preview while preserving the app navigation. */
 .resource-inspector{width:360px;flex-basis:360px}.resource-preview-large{min-height:150px;max-height:460px}.resource-preview-large:has(img),.resource-preview-large:has(video){min-height:320px}.resource-preview-large img,.resource-preview-large video{max-height:440px;object-fit:contain}
 @media(max-width:1000px){.resource-inspector{width:290px;flex-basis:290px}}
+
+
+/* Consistent, colourful resource tags and cleaner library heading */
+.resource-card-tags i{display:inline-flex;align-items:center;padding:4px 8px;border:1px solid color-mix(in srgb,var(--tag-colour,var(--ctp-lavender)) 35%,transparent);border-radius:999px;background:color-mix(in srgb,var(--tag-colour,var(--ctp-lavender)) 12%,var(--surface));color:color-mix(in srgb,var(--tag-colour,var(--ctp-lavender)) 82%,var(--ctp-text));font-weight:600}
+.resource-card-tags i:nth-child(5n+1){--tag-colour:var(--ctp-lavender)}
+.resource-card-tags i:nth-child(5n+2){--tag-colour:var(--ctp-blue)}
+.resource-card-tags i:nth-child(5n+3){--tag-colour:var(--ctp-pink)}
+.resource-card-tags i:nth-child(5n+4){--tag-colour:var(--ctp-teal)}
+.resource-card-tags i:nth-child(5n){--tag-colour:var(--ctp-peach)}
