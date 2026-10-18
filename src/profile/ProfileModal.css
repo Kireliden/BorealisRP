@@ -14,8 +14,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(460px, calc(100vw - 32px));
+  width: min(520px, calc((92vh - 48px) * 1.5), calc(100vw - 32px));
+  min-height: 0;
   max-height: min(850px, 92vh);
+  aspect-ratio: 3 / 2;
   overflow: visible;
   color: var(--ctp-text);
   background: var(--panel-bg);
