@@ -77,7 +77,9 @@ export function PreferencesProvider({
   root.dataset.theme = theme;
   root.dataset.density = density;
   root.dataset.font = interfaceFont;
-  root.style.setProperty("--ui-scale", `${uiScale / 100}`);
+  root.dataset.animations = preferences.accessibility.animationsEnabled ? "on" : "off";
+  const scaleFactors: Record<number, number> = { 80: 0.7, 90: 0.8, 100: 0.9, 110: 1, 125: 1.15, 150: 1.4 };
+  root.style.setProperty("--ui-scale", `${scaleFactors[uiScale] ?? 1}`);
   root.style.setProperty(
   "--chat-font-size",
   `${preferences.appearance.chatFontSize}px`,
@@ -88,6 +90,7 @@ export function PreferencesProvider({
   preferences.appearance.uiScale,
   preferences.appearance.density,
   preferences.appearance.chatFontSize,
+  preferences.accessibility.animationsEnabled,
 ]);
 
   useEffect(() => {
