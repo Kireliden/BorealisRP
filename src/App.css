@@ -721,10 +721,14 @@ button:disabled {
   gap: 9px;
 }
 
-.message-meta strong {
+ .message-meta strong {
   color: var(--ctp-text);
   font-size: 14px;
   font-weight: 700;
+}
+
+.message-meta strong.message-author-user {
+  color: var(--accent);
 }
 
 .message-meta time {
@@ -753,6 +757,7 @@ button:disabled {
   color: var(--ctp-subtext1);
   font-size: var(--chat-font-size, 16px);
   line-height: 1.8;
+  margin-top: 3px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
