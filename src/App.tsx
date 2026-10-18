@@ -889,7 +889,7 @@ function sanitiseHtml(html: string) {
                           {folderExpanded && <div className="folder-scenes">{folderScenes.map((scene) => (<div key={scene.id} draggable onDragStart={(event) => { event.stopPropagation(); event.dataTransfer.setData("text/plain", scene.id); setDraggingNode({ type: "scene", id: scene.id }); setDraggingSceneId(scene.id); }} onDragEnd={() => { setDraggingNode(null); setDraggingSceneId(null); }} onDragOver={(event) => { if (draggingNode?.type === "scene") event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "scene") void reorderScenes(draggingNode.id, scene.id); setDraggingNode(null); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title="Rename scene" aria-label="Rename scene" onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title="Delete scene" aria-label="Delete scene" onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>))}</div>}
                         </div>;
                       })}
-                      <button type="button" className="category-add-folder" onClick={() => { setActiveCategoryId(category.id); setActiveFolderId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }}><FolderPlus size={13} /> New folder</button>
+                      <button type="button" className="category-add-folder" onClick={() => { setActiveCategoryId(category.id); setActiveFolderId(null); setPendingSceneMoveId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }}><FolderPlus size={13} /> New folder</button>
                     </div>}
                   </div>;
                 })}
@@ -1170,7 +1170,7 @@ function sanitiseHtml(html: string) {
         </div>
       )}
       {isCreatingFolder && (
-        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsCreatingFolder(false); }}>
+        <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setIsCreatingFolder(false); setPendingSceneMoveId(null); } }}>
           <form className="clean-confirmation-dialog folder-create-dialog" onSubmit={(event) => { event.preventDefault(); void createFolder(); }}>
             <div className="clean-confirmation-icon"><FolderPlus size={21} /></div>
             <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · ORGANISATION</span>
@@ -1178,7 +1178,7 @@ function sanitiseHtml(html: string) {
             <p>Use folders for acts, arcs, chapters, or any structure that helps organise your roleplay.</p>
             <input autoFocus className="folder-name-input" value={folderNameDraft} onChange={(event) => setFolderNameDraft(event.target.value)} placeholder="e.g. Act I" aria-label="Folder name" maxLength={80} />
             <div className="clean-confirmation-actions">
-              <button type="button" className="clean-cancel-button" onClick={() => setIsCreatingFolder(false)}>Cancel</button>
+              <button type="button" className="clean-cancel-button" onClick={() => { setIsCreatingFolder(false); setPendingSceneMoveId(null); }}>Cancel</button>
               <button type="submit" className="clean-continue-button" disabled={!folderNameDraft.trim()}>Create folder</button>
             </div>
           </form>
