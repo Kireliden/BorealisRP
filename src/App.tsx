@@ -11,7 +11,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy } from "lucide-react";
+import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2 } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -166,6 +166,7 @@ function sanitiseHtml(html: string) {
   const [workspaceError, setWorkspaceError] = useState("");
   const [draftHtml, setDraftHtml] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
@@ -279,6 +280,24 @@ function sanitiseHtml(html: string) {
     const conversation = conversationRef.current;
     if (conversation) conversation.scrollTop = conversation.scrollHeight;
   }, []);
+
+  useEffect(() => {
+    if (openMessageActionsId === null) return;
+    function closeMessageActions(event: PointerEvent) {
+      if (!(event.target as Element | null)?.closest(".message-actions")) {
+        setOpenMessageActionsId(null);
+      }
+    }
+    function closeMessageActionsOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpenMessageActionsId(null);
+    }
+    document.addEventListener("pointerdown", closeMessageActions);
+    window.addEventListener("keydown", closeMessageActionsOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMessageActions);
+      window.removeEventListener("keydown", closeMessageActionsOnEscape);
+    };
+  }, [openMessageActionsId]);
 
   useEffect(() => {
     if (!showCharacterPicker && !showExpressions) return;
@@ -398,6 +417,32 @@ function sanitiseHtml(html: string) {
     if (editorRef.current) editorRef.current.innerHTML = "";
   }
 
+  function canDeleteMessage(message: Message) {
+    if (typeof message.sentAt !== "number") return false;
+    const age = Date.now() - message.sentAt;
+    return age >= 0 && age <= 24 * 60 * 60 * 1000;
+  }
+
+  async function changeMessageRole(message: Message) {
+    const nextMessages = messages.map((item) =>
+      item.id === message.id
+        ? { ...item, role: item.role === "Narration" ? "Dialogue" as const : "Narration" as const }
+        : item,
+    );
+    setOpenMessageActionsId(null);
+    await persistSceneMessages(nextMessages);
+  }
+
+  async function deleteMessage(message: Message) {
+    if (!canDeleteMessage(message)) return;
+    const confirmed = window.confirm("Delete this message? This cannot be undone.");
+    if (!confirmed) return;
+    const nextMessages = messages.filter((item) => item.id !== message.id);
+    setOpenMessageActionsId(null);
+    if (editingMessageId === message.id) cancelEditingMessage();
+    await persistSceneMessages(nextMessages);
+  }
+
   async function persistSceneMessages(nextMessages: Message[]) {
     if (!activeWorkspace || !activeSceneId) return;
     const nextScenes = scenes.map((scene) =>
@@ -471,6 +516,7 @@ function sanitiseHtml(html: string) {
         ...messages,
         {
           id: Date.now(),
+          sentAt: Date.now(),
           author: character.name,
           initials: character.initials,
           role: selectedRole,
@@ -571,7 +617,14 @@ function sanitiseHtml(html: string) {
                           )?.image ?? ""}")`,
                         }}
                       />
-                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}</div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
+                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}</div><div className="message-actions">
+                <button className="message-menu" type="button" title="Message actions" aria-label={`Message actions for ${message.author}`} aria-expanded={openMessageActionsId === message.id} onClick={() => setOpenMessageActionsId((current) => current === message.id ? null : message.id)}><MoreHorizontal size={17} /></button>
+                {openMessageActionsId === message.id && <div className="message-actions-popover" role="menu">
+                  <button type="button" role="menuitem" onClick={() => { setOpenMessageActionsId(null); beginEditingMessage(message); }}><Pencil size={14} /><span>Edit message</span></button>
+                  <button type="button" role="menuitem" onClick={() => void changeMessageRole(message)}><ArrowLeftRight size={14} /><span>Change to {message.role === "Narration" ? "dialogue" : "narration"}</span></button>
+                  <button type="button" role="menuitem" className="message-delete-action" disabled={!canDeleteMessage(message)} title={!canDeleteMessage(message) ? "Messages can only be deleted within 24 hours of sending; older messages without a timestamp cannot be deleted." : "Delete message"} onClick={() => void deleteMessage(message)}><Trash2 size={14} /><span>Delete message</span>{!canDeleteMessage(message) && <small>24h limit</small>}</button>
+                </div>}
+              </div></article>)}
             {hasNewMessages && <button className="scroll-to-latest" type="button" onClick={scrollToLatestMessage}>↓ New messages · Jump to latest</button>}
           </section>
 
