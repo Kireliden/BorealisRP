@@ -383,6 +383,8 @@ button:disabled {
   height: 100%;
   object-fit: cover;
   object-position: var(--profile-avatar-position, 50% 50%);
+  transform: scale(var(--profile-avatar-zoom, 1));
+  transform-origin: var(--profile-avatar-position, 50% 50%);
 }
 .sidebar-footer .profile-avatar span {
   display: grid;
@@ -756,6 +758,10 @@ button:disabled {
   height: 100%;
   object-fit: cover;
   object-position: var(--profile-avatar-position, 50% 50%);
+}
+.message-avatar-profile-image {
+  transform: scale(var(--profile-avatar-zoom, 1));
+  transform-origin: var(--profile-avatar-position, 50% 50%);
 }
 
 .message.chat-avatar-small .message-avatar { width: 44px; height: 55px; flex-basis: 44px; }
