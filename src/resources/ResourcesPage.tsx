@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { deleteResource, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
-import { resourceKindFromFile, type ResourceRecord } from "./resources.types";
+import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
 
 type Props = { onClose: () => void };
 
 export default function ResourcesPage({ onClose }: Props) {
   const [resources, setResources] = useState<ResourceRecord[]>([]);
+  const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [tagDraft, setTagDraft] = useState("");
@@ -19,6 +20,15 @@ export default function ResourcesPage({ onClose }: Props) {
 
   async function refresh() { setResources(await listResources()); }
   useEffect(() => { void refresh().catch((reason) => setError(String(reason))); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const urls: Record<string, string> = {};
+    void Promise.all(resources.filter((item) => item.kind === "image").map(async (item) => {
+      const blob = await getResourceBlob(item.id).catch(() => null);
+      if (blob) urls[item.id] = URL.createObjectURL(blob);
+    })).then(() => { if (!cancelled) setThumbnailUrls(urls); else Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); });
+    return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
+  }, [resources]);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
@@ -73,7 +83,7 @@ export default function ResourcesPage({ onClose }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 10).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
           <div className="resource-grid">{filtered.map((resource) => <button key={resource.id} type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => void openPreview(resource)}>
-            <div className="resource-card-preview">{resource.kind === "image" && previewUrl && selected?.id === resource.id ? <img src={previewUrl} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
+            <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[resource.id] ? <img src={thumbnailUrls[resource.id]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
             <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
           </button>)}</div>}
       </section>
