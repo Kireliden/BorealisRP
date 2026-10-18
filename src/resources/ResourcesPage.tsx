@@ -55,8 +55,9 @@ export default function ResourcesPage({ onClose }: Props) {
     try {
       const droppedFiles = await invoke<NativeDroppedFile[]>("read_dropped_resource_files", { paths });
       for (const dropped of droppedFiles) {
-        const bytes = Uint8Array.from(dropped.bytes);
-        const file = new File([bytes.buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
+        const buffer = new ArrayBuffer(dropped.bytes.length);
+        new Uint8Array(buffer).set(dropped.bytes);
+        const file = new File([buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
         await importResource(file);
       }
       if (droppedFiles.length) await refresh();
