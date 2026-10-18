@@ -15,6 +15,8 @@ export default function ResourcesPage({ onClose }: Props) {
   const [selected, setSelected] = useState<ResourceRecord | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
+  const [bulkTagDraft, setBulkTagDraft] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -58,7 +60,27 @@ export default function ResourcesPage({ onClose }: Props) {
     if (!window.confirm(`Delete “${resource.fileName}” from the global resource library?`)) return;
     await deleteResource(resource.id);
     if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
+    setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
     await refresh();
+  }
+  function toggleResourceSelection(id: string) {
+    setSelectedResourceIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+  async function addTagsToSelected() {
+    const additions = bulkTagDraft.split(",").map((tag) => tag.trim()).filter(Boolean);
+    if (!selectedResourceIds.length || !additions.length) return;
+    setError("");
+    try {
+      for (const id of selectedResourceIds) {
+        const resource = resources.find((item) => item.id === id);
+        if (!resource) continue;
+        const merged = [...resource.tags, ...additions].filter((tag, index, tags) => tags.findIndex((other) => other.toLocaleLowerCase() === tag.toLocaleLowerCase()) === index);
+        await updateResourceTags(id, merged);
+      }
+      setBulkTagDraft("");
+      setSelectedResourceIds([]);
+      await refresh();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   }
   function iconFor(resource: ResourceRecord) {
     if (resource.kind === "image") return <FileImage size={20} />;
@@ -82,11 +104,15 @@ export default function ResourcesPage({ onClose }: Props) {
         {error && <p className="resource-error">{error}</p>}
         <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><select aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></select></div>
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 10).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
+        {selectedResourceIds.length > 0 && <div className="resource-bulk-tools"><div><strong>{selectedResourceIds.length} selected</strong><button type="button" onClick={() => setSelectedResourceIds([])}>Clear selection</button></div><label><Tag size={14} /><input value={bulkTagDraft} onChange={(event) => setBulkTagDraft(event.target.value)} placeholder="Add tags, comma separated" aria-label="Tags to add to selected resources" /></label><button type="button" className="library-primary" onClick={() => void addTagsToSelected()} disabled={!bulkTagDraft.split(",").some((tag) => tag.trim())}>Add tags</button></div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
-          <div className="resource-grid">{filtered.map((resource) => <button key={resource.id} type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => void openPreview(resource)}>
-            <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[resource.id] ? <img src={thumbnailUrls[resource.id]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
-            <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
-          </button>)}</div>}
+          <div className="resource-grid">{filtered.map((resource) => <div key={resource.id} className="resource-card-shell">
+            <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
+            <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => void openPreview(resource)}>
+              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[resource.id] ? <img src={thumbnailUrls[resource.id]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
+              <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
+            </button>
+          </div>)}</div>}
       </section>
       {selected && <aside className="resource-inspector"><div className="character-editor-top"><span>RESOURCE DETAILS</span><button type="button" onClick={() => { setSelected(null); setPreviewUrl(null); }} aria-label="Close resource details"><X size={16} /></button></div>
         <div className="resource-preview-large">{previewUrl && selected.kind === "image" ? <img src={previewUrl} alt={selected.fileName} /> : previewUrl && selected.kind === "audio" ? <audio controls src={previewUrl} /> : previewUrl && selected.kind === "video" ? <video controls src={previewUrl} /> : iconFor(selected)}</div>
