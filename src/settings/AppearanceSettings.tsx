@@ -67,31 +67,7 @@ export default function AppearanceSettings() {
         </select>
       </label>
 
-      <label className="appearance-setting">
-        <span className="appearance-setting-copy">
-          <span className="appearance-setting-label">
-            Chat Text Size
-          </span>
-          <span className="appearance-setting-description">
-            Text size for chat messages.
-          </span>
-        </span>
-        <span className="appearance-number-control">
-          <input
-            type="number"
-            min={10}
-            max={24}
-            value={chatFontSize}
-            onChange={(event) => {
-              const value = Number(event.target.value);
-              if (Number.isFinite(value) && value >= 10 && value <= 24) {
-                updateAppearance({ chatFontSize: value });
-              }
-            }}
-          />
-          <span>px</span>
-        </span>
-      </label>
+
 
       <div className="appearance-section-heading">
         <h4>Interface Scale</h4>
