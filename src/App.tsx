@@ -164,6 +164,7 @@ function sanitiseHtml(html: string) {
   const [scenes, setScenes] = useState<WorkspaceScene[]>([]);
   const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
   const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
+  const [isWorkspaceContentsCollapsed, setIsWorkspaceContentsCollapsed] = useState(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [scenePendingDeletion, setScenePendingDeletion] = useState<WorkspaceScene | null>(null);
@@ -693,9 +694,10 @@ function sanitiseHtml(html: string) {
               </button>
             </div>
             {!isScenesCollapsed && <>
-              <button type="button" className="project-label project-label-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed(true)} disabled={!activeWorkspace}>
-                <ChevronDown size={14} className="project-chevron" /><span className="project-symbol">✦</span><span className="project-label-name">{activeWorkspace?.manifest.name ?? "Choose a roleplay"}</span>
+              <button type="button" className="project-label project-label-button" aria-expanded={!isWorkspaceContentsCollapsed} onClick={() => setIsWorkspaceContentsCollapsed((collapsed) => !collapsed)} disabled={!activeWorkspace}>
+                {isWorkspaceContentsCollapsed ? <ChevronRight size={14} className="project-chevron" /> : <ChevronDown size={14} className="project-chevron" />}<span className="project-symbol">✦</span><span className="project-label-name">{activeWorkspace?.manifest.name ?? "Choose a roleplay"}</span>
               </button>
+              {!isWorkspaceContentsCollapsed && <>
               <div className="roleplay-tree">
                 {folders.map((folder) => {
                   const folderScenes = scenes.filter((scene) => scene.folderId === folder.id);
@@ -718,6 +720,7 @@ function sanitiseHtml(html: string) {
                 <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
                 <button className="new-folder-button" type="button" title="Create folder" aria-label="Create folder" onClick={() => { setFolderNameDraft(""); setIsCreatingFolder(true); }} disabled={!activeWorkspace || workspaceLoading}><FolderPlus size={16} /></button>
               </div>
+              </>}
             </>}
           </div>
           
