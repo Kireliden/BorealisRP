@@ -129,7 +129,6 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
       await rememberAndSelect(workspace);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
-      setRecent((items) => items.filter((item) => item.path !== path));
     } finally {
       setBusy(false);
     }
