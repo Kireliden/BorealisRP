@@ -1,8 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import { loadCharacters, saveCharacters } from "./characters.storage";
 import { makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
 import "./characters.css";
+import CharacterPortraitArt from "./CharacterPortraitArt";
+import { getResourceBlob, listResources } from "../resources/resources.storage";
+import type { ResourceRecord } from "../resources/resources.types";
 
 type Props = { onClose: () => void };
 
@@ -18,11 +21,23 @@ const emptyDraft: CharacterDraft = {
 
 export default function CharactersPage({ onClose }: Props) {
   const [characters, setCharacters] = useState<CharacterRecord[]>(loadCharacters);
+  const [imageResources, setImageResources] = useState<ResourceRecord[]>([]);
+  const [portraitUrls, setPortraitUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [tagDraft, setTagDraft] = useState("");
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
   const [isCreating, setIsCreating] = useState(false);
+  useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const urls: Record<string, string> = {};
+    void Promise.all(imageResources.map(async (resource) => {
+      const blob = await getResourceBlob(resource.id).catch(() => null);
+      if (blob) urls[resource.id] = URL.createObjectURL(blob);
+    })).then(() => { if (cancelled) Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); else setPortraitUrls(urls); });
+    return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
+  }, [imageResources]);
   const selected = characters.find((character) => character.id === selectedId) ?? null;
   const allTags = useMemo(() => [...new Set(characters.flatMap((character) => character.tags))].sort(), [characters]);
   const filtered = characters.filter((character) => [character.name, character.subtitle, character.description, ...character.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
@@ -70,16 +85,17 @@ export default function CharactersPage({ onClose }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
           <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card accent-${character.accent} ${selectedId === character.id ? "is-selected" : ""}`} onClick={() => openCharacter(character)}>
-            <div className="character-card-art"><span>{character.initials || character.name.slice(0, 2).toUpperCase()}</span><small>BRD · CHARACTER FILE</small></div>
+            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} /><small>BRD · CHARACTER FILE</small></div>
             <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
       </section>
       {(selected || isCreating) && <aside className="character-editor">
         <div className="character-editor-top"><span>{isCreating ? "NEW CHARACTER" : "CHARACTER PROFILE"}</span><button type="button" onClick={() => { setSelectedId(null); setIsCreating(false); }} aria-label="Close editor"><X size={16} /></button></div>
-        <div className={`character-editor-portrait accent-${draft.accent}`}><span>{draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"}</span><small>PORTRAIT PREVIEW</small></div>
+        <div className={`character-editor-portrait accent-${draft.accent}`}><CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] : null} alt={draft.name} /><small>PORTRAIT PREVIEW</small></div>
         <label className="character-field"><span>Character name *</span><input autoFocus value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, initials: draft.initials || event.target.value.slice(0, 2).toUpperCase() })} placeholder="e.g. Keira" /></label>
         <label className="character-field"><span>Subtitle</span><input value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} placeholder="Story · Role" /></label>
         <label className="character-field"><span>Initials</span><input maxLength={3} value={draft.initials} onChange={(event) => setDraft({ ...draft, initials: event.target.value.toUpperCase() })} placeholder="KR" /></label>
+        <label className="character-field"><span>Portrait image</span><select value={draft.portraitResourceId ?? ""} onChange={(event) => setDraft({ ...draft, portraitResourceId: event.target.value || null })}><option value="">Use initials</option>{imageResources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</select>{imageResources.length === 0 && <small className="character-field-hint">Import images in Resources to use them as portraits.</small>}</label>
         <label className="character-field"><span>Accent</span><select value={draft.accent} onChange={(event) => setDraft({ ...draft, accent: event.target.value as CharacterDraft["accent"] })}><option value="lavender">Lavender</option><option value="blue">Blue</option><option value="pink">Pink</option><option value="green">Green</option></select></label>
         <label className="character-field"><span>Description</span><textarea rows={4} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} placeholder="Who are they? What should you remember?" /></label>
         <div className="character-field"><span>Tags</span><div className="character-tag-input"><input value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag(); } }} placeholder="Add a tag…" /><button type="button" onClick={addTag}><Plus size={14} /></button></div><div className="character-edit-tags">{draft.tags.map((tag) => <button type="button" key={tag} onClick={() => setDraft({ ...draft, tags: draft.tags.filter((item) => item !== tag) })}>{tag}<X size={11} /></button>)}</div></div>
