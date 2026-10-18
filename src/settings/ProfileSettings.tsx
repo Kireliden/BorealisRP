@@ -95,7 +95,7 @@ export default function ProfileSettings() {
           <label className="profile-field-label">Portrait frame
             <select value={draft.frameStyle} onChange={(event) => update({ frameStyle: event.target.value as Profile["frameStyle"] })}>
               <option value="none">Minimal</option>
-              <option value="lavender">Lavender outline</option>
+              <option value="lavender">Theme Outline</option>
               <option value="ornate">Ornate glow</option>
             </select>
           </label>
