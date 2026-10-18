@@ -54,10 +54,14 @@ export interface AppPreferences {
   appearance: {
     theme: CatppuccinFlavor;
     accentColor: string | null;
-    uiScale: 90 | 100 | 110 | 125 | 150;
+    uiScale: 80 | 90 | 100 | 110 | 125 | 150;
     density: UiDensity;
     interfaceFont: InterfaceFont;
     chatFontSize: number;
+  };
+
+  accessibility: {
+    animationsEnabled: boolean;
   };
 
   profile: {
