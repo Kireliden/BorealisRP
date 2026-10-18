@@ -2259,3 +2259,49 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 .category-add-folder:hover { color: var(--accent); background: var(--control-hover); }
 .category-group[draggable="true"], .folder-row[draggable="true"] { cursor: grab; }
 .category-group:has(.folder-group:hover), .folder-group[draggable="true"]:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+/* Soft pointer-drag feedback for the Roleplay Space tree. */
+.roleplay-tree .category-group,
+.roleplay-tree .folder-group,
+.roleplay-tree .scene-row,
+.roleplay-tree .category-row,
+.roleplay-tree .folder-row {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.roleplay-tree .tree-node-dragging {
+  opacity: 0.48;
+  transform: scale(0.985);
+}
+
+.roleplay-tree .scene-row.scene-dragging {
+  opacity: 0.42;
+  transform: scale(0.985);
+}
+
+.roleplay-tree [data-drop-type].drag-over-target {
+  background: color-mix(in srgb, var(--accent) 13%, var(--control-hover));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 62%, transparent);
+}
+
+.roleplay-tree .scene-row.drag-over-target,
+.roleplay-tree .folder-group.drag-over-target,
+.roleplay-tree .category-group.drag-over-target {
+  transform: scale(1.01);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roleplay-tree .category-group,
+  .roleplay-tree .folder-group,
+  .roleplay-tree .scene-row,
+  .roleplay-tree .category-row,
+  .roleplay-tree .folder-row {
+    transition: none;
+  }
+}
+
