@@ -4,7 +4,7 @@
 **Status:** Approved architectural decision  
 **Date:** 17 October 2026  
 **Scope:** Workspace discovery, storage, portability, open formats and backup/restore  
-**Implementation status:** Planned — this document defines requirements, not implemented functionality
+**Implementation status:** Storage foundation implemented on `feature/workspace-storage-foundation`; workspace-manager UI and application integration remain pending
 
 ---
 
@@ -86,6 +86,18 @@ BRD - Neon Requiem/
 ```
 
 The schema should be designed around stable IDs rather than assuming a display name is a permanent identifier. The manifest should identify the workspace, state the format/schema version and provide enough metadata for BRD to recognize and validate the folder.
+
+### Initial manifest contract (schema version 1)
+
+The initial implementation uses a root `workspace.json` with these fields:
+
+- `format`: `borealis-roleplay-den-workspace`, used to identify BRD workspace folders.
+- `schemaVersion`: integer `1`; unsupported versions are rejected rather than silently rewritten.
+- `id`: stable UUID generated once when the workspace is created.
+- `name`: display name chosen by the user.
+- `createdAt` and `updatedAt`: ISO 8601 UTC timestamps.
+
+The first native storage commands are `create_workspace(parentPath, name)` and `inspect_workspace(path)`. Creation refuses to overwrite an existing folder, builds the initial directory structure, and removes the newly created folder if initialization fails. Inspection validates the manifest and is read-only. These commands are the storage foundation only; the UI must not imply that workspace management is available until it is connected to them.
 
 ### Data expected to live in the workspace
 
