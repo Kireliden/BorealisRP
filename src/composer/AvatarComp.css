@@ -634,3 +634,9 @@
   background: transparent;
   color: var(--muted);
 }
+
+
+/* Character library accent variants */
+.character-portrait.avatar-lavender{border-color:var(--ctp-lavender);background:linear-gradient(145deg,color-mix(in srgb,var(--ctp-lavender) 35%,var(--ctp-base)),color-mix(in srgb,var(--ctp-lavender) 12%,var(--ctp-mantle)));color:var(--ctp-lavender)}
+.character-portrait.avatar-pink{border-color:var(--ctp-pink);background:linear-gradient(145deg,color-mix(in srgb,var(--ctp-pink) 35%,var(--ctp-base)),color-mix(in srgb,var(--ctp-pink) 12%,var(--ctp-mantle)));color:var(--ctp-pink)}
+.character-portrait.avatar-green{border-color:var(--ctp-green);background:linear-gradient(145deg,color-mix(in srgb,var(--ctp-green) 35%,var(--ctp-base)),color-mix(in srgb,var(--ctp-green) 12%,var(--ctp-mantle)));color:var(--ctp-green)}
