@@ -807,7 +807,7 @@ button:disabled {
 }
 
 .message-meta > strong {
-  font-size: calc(var(--chat-font-size, 16px) * 0.9);
+  font-size: var(--chat-font-size, 16px);
   font-weight: 750;
 }
 
@@ -819,7 +819,7 @@ button:disabled {
 .role-tag {
   padding: 3px 6px;
   border-radius: 4px;
-  font-size: calc(var(--chat-font-size, 16px) * 0.68);
+  font-size: calc(var(--chat-font-size, 16px) * 0.75);
   font-weight: 700;
 }
 
@@ -846,7 +846,7 @@ button:disabled {
   display: block;
   margin-bottom: 5px;
   color: var(--accent);
-  font-size: 9px;
+  font-size: calc(var(--chat-font-size, 16px) * 0.65);
   font-weight: 800;
   letter-spacing: 1.3px;
   line-height: 1.4;
@@ -1548,9 +1548,9 @@ textarea:focus-visible {
 
 .message-expression {
   display: inline-block;
-  flex: 0 0 calc(var(--chat-font-size, 16px) * 1.15);
-  width: calc(var(--chat-font-size, 16px) * 1.15);
-  height: calc(var(--chat-font-size, 16px) * 1.15);
+  flex: 0 0 calc(var(--chat-font-size, 16px) * 1.25);
+  width: calc(var(--chat-font-size, 16px) * 1.25);
+  height: calc(var(--chat-font-size, 16px) * 1.25);
   background-color: var(--accent);
   mask-repeat: no-repeat;
   mask-position: center;
