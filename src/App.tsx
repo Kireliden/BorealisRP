@@ -180,6 +180,7 @@ function sanitiseHtml(html: string) {
   const [isAtLatestMessage, setIsAtLatestMessage] = useState(true);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "themes" | "profile" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { preferences, updatePreferences } = usePreferences();
@@ -768,7 +769,7 @@ function sanitiseHtml(html: string) {
         </div>
       )}
       {isSettingsOpen && (
-        <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+        <SettingsModal initialCategory={settingsInitialCategory} onClose={() => setIsSettingsOpen(false)} />
       )}
       {isCollectionsOpen && (
         <CollectionsModal onClose={() => setIsCollectionsOpen(false)} />
@@ -776,7 +777,11 @@ function sanitiseHtml(html: string) {
       {isProfileOpen && (
         <ProfileModal
           profile={preferences.profile}
-          onSave={(profile) => updatePreferences((current) => ({ ...current, profile }))}
+          onEdit={() => {
+            setIsProfileOpen(false);
+            setSettingsInitialCategory("profile");
+            setIsSettingsOpen(true);
+          }}
           onClose={() => setIsProfileOpen(false)}
         />
       )}
