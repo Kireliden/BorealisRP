@@ -60,7 +60,7 @@ export default function ProfileSettings() {
 
       <article className={`profile-card frame-${draft.frameStyle}`}>
         <div className="profile-banner">
-          {bannerSrc ? <img src={bannerSrc} alt="" className="profile-banner-image" /> : <div className="profile-banner-art" />}
+          {bannerSrc ? <img src={bannerSrc} alt="" className="profile-banner-image" style={{ objectPosition: `${draft.bannerPositionX}% ${draft.bannerPositionY}%` }} /> : <div className="profile-banner-art" />}
           <div className="profile-banner-overlay" />
           <button className="profile-media-button profile-banner-edit" type="button" onClick={() => void pickMedia("bannerAssetPath")}>{bannerSrc ? "Change banner" : "Add banner / GIF"}</button>
           {bannerSrc && <button className="profile-media-button profile-banner-remove" type="button" onClick={() => update({ bannerAssetPath: null })}>Remove</button>}
@@ -69,7 +69,7 @@ export default function ProfileSettings() {
         <div className="profile-identity">
           <div className="profile-avatar-column">
             <div className={`profile-portrait frame-border-${draft.frameStyle}`}>
-              {avatarSrc ? <img src={avatarSrc} alt="" className="profile-portrait-image" /> : <span className="profile-portrait-placeholder">{draft.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
+              {avatarSrc ? <img src={avatarSrc} alt="" className="profile-portrait-image" style={{ objectPosition: `${draft.avatarPositionX}% ${draft.avatarPositionY}%` }} /> : <span className="profile-portrait-placeholder">{draft.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
             </div>
             <button className="profile-media-button" type="button" onClick={() => void pickMedia("avatarAssetPath")}>{avatarSrc ? "Change portrait / GIF" : "Add portrait / GIF"}</button>
             {avatarSrc && <button className="profile-media-button profile-remove-media" type="button" onClick={() => update({ avatarAssetPath: null })}>Remove portrait</button>}
@@ -102,6 +102,31 @@ export default function ProfileSettings() {
           <div className="profile-settings-note">Portraits use a 4:5 frame and fill it with a centred crop. Animated GIFs stay animated. Supported formats: GIF, PNG, JPG and WebP (up to 25 MiB).</div>
         </div>
       </article>
+
+      <section className="profile-image-framing" aria-label="Image framing">
+        <div className="appearance-section-heading">
+          <h4>Image framing</h4>
+          <p>Adjust which part of each image is visible. Animated GIFs keep playing while you reposition them.</p>
+        </div>
+        <div className="profile-framing-group">
+          <strong>Portrait position</strong>
+          <label className="profile-framing-control">Horizontal <span>{draft.avatarPositionX}%</span>
+            <input type="range" min="0" max="100" step="1" value={draft.avatarPositionX} onChange={(event) => update({ avatarPositionX: Number(event.target.value) })} />
+          </label>
+          <label className="profile-framing-control">Vertical <span>{draft.avatarPositionY}%</span>
+            <input type="range" min="0" max="100" step="1" value={draft.avatarPositionY} onChange={(event) => update({ avatarPositionY: Number(event.target.value) })} />
+          </label>
+        </div>
+        <div className="profile-framing-group">
+          <strong>Banner position</strong>
+          <label className="profile-framing-control">Horizontal <span>{draft.bannerPositionX}%</span>
+            <input type="range" min="0" max="100" step="1" value={draft.bannerPositionX} onChange={(event) => update({ bannerPositionX: Number(event.target.value) })} />
+          </label>
+          <label className="profile-framing-control">Vertical <span>{draft.bannerPositionY}%</span>
+            <input type="range" min="0" max="100" step="1" value={draft.bannerPositionY} onChange={(event) => update({ bannerPositionY: Number(event.target.value) })} />
+          </label>
+        </div>
+      </section>
 
       {error && <p className="profile-media-error profile-settings-error" role="alert">{error}</p>}
       <div className="profile-settings-actions">
