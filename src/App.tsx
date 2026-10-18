@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { usePreferences } from "./preferences/PreferencesContext";
 import ProfileModal from "./profile/ProfileModal";
-import { chooseProfileMedia, profileMediaSource } from "./profile/profileMedia";
+import { profileMediaSource } from "./profile/profileMedia";
 import "./themes/themes.css";
 import "./App.css";
 import "./composer/Composer.css";
@@ -190,7 +190,12 @@ function sanitiseHtml(html: string) {
   const workspaceSelectionMadeRef = useRef(false);
 
   const selectedCharacterBase = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
-  const character: Character = { ...selectedCharacterBase, avatarAssetPath: preferences.characterAvatarPaths[selectedCharacter] ?? null };
+  // "You" always uses the saved user profile portrait (including animated GIFs).
+  // Character portraits will be managed through the dedicated character workflow later.
+  const character: Character = {
+    ...selectedCharacterBase,
+    avatarAssetPath: selectedCharacter === "You" ? preferences.profile.avatarAssetPath : null,
+  };
   const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? null;
 
   // Restore the last active workspace once, before persisting later selections.
@@ -329,23 +334,6 @@ function sanitiseHtml(html: string) {
       unlisten?.();
     };
   }, []);
-
-  async function chooseCharacterPortrait() {
-    try {
-      const path = await chooseProfileMedia();
-      if (!path) return;
-      updatePreferences((current) => ({
-        ...current,
-        characterAvatarPaths: {
-          ...current.characterAvatarPaths,
-          [selectedCharacter]: path,
-        },
-      }));
-      setShowCharacterPicker(false);
-    } catch (reason) {
-      console.error("Could not import character portrait:", reason);
-    }
-  }
 
   async function toggleMaximize() {
     await appWindow.toggleMaximize();
@@ -610,7 +598,7 @@ function sanitiseHtml(html: string) {
                 </div>
                 {showCharacterPicker && <div className="portrait-popover character-picker-popover">
                   <span className="portrait-popover-label">WRITING AS</span>
-                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => setSelectedCharacter(event.target.value)}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select><button className="character-portrait-media-action" type="button" onClick={() => void chooseCharacterPortrait()}>Choose portrait or GIF…</button>{character.avatarAssetPath && <button className="character-portrait-media-action secondary" type="button" onClick={() => updatePreferences((current) => ({ ...current, characterAvatarPaths: { ...current.characterAvatarPaths, [selectedCharacter]: null } }))}>Remove portrait</button>}
+                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => setSelectedCharacter(event.target.value)}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select>
                 </div>}
                 {showExpressions && <div className="portrait-popover expression-picker-popover">
                   <span className="portrait-popover-label">EXPRESSION</span>
