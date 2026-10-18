@@ -4,9 +4,11 @@ import AppearanceSettings from "./AppearanceSettings";
 import ThemesSettings from "./ThemesSettings";
 import ProfileSettings from "./ProfileSettings";
 import ChatSettings from "./ChatSettings";
+import AccessibilitySettings from "./AccessibilitySettings";
 
 type SettingsCategory =
   | "appearance"
+  | "accessibility"
   | "themes"
   | "profile"
   | "chat"
@@ -22,6 +24,7 @@ interface SettingsModalProps {
 
 const categories: { id: SettingsCategory; label: string }[] = [
   { id: "appearance", label: "Appearance" },
+  { id: "accessibility", label: "Accessibility" },
   { id: "themes", label: "Themes" },
   { id: "profile", label: "Profile" },
   { id: "chat", label: "Chat" },
@@ -121,6 +124,8 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
           <div className="settings-content-body">
             {activeCategory === "appearance" ? (
   <AppearanceSettings />
+ ) : activeCategory === "accessibility" ? (
+  <AccessibilitySettings />
 ) : activeCategory === "themes" ? (
   <ThemesSettings />
 ) : activeCategory === "profile" ? (
