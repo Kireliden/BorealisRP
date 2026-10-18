@@ -2407,16 +2407,7 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
   white-space: nowrap;
 }
 
-.roleplay-tree .category-select-button > small {
-  flex: 0 0 auto;
-  margin-left: auto;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 13%, transparent);
-  color: var(--ctp-subtext1);
-  font-size: 9px;
-  font-weight: 600;
-}
+
 
 .roleplay-tree .category-children {
   margin-left: 12px;
@@ -2504,20 +2495,3 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
   left: -14px;
 }
 
-
-/* Keep the category counter compact so it doesn't steal space from the label. */
-.roleplay-tree .category-row .category-select-button {
-  min-width: 0;
-  flex: 1 1 0%;
-  overflow: hidden;
-}
-
-.roleplay-tree .category-row .category-select-button > span {
-  flex: 1 1 0%;
-  width: 0;
-}
-
-.roleplay-tree .category-row .category-select-button > small {
-  flex: 0 0 auto;
-  margin-left: 3px;
-}
