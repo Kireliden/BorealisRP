@@ -20,6 +20,10 @@
 
 /* Context menus, dropdowns, pickers and compact popovers. */
 .brand-menu,
+[role="menu"],
+[role="listbox"],
+[data-popup],
+[data-popper-content-wrapper],
 .scene-options-popover,
 .message-actions-popover,
 .portrait-popover,
@@ -30,6 +34,7 @@
 
 /* Dialogs and modal cards across the app. */
 .clean-confirmation-dialog,
+[role="dialog"],
 .settings-modal,
 .collections-modal,
 .workspace-modal,
@@ -60,11 +65,16 @@
 
 @media (prefers-reduced-motion: reduce) {
   .brand-menu,
+  [role="menu"],
+  [role="listbox"],
+  [data-popup],
+  [data-popper-content-wrapper],
   .scene-options-popover,
   .message-actions-popover,
   .portrait-popover,
   .colour-picker,
   .clean-confirmation-dialog,
+  [role="dialog"],
   .settings-modal,
   .collections-modal,
   .workspace-modal,
