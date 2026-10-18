@@ -656,6 +656,12 @@ function sanitiseHtml(html: string) {
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
       setScenes(nextScenes);
+      if (folderId) {
+        setExpandedFolderIds((current) => current.includes(folderId) ? current : [...current, folderId]);
+        setActiveFolderId(folderId);
+      } else {
+        setActiveFolderId(null);
+      }
       setWorkspaceError("");
     } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
