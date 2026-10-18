@@ -68,7 +68,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew 
 
   useEffect(() => {
     void refreshRecent();
-  }, []);
+  }, [activeWorkspace?.path]);
 
   useEffect(() => {
     if (!open) return;
@@ -113,7 +113,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew 
       <button
         className="workspace-button"
         type="button"
-        onClick={() => { setOpen((value) => !value); setError(""); }}
+        onClick={() => { const nextOpen = !open; setOpen(nextOpen); setError(""); if (nextOpen) void refreshRecent(); }}
         aria-label="Choose workspace"
         aria-haspopup="menu"
         aria-expanded={open}
