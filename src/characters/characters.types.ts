@@ -6,12 +6,13 @@ export type CharacterRecord = {
   initials: string;
   accent: "lavender" | "blue" | "pink" | "green";
   portraitResourceId: string | null;
+  portraitFit: "cover" | "contain";
   tags: string[];
   createdAt: string;
   updatedAt: string;
 };
 
-export type CharacterDraft = Pick<CharacterRecord, "name" | "subtitle" | "description" | "initials" | "accent" | "portraitResourceId" | "tags">;
+export type CharacterDraft = Pick<CharacterRecord, "name" | "subtitle" | "description" | "initials" | "accent" | "portraitResourceId" | "portraitFit" | "tags">;
 
 export const CHARACTER_LIBRARY_KEY = "brd.character-library.v1";
 
