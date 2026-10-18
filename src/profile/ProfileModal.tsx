@@ -8,11 +8,11 @@ type FrameStyle = Profile["frameStyle"];
 
 interface ProfileModalProps {
   profile: Profile;
-  onSave: (profile: Profile) => void;
+  onEdit: () => void;
   onClose: () => void;
 }
 
-export default function ProfileModal({ profile, onSave, onClose }: ProfileModalProps) {
+export default function ProfileModal({ profile, onEdit, onClose }: ProfileModalProps) {
   const [draft, setDraft] = useState<Profile>(profile);
   const [editing, setEditing] = useState(false);
   const [mediaError, setMediaError] = useState("");
@@ -143,7 +143,7 @@ export default function ProfileModal({ profile, onSave, onClose }: ProfileModalP
           ) : (
             <>
               <span className="profile-footer-hint">Only stored on this device</span>
-              <button type="button" className="profile-primary-button" onClick={() => setEditing(true)}>Edit profile</button>
+              <button type="button" className="profile-primary-button" onClick={onEdit}>Edit profile</button>
             </>
           )}
         </footer>
