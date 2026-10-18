@@ -49,7 +49,7 @@ export interface Character {
 }
 
 export interface AppPreferences {
-  schemaVersion: 1;
+  schemaVersion: 2;
 
   appearance: {
     theme: CatppuccinFlavor;
