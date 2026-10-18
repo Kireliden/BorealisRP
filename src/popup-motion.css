@@ -105,3 +105,13 @@ html[data-animations="off"] *::after {
   transition: none !important;
   scroll-behavior: auto !important;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-animations="on"] *,
+  html[data-animations="on"] *::before,
+  html[data-animations="on"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
