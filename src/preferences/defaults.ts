@@ -7,10 +7,14 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   appearance: {
     theme: "frappe",
     accentColor: null,
-    uiScale: 100,
+    uiScale: 110,
     density: "comfortable",
     interfaceFont: "ubuntu",
     chatFontSize: 16,
+  },
+
+  accessibility: {
+    animationsEnabled: true,
   },
 
   profile: {
