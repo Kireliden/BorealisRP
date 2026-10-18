@@ -20,6 +20,11 @@ export function inspectWorkspace(path: string): Promise<WorkspaceInfo> {
   return invoke<WorkspaceInfo>("inspect_workspace", { path });
 }
 
+/** Renames the workspace label stored in its manifest without moving its folder. */
+export function renameWorkspace(path: string, name: string): Promise<WorkspaceInfo> {
+  return invoke<WorkspaceInfo>("rename_workspace", { path, name });
+}
+
 const WORKSPACE_PREFERENCES_FILE = "recent-workspaces.json";
 const LAST_WORKSPACE_KEY = "lastActiveWorkspacePath";
 
