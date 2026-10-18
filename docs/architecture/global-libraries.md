@@ -17,7 +17,7 @@
 - `src/characters/CharactersPage.tsx`: editorial gallery, search, tags, create/edit/delete, accent and portrait selection.
 - `src/resources/resources.types.ts`: resource metadata and media classification.
 - `src/resources/resources.storage.ts`: resource-library database operations.
-- `src/resources/ResourcesPage.tsx`: drag-and-drop/import gallery, image thumbnails, audio/video preview, filtering, tagging and deletion.
+- `src/resources/ResourcesPage.tsx`: drag-and-drop/import gallery, image thumbnails, audio/video preview, filtering, per-resource tagging, multi-select and bulk tag addition.
 - `src/GlobalSearch.tsx`: search overlay for both global libraries.
 
 ## Persistence in this milestone
@@ -32,7 +32,7 @@
 
 1. Move global library persistence behind a dedicated storage adapter so it can be migrated to a native app-data directory without rewriting the UI.
 2. Add export/import and backup/restore for both libraries.
-3. Add batch tagging, tag normalization/autocomplete shared between libraries, and resource multi-select.
+3. Add shared tag normalization/autocomplete across both global libraries.
 4. Add a resource picker for other app surfaces (scene backgrounds, message attachments and audio cues).
 5. Expand global search to scenes and messages when appropriate.
 6. Consider migration of legacy workspace `Characters` and `Resources/*` folders; they are not the source of truth for the global libraries.
