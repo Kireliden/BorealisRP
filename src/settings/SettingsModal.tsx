@@ -123,16 +123,16 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
 
           <div className="settings-content-body">
             {activeCategory === "appearance" ? (
-  <AppearanceSettings />
- ) : activeCategory === "accessibility" ? (
-  <AccessibilitySettings />
-) : activeCategory === "themes" ? (
-  <ThemesSettings />
-) : activeCategory === "profile" ? (
-  <ProfileSettings />
-) : activeCategory === "chat" ? (
-  <ChatSettings />
-) : (
+              <AppearanceSettings />
+            ) : activeCategory === "accessibility" ? (
+              <AccessibilitySettings />
+            ) : activeCategory === "themes" ? (
+              <ThemesSettings />
+            ) : activeCategory === "profile" ? (
+              <ProfileSettings />
+            ) : activeCategory === "chat" ? (
+              <ChatSettings />
+            ) : (
   <div className="settings-placeholder">
     <div className="settings-placeholder-symbol">✦</div>
     <h4>{activeLabel}</h4>
