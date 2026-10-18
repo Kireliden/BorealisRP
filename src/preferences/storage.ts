@@ -144,6 +144,7 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
     ? saved.appearance
     : {};
   const profile = isRecord(saved.profile) ? saved.profile : {};
+  const accessibility = isRecord(saved.accessibility) ? saved.accessibility : {};
   const editor = isRecord(saved.editor) ? saved.editor : {};
   const roleplay = isRecord(saved.roleplay) ? saved.roleplay : {};
 
@@ -168,7 +169,7 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
   appearance.uiScale,
   (value): value is AppPreferences["appearance"]["uiScale"] =>
     typeof value === "number" &&
-    [90, 100, 110, 125, 150].includes(value),
+    [80, 90, 100, 110, 125, 150].includes(value),
   defaults.appearance.uiScale,
 ),
       density: validOr(
@@ -190,6 +191,10 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
             (value): value is number => isBoundedNumber(value, 11, 24),
             defaults.appearance.chatFontSize,
           ),
+    },
+
+    accessibility: {
+      animationsEnabled: validOr(accessibility.animationsEnabled, isBoolean, defaults.accessibility.animationsEnabled),
     },
 
     profile: {
