@@ -64,16 +64,16 @@
   backdrop-filter: blur(8px);
 }
 .profile-close:hover { border-color: var(--accent); background: rgb(36 34 53 / 96%); }
-.profile-banner { position: relative; height: 176px; overflow: hidden; border-radius: 17px 17px 0 0; background: linear-gradient(120deg, #383451, #4e527c 46%, #78638f); }
+.profile-banner { position: relative; flex: 0 0 150px; min-height: 150px; overflow: hidden; border-radius: 17px 17px 0 0; background: linear-gradient(120deg, #383451, #4e527c 46%, #78638f); }
 .profile-banner-art { position: absolute; inset: 0; background: radial-gradient(ellipse at 18% 22%, #babbf166, transparent 40%), radial-gradient(ellipse at 82% 8%, #ca9ee866, transparent 36%), linear-gradient(125deg, #303044, #48466d 52%, #68577d); }
 .profile-banner-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .profile-banner-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(18 18 30 / 4%), rgb(18 18 30 / 45%)); pointer-events: none; }
 .profile-media-button { position: relative; z-index: 2; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: rgb(24 24 37 / 88%); color: #f4f0ff; font-size: 11px; cursor: pointer; }
 .profile-media-button:hover { border-color: var(--accent); background: rgb(36 34 53 / 96%); }
 .profile-banner-edit { position: absolute; right: 14px; bottom: 14px; }
-.profile-identity { position: relative; display: flex; align-items: flex-end; gap: 18px; padding: 0 24px 18px; }
-.profile-avatar-column { position: relative; display: flex; flex: 0 0 144px; flex-direction: column; align-items: stretch; gap: 8px; margin-top: -80px; }
-.profile-portrait { position: relative; width: 144px; aspect-ratio: 4 / 5; overflow: hidden; border: 3px solid var(--ctp-base); border-radius: 15px; background: linear-gradient(145deg, #7775a8, #3b3857); box-shadow: 0 8px 24px rgb(0 0 0 / 28%); }
+.profile-identity { position: relative; display: flex; align-items: flex-end; gap: 20px; padding: 0 30px 18px; }
+.profile-avatar-column { position: relative; display: flex; flex: 0 0 112px; flex-direction: column; align-items: stretch; gap: 8px; margin-top: -58px; }
+.profile-portrait { position: relative; width: 112px; aspect-ratio: 4 / 5; overflow: hidden; border: 3px solid var(--ctp-base); border-radius: 15px; background: linear-gradient(145deg, #7775a8, #3b3857); box-shadow: 0 8px 24px rgb(0 0 0 / 28%); }
 .profile-portrait-image { display: block; width: 100%; height: 100%; object-fit: cover; }
 .profile-portrait-placeholder { display: grid; width: 100%; height: 100%; place-items: center; background: radial-gradient(circle at 30% 20%, #babbf188, transparent 42%), linear-gradient(145deg, #625985, #343449); color: #f4f0ff; font-size: 48px; font-weight: 750; }
 .profile-portrait.frame-border-lavender {
@@ -127,10 +127,10 @@
 @media (max-width: 560px) {
   .profile-backdrop { padding: 10px; }
   .profile-modal-footer { padding: 14px; }
-  .profile-banner { height: 130px; }
+  .profile-banner { flex-basis: 118px; min-height: 118px; }
   .profile-identity { align-items: flex-start; gap: 12px; padding: 0 14px 14px; }
-  .profile-avatar-column { flex-basis: 112px; margin-top: -55px; }
-  .profile-portrait { width: 112px; }
+  .profile-avatar-column { flex-basis: 96px; margin-top: -48px; }
+  .profile-portrait { width: 96px; }
   .profile-identity-copy h3 { font-size: 21px; }
   .profile-details { padding: 0 14px 16px; }
 }
