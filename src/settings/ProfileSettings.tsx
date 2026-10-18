@@ -1,0 +1,116 @@
+import { useEffect, useState } from "react";
+import { usePreferences } from "../preferences/PreferencesContext";
+import type { AppPreferences } from "../preferences/types";
+import { chooseProfileMedia, profileMediaSource } from "../profile/profileMedia";
+import "../profile/ProfileModal.css";
+import "./ProfileSettings.css";
+
+type Profile = AppPreferences["profile"];
+
+export default function ProfileSettings() {
+  const { preferences, updatePreferences } = usePreferences();
+  const [draft, setDraft] = useState<Profile>(preferences.profile);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setDraft(preferences.profile);
+  }, [preferences.profile]);
+
+  function update(changes: Partial<Profile>) {
+    setDraft((current) => ({ ...current, ...changes }));
+    setSaved(false);
+  }
+
+  async function pickMedia(target: "avatarAssetPath" | "bannerAssetPath") {
+    try {
+      setError("");
+      const path = await chooseProfileMedia();
+      if (path) update({ [target]: path });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  function save() {
+    if (!draft.displayName.trim()) return;
+    updatePreferences((current) => ({
+      ...current,
+      profile: { ...draft, displayName: draft.displayName.trim() },
+    }));
+    setSaved(true);
+    setError("");
+  }
+
+  function cancel() {
+    setDraft(preferences.profile);
+    setError("");
+    setSaved(false);
+  }
+
+  const avatarSrc = profileMediaSource(draft.avatarAssetPath);
+  const bannerSrc = profileMediaSource(draft.bannerAssetPath);
+  const hasChanges = JSON.stringify(draft) !== JSON.stringify(preferences.profile);
+
+  return (
+    <div className="profile-settings">
+      <div className="profile-settings-intro">
+        <p>Shape the little corner of BRD that represents you. Your profile is saved locally and stays separate from your roleplay characters.</p>
+      </div>
+
+      <article className={`profile-card frame-${draft.frameStyle}`}>
+        <div className="profile-banner">
+          {bannerSrc ? <img src={bannerSrc} alt="" className="profile-banner-image" /> : <div className="profile-banner-art" />}
+          <div className="profile-banner-overlay" />
+          <button className="profile-media-button profile-banner-edit" type="button" onClick={() => void pickMedia("bannerAssetPath")}>{bannerSrc ? "Change banner" : "Add banner / GIF"}</button>
+          {bannerSrc && <button className="profile-media-button profile-banner-remove" type="button" onClick={() => update({ bannerAssetPath: null })}>Remove</button>}
+        </div>
+
+        <div className="profile-identity">
+          <div className="profile-avatar-column">
+            <div className={`profile-portrait frame-border-${draft.frameStyle}`}>
+              {avatarSrc ? <img src={avatarSrc} alt="" className="profile-portrait-image" /> : <span className="profile-portrait-placeholder">{draft.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
+            </div>
+            <button className="profile-media-button" type="button" onClick={() => void pickMedia("avatarAssetPath")}>{avatarSrc ? "Change portrait / GIF" : "Add portrait / GIF"}</button>
+            {avatarSrc && <button className="profile-media-button profile-remove-media" type="button" onClick={() => update({ avatarAssetPath: null })}>Remove portrait</button>}
+          </div>
+
+          <div className="profile-identity-copy profile-settings-fields">
+            <label className="profile-field-label">Display name <span>Required</span>
+              <input maxLength={80} value={draft.displayName} onChange={(event) => update({ displayName: event.target.value })} placeholder="Your name" />
+            </label>
+            <label className="profile-field-label">Title <span>Optional</span>
+              <input maxLength={80} value={draft.title} onChange={(event) => update({ title: event.target.value })} placeholder="A little title" />
+            </label>
+          </div>
+        </div>
+
+        <div className="profile-details profile-settings-details">
+          <label className="profile-field-label">Motto <span>Optional</span>
+            <input maxLength={160} value={draft.motto} onChange={(event) => update({ motto: event.target.value })} placeholder="A few words that feel like you" />
+          </label>
+          <label className="profile-field-label">About you <span>Optional</span>
+            <textarea maxLength={1000} rows={4} value={draft.description} onChange={(event) => update({ description: event.target.value })} placeholder="Tell a little story about yourself…" />
+          </label>
+          <label className="profile-field-label">Portrait frame
+            <select value={draft.frameStyle} onChange={(event) => update({ frameStyle: event.target.value as Profile["frameStyle"] })}>
+              <option value="none">Minimal</option>
+              <option value="lavender">Lavender outline</option>
+              <option value="ornate">Ornate glow</option>
+            </select>
+          </label>
+          <div className="profile-settings-note">Portraits use a 4:5 frame and fill it with a centred crop. Animated GIFs stay animated. Supported formats: GIF, PNG, JPG and WebP (up to 25 MiB).</div>
+        </div>
+      </article>
+
+      {error && <p className="profile-media-error profile-settings-error" role="alert">{error}</p>}
+      <div className="profile-settings-actions">
+        <span className={`profile-settings-status ${saved ? "is-saved" : ""}`}>{saved ? "Profile saved" : hasChanges ? "Unsaved changes" : "All changes saved"}</span>
+        <div className="profile-footer-actions">
+          <button type="button" className="profile-secondary-button" onClick={cancel} disabled={!hasChanges}>Cancel</button>
+          <button type="button" className="profile-primary-button" onClick={save} disabled={!draft.displayName.trim() || !hasChanges}>Save profile</button>
+        </div>
+      </div>
+    </div>
+  );
+}
