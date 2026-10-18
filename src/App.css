@@ -371,9 +371,9 @@ button:disabled {
 .sidebar-profile-trigger:focus-visible { outline-offset: 3px; }
 .sidebar-footer .profile-avatar {
   width: 31.5px;
-  height: 42px;
+  height: 39.375px;
   flex-basis: 31.5px;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   border-radius: 8px;
 }
