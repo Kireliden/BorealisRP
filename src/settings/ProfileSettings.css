@@ -29,3 +29,6 @@
   .profile-settings-actions { align-items: flex-start; flex-direction: column; }
   .profile-settings .profile-media-button { padding: 6px; font-size: 10px; }
 }
+
+/* The settings preview keeps its normal card clipping; the floating preview stays free to tilt. */
+.profile-settings .profile-card { overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--panel-bg); }
