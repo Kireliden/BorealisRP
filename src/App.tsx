@@ -25,6 +25,7 @@ const appWindow = getCurrentWindow();
 
 type Role = "Narration" | "Dialogue";
 type Character = { name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null };
+type AvatarPreviewCharacter = Character & { expression?: string };
 type Message = WorkspaceMessage;
 
 const characters: Character[] = [
@@ -176,6 +177,7 @@ function sanitiseHtml(html: string) {
   const [showExpressions, setShowExpressions] = useState(false);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+  const [avatarPreviewCharacter, setAvatarPreviewCharacter] = useState<AvatarPreviewCharacter | null>(null);
   const [avatarTilt, setAvatarTilt] = useState({ x: 0, y: 0, shineX: 50, shineY: 35 });
   const [isMaximized, setIsMaximized] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -185,7 +187,7 @@ function sanitiseHtml(html: string) {
   const [isAtLatestMessage, setIsAtLatestMessage] = useState(true);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
+  const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "accessibility" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { preferences, updatePreferences } = usePreferences();
@@ -201,6 +203,8 @@ function sanitiseHtml(html: string) {
     ...selectedCharacterBase,
     avatarAssetPath: selectedCharacter === "You" ? preferences.profile.avatarAssetPath : null,
   };
+  const previewCharacter = avatarPreviewCharacter ?? character;
+  const previewExpression = avatarPreviewCharacter?.expression ?? selectedExpression;
   const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? null;
 
   // Restore the last active workspace once, before persisting later selections.
@@ -642,7 +646,7 @@ function sanitiseHtml(html: string) {
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => <article className={`message ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</div><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
+            {messages.map((message) => <article className={`message ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
@@ -677,7 +681,7 @@ function sanitiseHtml(html: string) {
                     type="button"
                     aria-label={`View ${character.name}'s avatar`}
                     title={`View ${character.name}'s avatar`}
-                    onClick={() => { setShowAvatarPreview(true); setShowCharacterPicker(false); setShowExpressions(false); }}
+                    onClick={() => { setAvatarPreviewCharacter(null); setShowAvatarPreview(true); setShowCharacterPicker(false); setShowExpressions(false); }}
                   >
                     {character.avatarAssetPath ? <img className="character-portrait-image" src={profileMediaSource(character.avatarAssetPath) ?? undefined} alt="" /> : <span className="character-portrait-initials">{character.initials}</span>}
                     {selectedCharacter !== "You" && <span
@@ -836,10 +840,10 @@ function sanitiseHtml(html: string) {
           }}
         >
           <section
-            className={`avatar-preview-card avatar-preview-${character.avatar}`}
+            className={`avatar-preview-card avatar-preview-${previewCharacter.avatar}`}
             role="dialog"
             aria-modal="true"
-            aria-label={`${character.name} avatar preview`}
+            aria-label={`${previewCharacter.name} avatar preview`}
             style={{
               transform: `perspective(1100px) rotateX(${avatarTilt.x}deg) rotateY(${avatarTilt.y}deg)`,
               "--shine-x": `${avatarTilt.shineX}%`,
@@ -858,33 +862,33 @@ function sanitiseHtml(html: string) {
               type="button"
               aria-label="Close avatar preview"
               title="Close"
-              onClick={() => setShowAvatarPreview(false)}
+              onClick={() => { setShowAvatarPreview(false); setAvatarPreviewCharacter(null); }}
             >×</button>
             <div className="avatar-preview-card-inner">
               <div className="avatar-preview-topline">BOREALIS · CHARACTER FILE</div>
               <div className="avatar-preview-art">
                 <div className="avatar-preview-orbit avatar-preview-orbit-one" />
                 <div className="avatar-preview-orbit avatar-preview-orbit-two" />
-                {character.avatarAssetPath ? (
-                  <img className="avatar-preview-image" src={profileMediaSource(character.avatarAssetPath) ?? undefined} alt={character.name} />
-                ) : character.name === "Keira" ? (
+                {previewCharacter.avatarAssetPath ? (
+                  <img className="avatar-preview-image" src={profileMediaSource(previewCharacter.avatarAssetPath) ?? undefined} alt={previewCharacter.name} />
+                ) : previewCharacter.name === "Keira" ? (
                   <img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" />
                 ) : (
-                  <span className="avatar-preview-initials">{character.initials}</span>
+                  <span className="avatar-preview-initials">{previewCharacter.initials}</span>
                 )}
-                {selectedCharacter !== "You" && (
+                {previewCharacter.name !== "You" && previewExpression && (
                   <span
                     className="avatar-preview-expression"
-                    aria-label={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
+                    aria-label={expressions.find((expression) => expression.emoji === previewExpression)?.label ?? "Character expression"}
                     style={{
-                      maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
-                      WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
+                      maskImage: `url("${expressions.find((expression) => expression.emoji === previewExpression)?.image ?? ""}")`,
+                      WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === previewExpression)?.image ?? ""}")`,
                     }}
                   />
                 )}
               </div>
               <div className="avatar-preview-details">
-                <h2>{character.name}</h2>
+                <h2>{previewCharacter.name}</h2>
               </div>
               <div className="avatar-preview-footer"><span>BRD</span><span>HOLOGRAPHIC EDITION</span></div>
             </div>
