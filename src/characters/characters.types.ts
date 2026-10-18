@@ -7,6 +7,9 @@ export type CharacterRecord = {
   accent: "lavender" | "blue" | "pink" | "green";
   portraitResourceId: string | null;
   portraitFit: "cover" | "contain";
+  portraitPositionX: number;
+  portraitPositionY: number;
+  portraitZoom: number;
   tags: string[];
   createdAt: string;
   updatedAt: string;
