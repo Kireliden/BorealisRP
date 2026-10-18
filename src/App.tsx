@@ -169,6 +169,7 @@ function sanitiseHtml(html: string) {
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [categoryNameDraft, setCategoryNameDraft] = useState("");
   const [draggingNode, setDraggingNode] = useState<{ type: "scene" | "folder" | "category"; id: string } | null>(null);
+  const [pendingSceneMoveId, setPendingSceneMoveId] = useState<string | null>(null);
   const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
   const [isWorkspaceContentsCollapsed, setIsWorkspaceContentsCollapsed] = useState(false);
   const [isUnfiledScenesCollapsed, setIsUnfiledScenesCollapsed] = useState(false);
@@ -729,9 +730,14 @@ function sanitiseHtml(html: string) {
     }
     const folder: WorkspaceFolder = { id: crypto.randomUUID(), name, categoryId: activeCategoryId };
     const nextFolders = [...folders, folder];
+    const nextScenes = pendingSceneMoveId
+      ? scenes.map((scene) => scene.id === pendingSceneMoveId ? { ...scene, folderId: folder.id } : scene)
+      : scenes;
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders: nextFolders, categories });
       setFolders(nextFolders);
+      setScenes(nextScenes);
+      setPendingSceneMoveId(null);
       setExpandedFolderIds((current) => [...current, folder.id]);
       setActiveFolderId(folder.id);
       setFolderNameDraft("");
@@ -862,7 +868,7 @@ function sanitiseHtml(html: string) {
                 {categories.map((category) => {
                   const expanded = expandedCategoryIds.includes(category.id);
                   const categoryFolders = folders.filter((folder) => folder.categoryId === category.id);
-                  return <div key={category.id} className="category-group" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, category.id); if (draggingNode?.type === "scene") { const firstFolder = categoryFolders[0]; if (firstFolder) void moveSceneToFolder(draggingNode.id, firstFolder.id); else { setActiveCategoryId(category.id); setFolderNameDraft("Scenes"); setIsCreatingFolder(true); } } if (draggingNode?.type === "category") void reorderCategories(draggingNode.id, category.id); setDraggingNode(null); }}>
+                  return <div key={category.id} className="category-group" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); event.stopPropagation(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, category.id); if (draggingNode?.type === "scene") { const firstFolder = categoryFolders[0]; if (firstFolder) void moveSceneToFolder(draggingNode.id, firstFolder.id); else { setActiveCategoryId(category.id); setPendingSceneMoveId(draggingNode.id); setFolderNameDraft("Scenes"); setIsCreatingFolder(true); } } if (draggingNode?.type === "category") void reorderCategories(draggingNode.id, category.id); setDraggingNode(null); }}>
                     <div className="category-row" draggable onDragStart={(event) => { event.stopPropagation(); setDraggingNode({ type: "category", id: category.id }); }} onDragEnd={() => setDraggingNode(null)}>
                       <button type="button" className="folder-expand-button" aria-expanded={expanded} onClick={() => setExpandedCategoryIds((current) => expanded ? current.filter((id) => id !== category.id) : [...current, category.id])}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>
                       <button type="button" className="folder-select-button" onClick={() => { setActiveCategoryId(category.id); setActiveFolderId(null); }}><Folder size={14} /><span>{category.name}</span><small>{scenes.filter((scene) => categoryFolders.some((folder) => folder.id === scene.folderId)).length}</small></button>
@@ -902,7 +908,7 @@ function sanitiseHtml(html: string) {
               </div>
               <div className="scene-creation-actions">
                 <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
-                <button className="new-folder-button" type="button" title="Create folder" aria-label="Create folder" onClick={() => { setFolderNameDraft(""); setIsCreatingFolder(true); }} disabled={!activeWorkspace || workspaceLoading}><FolderPlus size={16} /></button>
+                <button className="new-folder-button" type="button" title="Create folder" aria-label="Create folder" onClick={() => { setActiveCategoryId(null); setPendingSceneMoveId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }} disabled={!activeWorkspace || workspaceLoading}><FolderPlus size={16} /></button>
               </div>
               </>}
             </>}
