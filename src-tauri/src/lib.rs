@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
-use tauri::{PhysicalPosition, Window};
+use tauri::{AppHandle, Manager, PhysicalPosition, Window};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use uuid::Uuid;
 
@@ -219,6 +219,42 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+/// Imports an image into BRD-owned application storage so the original file can be moved safely.
+#[tauri::command]
+fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, String> {
+    let source = PathBuf::from(source_path);
+    let extension = source
+        .extension()
+        .and_then(|value| value.to_str())
+        .map(str::to_ascii_lowercase)
+        .ok_or_else(|| "The selected file has no supported image extension.".to_string())?;
+
+    if !["png", "jpg", "jpeg", "webp", "gif"].contains(&extension.as_str()) {
+        return Err("Choose a PNG, JPG, WebP, or GIF image.".into());
+    }
+
+    let metadata = fs::metadata(&source)
+        .map_err(|error| format!("Could not read the selected image: {error}"))?;
+    if !metadata.is_file() {
+        return Err("The selected path is not a file.".into());
+    }
+    if metadata.len() > 25 * 1024 * 1024 {
+        return Err("Images must be 25 MiB or smaller.".into());
+    }
+
+    let app_data = app.path().app_data_dir()
+        .map_err(|error| format!("Could not locate BRD application storage: {error}"))?;
+    let media_dir = app_data.join("media");
+    fs::create_dir_all(&media_dir)
+        .map_err(|error| format!("Could not create BRD media storage: {error}"))?;
+
+    let destination = media_dir.join(format!("{}.{}", Uuid::new_v4(), extension));
+    fs::copy(&source, &destination)
+        .map_err(|error| format!("Could not import the selected image: {error}"))?;
+
+    Ok(destination.to_string_lossy().into_owned())
+}
+
 /// Moves the native application window briefly from side to side.
 #[tauri::command]
 fn shake_window(window: Window) -> Result<(), String> {
@@ -267,7 +303,8 @@ pub fn run() {
             create_workspace,
             inspect_workspace,
             load_workspace_content,
-            save_workspace_content
+            save_workspace_content,
+            import_profile_media
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
