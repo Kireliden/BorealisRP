@@ -16,8 +16,15 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   profile: {
     displayName: "Usuario",
     avatarAssetId: null,
+    avatarAssetPath: null,
+    bannerAssetPath: null,
+    title: "",
+    motto: "",
     description: "",
+    frameStyle: "none",
   },
+
+  characterAvatarPaths: {},
 
   editor: {
     fontSize: 14,
