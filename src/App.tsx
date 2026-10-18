@@ -606,7 +606,7 @@ function sanitiseHtml(html: string) {
 
 <div className="sidebar-footer">
   <button className="sidebar-profile-trigger" type="button" onClick={() => setIsProfileOpen(true)} title="Open your profile" aria-label="Open your profile">
-    <div className="profile-avatar">
+    <div className={`profile-avatar frame-border-${preferences.profile.frameStyle}`}>
       {profileMediaSource(preferences.profile.avatarAssetPath) ? <img src={profileMediaSource(preferences.profile.avatarAssetPath) ?? undefined} alt="" /> : <span>{preferences.profile.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
     </div>
     <div className="profile-copy">
