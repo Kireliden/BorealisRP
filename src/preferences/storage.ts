@@ -241,6 +241,8 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
       avatarPositionY: validOr(profile.avatarPositionY, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.avatarPositionY),
       bannerPositionX: validOr(profile.bannerPositionX, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.bannerPositionX),
       bannerPositionY: validOr(profile.bannerPositionY, (value): value is number => isBoundedNumber(value, 0, 100), defaults.profile.bannerPositionY),
+      avatarZoom: validOr(profile.avatarZoom, (value): value is number => isBoundedNumber(value, 100, 200), defaults.profile.avatarZoom),
+      bannerZoom: validOr(profile.bannerZoom, (value): value is number => isBoundedNumber(value, 100, 200), defaults.profile.bannerZoom),
       frameStyle: validOr(
         profile.frameStyle,
         (value): value is AppPreferences["profile"]["frameStyle"] =>
