@@ -2,7 +2,7 @@
 import type { AppPreferences } from "./types";
 
 export const DEFAULT_PREFERENCES: AppPreferences = {
-  schemaVersion: 2,
+  schemaVersion: 3,
 
   appearance: {
     theme: "frappe",
@@ -26,6 +26,10 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     motto: "",
     description: "",
     frameStyle: "none",
+    avatarPositionX: 50,
+    avatarPositionY: 50,
+    bannerPositionX: 50,
+    bannerPositionY: 50,
   },
 
   characterAvatarPaths: {},
