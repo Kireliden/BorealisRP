@@ -656,6 +656,13 @@ function sanitiseHtml(html: string) {
       {isCollectionsOpen && (
         <CollectionsModal onClose={() => setIsCollectionsOpen(false)} />
       )}
+      {isWorkspaceManagerOpen && (
+        <WorkspaceManagerModal
+          onClose={() => setIsWorkspaceManagerOpen(false)}
+          activeWorkspace={activeWorkspace}
+          onSelect={(workspace: WorkspaceInfo) => setActiveWorkspace(workspace)}
+        />
+      )}
     </main>
   );
 }
