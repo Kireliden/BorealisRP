@@ -180,7 +180,7 @@ function sanitiseHtml(html: string) {
   const [isAtLatestMessage, setIsAtLatestMessage] = useState(true);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "themes" | "profile" | "characters" | "roleplay" | "editor" | "data">("appearance");
+  const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { preferences, updatePreferences } = usePreferences();
