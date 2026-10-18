@@ -2,7 +2,7 @@
 import type { AppPreferences } from "./types";
 
 export const DEFAULT_PREFERENCES: AppPreferences = {
-  schemaVersion: 1,
+  schemaVersion: 2,
 
   appearance: {
     theme: "frappe",
