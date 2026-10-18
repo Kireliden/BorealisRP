@@ -1,10 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { deleteResource, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
 import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
 
 type Props = { onClose: () => void };
+type NativeDroppedFile = { fileName: string; bytes: number[] };
+
+function mimeTypeFromName(fileName: string): string {
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const types: Record<string, string> = {
+    png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif", bmp: "image/bmp", svg: "image/svg+xml", avif: "image/avif",
+    mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", flac: "audio/flac", m4a: "audio/mp4", aac: "audio/aac", opus: "audio/opus",
+    mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", mkv: "video/x-matroska",
+    pdf: "application/pdf", txt: "text/plain", json: "application/json", zip: "application/zip",
+  };
+  return types[extension] ?? "application/octet-stream";
+}
 
 export default function ResourcesPage({ onClose }: Props) {
   const [resources, setResources] = useState<ResourceRecord[]>([]);
@@ -35,6 +49,43 @@ export default function ResourcesPage({ onClose }: Props) {
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
   const filtered = resources.filter((resource) => (kind === "all" || resource.kind === kind) && [resource.name, resource.fileName, ...resource.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+
+  async function addNativePaths(paths: string[]) {
+    setError("");
+    try {
+      const droppedFiles = await invoke<NativeDroppedFile[]>("read_dropped_resource_files", { paths });
+      for (const dropped of droppedFiles) {
+        const bytes = Uint8Array.from(dropped.bytes);
+        const file = new File([bytes.buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
+        await importResource(file);
+      }
+      if (droppedFiles.length) await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  useEffect(() => {
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+    void getCurrentWindow().onDragDropEvent((event) => {
+      if (event.payload.type === "enter" || event.payload.type === "over") {
+        setDragging(true);
+      } else if (event.payload.type === "leave") {
+        setDragging(false);
+      } else if (event.payload.type === "drop") {
+        setDragging(false);
+        if (event.payload.paths.length) void addNativePaths(event.payload.paths);
+      }
+    }).then((stopListening) => {
+      if (disposed) stopListening();
+      else unlisten = stopListening;
+    }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, []);
 
   async function addFiles(files: FileList | File[]) {
     setError("");
