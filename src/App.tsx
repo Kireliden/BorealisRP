@@ -18,7 +18,7 @@ import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder } from "./workspace/workspaceContent";
-import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath } from "./workspace/workspaceStorage";
+import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath, renameWorkspace } from "./workspace/workspaceStorage";
 import "./popup-motion.css";
 
 const appWindow = getCurrentWindow();
@@ -165,6 +165,8 @@ function sanitiseHtml(html: string) {
   const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
   const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
   const [isWorkspaceContentsCollapsed, setIsWorkspaceContentsCollapsed] = useState(false);
+  const [isUnfiledScenesCollapsed, setIsUnfiledScenesCollapsed] = useState(false);
+  const [draggingSceneId, setDraggingSceneId] = useState<string | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [scenePendingDeletion, setScenePendingDeletion] = useState<WorkspaceScene | null>(null);
@@ -566,6 +568,78 @@ function sanitiseHtml(html: string) {
     }
   }
 
+  async function renameRoleplay() {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = window.prompt("Rename roleplay", activeWorkspace.manifest.name)?.trim();
+    if (!name || name === activeWorkspace.manifest.name) return;
+    try {
+      const renamed = await renameWorkspace(activeWorkspace.path, name);
+      setActiveWorkspace(renamed);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  async function renameFolder(folder: WorkspaceFolder) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = window.prompt("Rename folder", folder.name)?.trim();
+    if (!name || name === folder.name) return;
+    if (folders.some((item) => item.id !== folder.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setWorkspaceError("A folder with that name already exists in this roleplay space.");
+      return;
+    }
+    const nextFolders = folders.map((item) => item.id === folder.id ? { ...item, name } : item);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders });
+      setFolders(nextFolders);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  async function renameScene(scene: WorkspaceScene) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = window.prompt("Rename scene", scene.name)?.trim();
+    if (!name || name === scene.name) return;
+    if (scenes.some((item) => item.id !== scene.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setWorkspaceError("A scene with that name already exists in this workspace.");
+      return;
+    }
+    const nextScenes = scenes.map((item) => item.id === scene.id ? { ...item, name } : item);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
+      setScenes(nextScenes);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  async function reorderScenes(draggedId: string, targetId: string) {
+    if (!activeWorkspace || workspaceLoading || draggedId === targetId) return;
+    const dragged = scenes.find((scene) => scene.id === draggedId);
+    const target = scenes.find((scene) => scene.id === targetId);
+    if (!dragged || !target || (dragged.folderId ?? null) !== (target.folderId ?? null)) return;
+    const siblings = scenes.filter((scene) => (scene.folderId ?? null) === (dragged.folderId ?? null));
+    const from = siblings.findIndex((scene) => scene.id === draggedId);
+    const to = siblings.findIndex((scene) => scene.id === targetId);
+    if (from < 0 || to < 0) return;
+    const reordered = [...siblings];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    let index = 0;
+    const nextScenes = scenes.map((scene) => (scene.folderId ?? null) === (dragged.folderId ?? null) ? reordered[index++] : scene);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders });
+      setScenes(nextScenes);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
   async function createFolder() {
     if (!activeWorkspace || workspaceLoading) return;
     const name = folderNameDraft.trim();
@@ -690,11 +764,15 @@ function sanitiseHtml(html: string) {
               <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
                 <span>ROLEPLAY SPACE</span>{isScenesCollapsed ? <ChevronRight size={14} className="scenes-collapse-chevron" /> : <ChevronDown size={14} className="scenes-collapse-chevron" />}
               </button>
+              <button type="button" className="tiny-button roleplay-create-button" title="Create or open a roleplay" aria-label="Create or open a roleplay" onClick={() => setIsWorkspaceManagerOpen(true)}><FolderPlus size={15} /></button>
             </div>
             {!isScenesCollapsed && <>
-              <button type="button" className="project-label project-label-button" aria-expanded={!isWorkspaceContentsCollapsed} onClick={() => setIsWorkspaceContentsCollapsed((collapsed) => !collapsed)} disabled={!activeWorkspace}>
-                {isWorkspaceContentsCollapsed ? <ChevronRight size={14} className="project-chevron" /> : <ChevronDown size={14} className="project-chevron" />}<span className="project-symbol">✦</span><span className="project-label-name">{activeWorkspace?.manifest.name ?? "Choose a roleplay"}</span>
-              </button>
+              <div className="project-label-row">
+                <button type="button" className="project-label project-label-button" aria-expanded={!isWorkspaceContentsCollapsed} onClick={() => setIsWorkspaceContentsCollapsed((collapsed) => !collapsed)} disabled={!activeWorkspace}>
+                  {isWorkspaceContentsCollapsed ? <ChevronRight size={14} className="project-chevron" /> : <ChevronDown size={14} className="project-chevron" />}<span className="project-symbol">✦</span><span className="project-label-name">{activeWorkspace?.manifest.name ?? "Choose a roleplay"}</span>
+                </button>
+                <button type="button" className="rename-node-button" title="Rename roleplay" aria-label="Rename roleplay" onClick={() => void renameRoleplay()} disabled={!activeWorkspace || workspaceLoading}><Pencil size={12} /></button>
+              </div>
               {!isWorkspaceContentsCollapsed && <>
               <div className="roleplay-tree">
                 {folders.map((folder) => {
@@ -704,14 +782,18 @@ function sanitiseHtml(html: string) {
                     <div className="folder-row">
                       <button type="button" className="folder-expand-button" aria-label={`${expanded ? "Collapse" : "Expand"} folder ${folder.name}`} aria-expanded={expanded} onClick={() => setExpandedFolderIds((current) => expanded ? current.filter((id) => id !== folder.id) : [...current, folder.id])}>{expanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}</button>
                       <button type="button" className="folder-select-button" onClick={() => { setActiveFolderId(folder.id); setExpandedFolderIds((current) => current.includes(folder.id) ? current : [...current, folder.id]); }}><Folder size={14} /><span>{folder.name}</span><small>{folderScenes.length}</small></button>
+                      <button type="button" className="rename-node-button folder-rename-button" title={`Rename folder ${folder.name}`} aria-label={`Rename folder ${folder.name}`} onClick={() => void renameFolder(folder)}><Pencil size={12} /></button>
                       <button type="button" className="folder-delete-button" title={`Delete folder ${folder.name}`} aria-label={`Delete folder ${folder.name}`} onClick={() => setFolderPendingDeletion(folder)}><Trash2 size={13} /></button>
                     </div>
-                    {expanded && <div className="folder-scenes">{folderScenes.map((scene) => <div key={scene.id} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
+                    {expanded && <div className="folder-scenes">{folderScenes.map((scene) => <div key={scene.id} draggable onDragStart={() => setDraggingSceneId(scene.id)} onDragEnd={() => setDraggingSceneId(null)} onDragOver={(event) => { const dragged = scenes.find((item) => item.id === draggingSceneId); if (dragged && (dragged.folderId ?? null) === (scene.folderId ?? null)) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingSceneId) void reorderScenes(draggingSceneId, scene.id); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
                   </div>;
                 })}
                 <div className="folder-group unfiled-scenes">
-                  <div className="folder-row"><Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">Scenes</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small></div>
-                  <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => <div key={scene.id} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>
+                  <div className="folder-row">
+                    <button type="button" className="folder-expand-button" aria-label={`${isUnfiledScenesCollapsed ? "Expand" : "Collapse"} No category`} aria-expanded={!isUnfiledScenesCollapsed} onClick={() => setIsUnfiledScenesCollapsed((collapsed) => !collapsed)}>{isUnfiledScenesCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}</button>
+                    <Folder size={14} className="unfiled-folder-icon" /><span className="unfiled-label">No category</span><small>{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).length}</small>
+                  </div>
+                  {!isUnfiledScenesCollapsed && <div className="folder-scenes">{scenes.filter((scene) => !scene.folderId || !folders.some((folder) => folder.id === scene.folderId)).map((scene) => <div key={scene.id} draggable onDragStart={() => setDraggingSceneId(scene.id)} onDragEnd={() => setDraggingSceneId(null)} onDragOver={(event) => { const dragged = scenes.find((item) => item.id === draggingSceneId); if (dragged && (dragged.folderId ?? null) === (scene.folderId ?? null)) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingSceneId) void reorderScenes(draggingSceneId, scene.id); setDraggingSceneId(null); }} className={`scene-row ${activeSceneId === scene.id ? "selected" : ""} ${draggingSceneId === scene.id ? "scene-dragging" : ""}`}><button type="button" className="scene-item" onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="rename-node-button scene-rename-button" title={`Rename scene ${scene.name}`} aria-label={`Rename scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void renameScene(scene)}><Pencil size={12} /></button><button type="button" className="scene-delete-button" title={`Delete scene ${scene.name}`} aria-label={`Delete scene ${scene.name}`} disabled={!activeWorkspace || workspaceLoading} onClick={() => void deleteScene(scene)}><Trash2 size={14} /></button></div>)}</div>}
                 </div>
               </div>
               <div className="scene-creation-actions">
@@ -766,7 +848,7 @@ function sanitiseHtml(html: string) {
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => <article className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img className={message.avatarAssetPath || message.author === "You" ? "message-avatar-profile-image" : undefined} src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
+            {messages.map((message) => <article style={enteringMessageId === message.id && preferences.accessibility.animationsEnabled ? { animation: "brd-message-enter 850ms cubic-bezier(0.18, 0.82, 0.22, 1) both" } : undefined} className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img className={message.avatarAssetPath || message.author === "You" ? "message-avatar-profile-image" : undefined} src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
