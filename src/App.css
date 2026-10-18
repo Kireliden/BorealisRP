@@ -2207,6 +2207,30 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 }
 
 
+.tree-drag-handle {
+  display: inline-flex;
+  flex: 0 0 14px;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-height: 28px;
+  color: var(--ctp-overlay1);
+  cursor: grab;
+  opacity: 0.7;
+  border-radius: 4px;
+  touch-action: none;
+}
+.tree-drag-handle:hover {
+  color: var(--accent);
+  opacity: 1;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.tree-drag-handle:active { cursor: grabbing; }
+.category-row .tree-drag-handle { margin-left: 3px; }
+.folder-row .tree-drag-handle { margin-left: 2px; }
+.scene-row .tree-drag-handle { align-self: center; min-height: 30px; margin-left: 3px; }
+.scene-row .scene-item { min-width: 0; }
+
 /* Native drag-and-drop affordances for the Roleplay Space tree. */
 .category-row[draggable="true"],
 .folder-row[draggable="true"],
