@@ -270,6 +270,40 @@ fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, S
     Ok(destination.to_string_lossy().into_owned())
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DroppedResourceFile {
+    file_name: String,
+    bytes: Vec<u8>,
+}
+
+/// Reads files explicitly dropped onto the app window so the webview can store them in its resource library.
+#[tauri::command]
+fn read_dropped_resource_files(paths: Vec<String>) -> Result<Vec<DroppedResourceFile>, String> {
+    const MAX_FILE_BYTES: u64 = 128 * 1024 * 1024;
+    let mut files = Vec::new();
+
+    for raw_path in paths {
+        let path = PathBuf::from(&raw_path);
+        let metadata = fs::metadata(&path)
+            .map_err(|error| format!("Could not access dropped file '{}': {error}", path.display()))?;
+        if !metadata.is_file() {
+            continue;
+        }
+        if metadata.len() > MAX_FILE_BYTES {
+            return Err(format!("'{}' is larger than the 128 MB drag-and-drop limit. Use Import files for this file.", path.file_name().unwrap_or_default().to_string_lossy()));
+        }
+        let file_name = path.file_name()
+            .ok_or_else(|| "A dropped item has no file name.".to_string())?
+            .to_string_lossy()
+            .into_owned();
+        let bytes = fs::read(&path)
+            .map_err(|error| format!("Could not read dropped file '{}': {error}", path.display()))?;
+        files.push(DroppedResourceFile { file_name, bytes });
+    }
+    Ok(files)
+}
+
 /// Moves the native application window briefly from side to side.
 #[tauri::command]
 fn shake_window(window: Window) -> Result<(), String> {
@@ -321,7 +355,8 @@ pub fn run() {
             inspect_workspace,
             load_workspace_content,
             save_workspace_content,
-            import_profile_media
+            import_profile_media,
+            read_dropped_resource_files
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
