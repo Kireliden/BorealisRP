@@ -470,7 +470,7 @@ function sanitiseHtml(html: string) {
 
           <section ref={conversationRef} className="conversation" aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
-            {activeScene && !messages.length && !workspaceLoading && <div className="workspace-empty"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
+            {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
             {messages.map((message) => <article className="message" key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{message.expression && (
                       <span
                         className="message-expression"

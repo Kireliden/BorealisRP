@@ -167,7 +167,7 @@ fn inspect_workspace(path: String) -> Result<WorkspaceInfo, String> {
 #[tauri::command]
 fn load_workspace_content(path: String) -> Result<serde_json::Value, String> {
     let workspace = read_workspace(Path::new(&path))?;
-    let content_path = Path::new(&workspace.path).join("workspace-content.json");
+    let content_path = Path::new(&workspace.path).join("Chats/workspace-content.json");
     if !content_path.exists() {
         return Ok(serde_json::json!({ "schemaVersion": 1, "scenes": [] }));
     }
@@ -199,7 +199,7 @@ fn save_workspace_content(path: String, content: serde_json::Value) -> Result<()
         return Err("Workspace content is larger than the 20 MB safety limit.".into());
     }
 
-    let content_path = Path::new(&workspace.path).join("workspace-content.json");
+    let content_path = Path::new(&workspace.path).join("Chats/workspace-content.json");
     fs::write(&content_path, bytes)
         .map_err(|error| format!("Could not save workspace content: {error}"))?;
 

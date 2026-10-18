@@ -6,7 +6,7 @@ This milestone replaces the hard-coded scene/message preview with workspace-owne
 
 ## Storage
 
-Each workspace stores `workspace-content.json` at its root. The document has `schemaVersion: 1` and a `scenes` array. Each scene owns its ID, name, icon, and messages. The file is portable with the workspace folder.
+Each workspace stores `workspace-content.json` inside the workspace’s `Chats` folder. The document has `schemaVersion: 1` and a `scenes` array. Each scene owns its ID, name, icon, and messages. The file is portable with the workspace folder.
 
 The Tauri backend validates the workspace manifest before reading or writing content, uses a fixed filename rather than an arbitrary relative path, validates the content schema, caps saved content at 20 MB, and updates the manifest's `updatedAt` timestamp after saves.
 
