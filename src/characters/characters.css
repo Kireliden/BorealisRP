@@ -11,10 +11,10 @@
 .character-editor-portrait{aspect-ratio:4/5;max-height:310px;margin-bottom:22px;border:1px solid color-mix(in srgb,var(--character-accent) 45%,var(--border));border-radius:14px;background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--character-accent) 28%,var(--ctp-base)),color-mix(in srgb,var(--character-accent) 7%,var(--ctp-mantle)) 65%);box-shadow:0 12px 32px #0002, inset 0 0 30px color-mix(in srgb,var(--character-accent) 8%,transparent);transition:border-color .2s,box-shadow .2s}
 .character-editor-portrait:hover{box-shadow:0 0 0 1px color-mix(in srgb,var(--character-accent) 60%,transparent),0 14px 38px #0003}
 .character-editor-portrait:before{inset:10px;border-color:color-mix(in srgb,var(--character-accent) 35%,transparent);border-radius:9px;pointer-events:none}
-.character-card-art{isolation:isolate;background:radial-gradient(ellipse at 50% 24%,color-mix(in srgb,var(--character-accent) 30%,var(--ctp-base)),var(--ctp-mantle) 72%)}
+.character-card-art{isolation:isolate;flex:0 0 auto;width:100%;background:radial-gradient(ellipse at 50% 24%,color-mix(in srgb,var(--character-accent) 30%,var(--ctp-base)),var(--ctp-mantle) 72%)}
 .character-card-art:after{content:none}
 .character-card-art small{z-index:2;padding:4px 7px;border:1px solid color-mix(in srgb,var(--character-accent) 24%,transparent);border-radius:5px;background:color-mix(in srgb,var(--ctp-mantle) 58%,transparent);backdrop-filter:blur(5px)}
-.character-card{border-color:color-mix(in srgb,var(--character-accent,var(--border)) 25%,var(--border));background:linear-gradient(155deg,color-mix(in srgb,var(--character-accent) 4%,var(--sidebar-bg)),var(--sidebar-bg));transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.character-card{display:flex;flex-direction:column;align-self:start;border-color:color-mix(in srgb,var(--character-accent,var(--border)) 25%,var(--border));background:linear-gradient(155deg,color-mix(in srgb,var(--character-accent) 4%,var(--sidebar-bg)),var(--sidebar-bg));transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
 .character-card:hover{border-color:color-mix(in srgb,var(--character-accent) 68%,var(--border));box-shadow:0 10px 26px #0002}
 .character-card.is-selected{border-color:var(--character-accent);box-shadow:0 0 0 1px var(--character-accent),0 8px 24px color-mix(in srgb,var(--character-accent) 12%,transparent)}
 .character-card-copy{position:relative}
@@ -39,7 +39,7 @@
 
 
 /* Fade only the portrait artwork; labels and tags stay on a crisp upper layer. */
-.character-card-art .character-portrait-image-layer-fade{position:absolute;inset:0;z-index:0;width:100%;height:100%;overflow:hidden;mask-image:linear-gradient(to bottom,transparent 0%,#000 24%,#000 72%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 24%,#000 72%,transparent 100%)}
+.character-card-art .character-portrait-image-layer-fade{position:absolute;inset:0;z-index:0;width:100%;height:100%;overflow:hidden;mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 56%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 56%,transparent 100%)}
 .character-card-art .character-portrait-image-layer-fade .character-portrait-image{position:absolute;inset:0;width:100%;height:100%;mask-image:none;-webkit-mask-image:none}
 .character-card-art:before{z-index:1;pointer-events:none}
 .character-card-art small{z-index:2}
