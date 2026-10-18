@@ -303,7 +303,19 @@ function sanitiseHtml(html: string) {
         setScenes(validScenes);
         const validFolders = Array.isArray(content.folders) ? content.folders : [];
         setFolders(validFolders);
-        const validCategories = Array.isArray(content.categories) ? content.categories : [];
+        let validCategories = Array.isArray(content.categories) ? content.categories : [];
+        // The selected roleplay's name is the default root category, not a parent
+        // node above another category. Promote the single provisional category
+        // created by the previous tree layout to the roleplay's visible root name.
+        if (activeWorkspace && validCategories.length === 1 && validCategories[0].name !== activeWorkspace.manifest.name) {
+          validCategories = [{ ...validCategories[0], name: activeWorkspace.manifest.name }];
+          await saveWorkspaceContent(activeWorkspace.path, {
+            schemaVersion: 1,
+            scenes: validScenes,
+            folders: validFolders,
+            categories: validCategories,
+          });
+        }
         setCategories(validCategories);
         setExpandedCategoryIds(validCategories.map((category) => category.id));
         setExpandedFolderIds(validFolders.map((folder) => folder.id));
@@ -876,16 +888,9 @@ function sanitiseHtml(html: string) {
               <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
                 <span>ROLEPLAY SPACE</span>{isScenesCollapsed ? <ChevronRight size={14} className="scenes-collapse-chevron" /> : <ChevronDown size={14} className="scenes-collapse-chevron" />}
               </button>
-              <button type="button" className="tiny-button roleplay-create-button" title="Create or open a roleplay" aria-label="Create or open a roleplay" onClick={() => { setCategoryNameDraft(""); setIsCreatingCategory(true); }}><Plus size={15} /></button>
+              <button type="button" className="tiny-button roleplay-create-button" title="Create category" aria-label="Create category" onClick={() => { setCategoryNameDraft(""); setIsCreatingCategory(true); }}><Plus size={15} /></button>
             </div>
             {!isScenesCollapsed && <>
-              <div className="project-label-row">
-                <button type="button" className="project-label project-label-button" aria-expanded={!isWorkspaceContentsCollapsed} onClick={() => setIsWorkspaceContentsCollapsed((collapsed) => !collapsed)} disabled={!activeWorkspace}>
-                  {isWorkspaceContentsCollapsed ? <ChevronRight size={14} className="project-chevron" /> : <ChevronDown size={14} className="project-chevron" />}<span className="project-symbol">✦</span><span className="project-label-name">{activeWorkspace?.manifest.name ?? "Choose a roleplay"}</span>
-                </button>
-                <button type="button" className="rename-node-button" title="Rename roleplay" aria-label="Rename roleplay" onClick={() => void renameRoleplay()} disabled={!activeWorkspace || workspaceLoading}><Pencil size={12} /></button>
-              </div>
-              {!isWorkspaceContentsCollapsed && <>
               <div className="roleplay-tree" onDragOver={(event) => { if (draggingNode) event.preventDefault(); }} onDrop={(event) => { event.preventDefault(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, null); if (draggingNode?.type === "scene") void moveSceneToFolder(draggingNode.id, null); setDraggingNode(null); }}>
                 {categories.map((category) => {
                   const expanded = expandedCategoryIds.includes(category.id);
@@ -932,7 +937,6 @@ function sanitiseHtml(html: string) {
                 <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
                 <button className="new-folder-button" type="button" title="Create folder" aria-label="Create folder" onClick={() => { setActiveCategoryId(null); setPendingSceneMoveId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }} disabled={!activeWorkspace || workspaceLoading}><FolderPlus size={16} /></button>
               </div>
-              </>}
             </>}
           </div>
           
@@ -1182,10 +1186,10 @@ function sanitiseHtml(html: string) {
       {isCreatingCategory && (
         <div className="clean-confirmation-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsCreatingCategory(false); }}>
           <form className="clean-confirmation-dialog folder-create-dialog" onSubmit={(event) => { event.preventDefault(); void createCategory(); }}>
-            <div className="clean-confirmation-icon"><FolderPlus size={21} /></div>
+            <div className="clean-confirmation-icon"><Layers size={21} /></div>
             <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · ORGANISATION</span>
             <h2>Create a category</h2>
-            <p>Categories contain folders, and folders contain scenes. Existing scenes and messages will be preserved.</p>
+            <p>Categories sit directly inside Roleplay Space. Each category contains folders, and folders contain scenes. Existing scenes and messages will be preserved.</p>
             <input autoFocus className="folder-name-input" value={categoryNameDraft} onChange={(event) => setCategoryNameDraft(event.target.value)} placeholder="e.g. Main storyline" aria-label="Category name" maxLength={80} />
             <div className="clean-confirmation-actions"><button type="button" className="clean-cancel-button" onClick={() => setIsCreatingCategory(false)}>Cancel</button><button type="submit" className="clean-continue-button" disabled={!categoryNameDraft.trim()}>Create category</button></div>
           </form>
