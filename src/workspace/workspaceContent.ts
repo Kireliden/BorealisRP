@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export type WorkspaceMessage = {
   id: number;
+  sentAt?: number;
   author: string;
   initials: string;
   role: "Narration" | "Dialogue";
