@@ -1548,9 +1548,9 @@ textarea:focus-visible {
 
 .message-expression {
   display: inline-block;
-  flex: 0 0 1.15em;
-  width: 1.15em;
-  height: 1.15em;
+  flex: 0 0 calc(var(--chat-font-size, 16px) * 1.15);
+  width: calc(var(--chat-font-size, 16px) * 1.15);
+  height: calc(var(--chat-font-size, 16px) * 1.15);
   background-color: var(--accent);
   mask-repeat: no-repeat;
   mask-position: center;
