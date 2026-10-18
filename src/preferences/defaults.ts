@@ -30,6 +30,8 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     avatarPositionY: 50,
     bannerPositionX: 50,
     bannerPositionY: 50,
+    avatarZoom: 100,
+    bannerZoom: 100,
   },
 
   characterAvatarPaths: {},
