@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { PhysicalPosition, PhysicalSize } from "@tauri-apps/api/dpi";
 import { usePreferences } from "./preferences/PreferencesContext";
 import ProfileModal from "./profile/ProfileModal";
 import { profileMediaSource } from "./profile/profileMedia";
@@ -180,6 +181,7 @@ function sanitiseHtml(html: string) {
   const [avatarPreviewCharacter, setAvatarPreviewCharacter] = useState<AvatarPreviewCharacter | null>(null);
   const [avatarTilt, setAvatarTilt] = useState({ x: 0, y: 0, shineX: 50, shineY: 35 });
   const [isMaximized, setIsMaximized] = useState(false);
+  const [enteringMessageId, setEnteringMessageId] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const characterPanelRef = useRef<HTMLElement>(null);
   const conversationRef = useRef<HTMLElement>(null);
@@ -388,18 +390,59 @@ function sanitiseHtml(html: string) {
     setHasNewMessages(false);
   }
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
     let cancelled = false;
-    appWindow.isMaximized().then(setIsMaximized);
-    appWindow.onResized(() => {
-      appWindow.isMaximized().then(setIsMaximized);
-    }).then((stopListening) => {
-      if (cancelled) stopListening();
-      else unlisten = stopListening;
-    });
+    let stopResize: (() => void) | undefined;
+    let stopMove: (() => void) | undefined;
+
+    async function restoreWindowBounds() {
+      try {
+        const saved = localStorage.getItem("brd-window-bounds");
+        if (saved) {
+          const bounds = JSON.parse(saved) as { width?: number; height?: number; x?: number; y?: number };
+          if (Number.isFinite(bounds.width) && Number.isFinite(bounds.height) && (bounds.width ?? 0) >= 760 && (bounds.height ?? 0) >= 560) {
+            await appWindow.setSize(new PhysicalSize(bounds.width!, bounds.height!));
+          }
+          if (Number.isFinite(bounds.x) && Number.isFinite(bounds.y)) {
+            await appWindow.setPosition(new PhysicalPosition(bounds.x!, bounds.y!));
+          }
+        }
+        if (localStorage.getItem("brd-window-maximized") === "true") {
+          await appWindow.maximize();
+        }
+      } catch (error) {
+        console.warn("Could not restore the previous window bounds:", error);
+      }
+      if (!cancelled) setIsMaximized(await appWindow.isMaximized());
+    }
+
+    async function saveWindowBounds() {
+      try {
+        const maximized = await appWindow.isMaximized();
+        localStorage.setItem("brd-window-maximized", String(maximized));
+        if (maximized || cancelled) return;
+        const [size, position] = await Promise.all([appWindow.outerSize(), appWindow.outerPosition()]);
+        localStorage.setItem("brd-window-bounds", JSON.stringify({
+          width: size.width, height: size.height, x: position.x, y: position.y,
+        }));
+      } catch (error) {
+        console.warn("Could not save the current window bounds:", error);
+      }
+    }
+
+    void (async () => {
+      await restoreWindowBounds();
+      if (cancelled) return;
+      stopResize = await appWindow.onResized(() => {
+        void appWindow.isMaximized().then(setIsMaximized);
+        void saveWindowBounds();
+      });
+      stopMove = await appWindow.onMoved(() => { void saveWindowBounds(); });
+    })();
+
     return () => {
       cancelled = true;
-      unlisten?.();
+      stopResize?.();
+      stopMove?.();
     };
   }, []);
 
@@ -555,10 +598,13 @@ function sanitiseHtml(html: string) {
       );
       setEditingMessageId(null);
     } else {
+      const newMessageId = Date.now();
+      setEnteringMessageId(newMessageId);
+      window.setTimeout(() => setEnteringMessageId((current) => current === newMessageId ? null : current), 420);
       nextMessages = [
         ...messages,
         {
-          id: Date.now(),
+          id: newMessageId,
           sentAt: Date.now(),
           author: character.name,
           initials: character.initials,
@@ -646,7 +692,7 @@ function sanitiseHtml(html: string) {
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => <article className={`message ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
+            {messages.map((message) => <article className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
