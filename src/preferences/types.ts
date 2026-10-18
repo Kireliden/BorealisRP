@@ -77,6 +77,8 @@ export interface AppPreferences {
     avatarPositionY: number;
     bannerPositionX: number;
     bannerPositionY: number;
+    avatarZoom: number;
+    bannerZoom: number;
   };
 
   /** App-level image paths for the current interim character picker. */
