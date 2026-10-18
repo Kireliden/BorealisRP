@@ -202,7 +202,7 @@ function sanitiseHtml(html: string) {
   const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "accessibility" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { preferences, updatePreferences } = usePreferences();
+  const { preferences } = usePreferences();
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
