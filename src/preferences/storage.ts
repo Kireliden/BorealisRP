@@ -185,7 +185,7 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
       ),
       chatFontSize: validOr(
         appearance.chatFontSize,
-        (value): value is number => isBoundedNumber(value, 11, 18),
+        (value): value is number => isBoundedNumber(value, 11, 24),
         defaults.appearance.chatFontSize,
       ),
     },
