@@ -393,6 +393,34 @@ function sanitiseHtml(html: string) {
     let cancelled = false;
     let stopResize: (() => void) | undefined;
     let stopMove: (() => void) | undefined;
+    let latestSize: PhysicalSize | null = null;
+    let latestPosition: PhysicalPosition | null = null;
+    let currentlyMaximized = false;
+
+    function persistWindowBounds() {
+      try {
+        localStorage.setItem("brd-window-maximized", String(currentlyMaximized));
+        if (currentlyMaximized || !latestSize || !latestPosition) return;
+        localStorage.setItem("brd-window-bounds", JSON.stringify({
+          width: latestSize.width,
+          height: latestSize.height,
+          x: latestPosition.x,
+          y: latestPosition.y,
+        }));
+      } catch (error) {
+        console.warn("Could not save the current window bounds:", error);
+      }
+    }
+
+    async function refreshMaximizedState() {
+      try {
+        currentlyMaximized = await appWindow.isMaximized();
+        if (!cancelled) setIsMaximized(currentlyMaximized);
+        persistWindowBounds();
+      } catch (error) {
+        console.warn("Could not check the window state:", error);
+      }
+    }
 
     async function restoreWindowBounds() {
       try {
@@ -409,34 +437,25 @@ function sanitiseHtml(html: string) {
         if (localStorage.getItem("brd-window-maximized") === "true") {
           await appWindow.maximize();
         }
+        [latestSize, latestPosition] = await Promise.all([appWindow.outerSize(), appWindow.outerPosition()]);
+        currentlyMaximized = await appWindow.isMaximized();
+        if (!cancelled) setIsMaximized(currentlyMaximized);
       } catch (error) {
         console.warn("Could not restore the previous window bounds:", error);
-      }
-      if (!cancelled) setIsMaximized(await appWindow.isMaximized());
-    }
-
-    async function saveWindowBounds() {
-      try {
-        const maximized = await appWindow.isMaximized();
-        localStorage.setItem("brd-window-maximized", String(maximized));
-        if (maximized || cancelled) return;
-        const [size, position] = await Promise.all([appWindow.outerSize(), appWindow.outerPosition()]);
-        localStorage.setItem("brd-window-bounds", JSON.stringify({
-          width: size.width, height: size.height, x: position.x, y: position.y,
-        }));
-      } catch (error) {
-        console.warn("Could not save the current window bounds:", error);
       }
     }
 
     void (async () => {
       await restoreWindowBounds();
       if (cancelled) return;
-      stopResize = await appWindow.onResized(() => {
-        void appWindow.isMaximized().then(setIsMaximized);
-        void saveWindowBounds();
+      stopResize = await appWindow.onResized((event) => {
+        latestSize = event.payload;
+        void refreshMaximizedState();
       });
-      stopMove = await appWindow.onMoved(() => { void saveWindowBounds(); });
+      stopMove = await appWindow.onMoved((event) => {
+        latestPosition = event.payload;
+        void refreshMaximizedState();
+      });
     })();
 
     return () => {
