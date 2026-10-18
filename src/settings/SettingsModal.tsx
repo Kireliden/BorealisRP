@@ -3,11 +3,13 @@ import "./SettingsModal.css";
 import AppearanceSettings from "./AppearanceSettings";
 import ThemesSettings from "./ThemesSettings";
 import ProfileSettings from "./ProfileSettings";
+import ChatSettings from "./ChatSettings";
 
 type SettingsCategory =
   | "appearance"
   | "themes"
   | "profile"
+  | "chat"
   | "characters"
   | "roleplay"
   | "editor"
@@ -22,6 +24,7 @@ const categories: { id: SettingsCategory; label: string }[] = [
   { id: "appearance", label: "Appearance" },
   { id: "themes", label: "Themes" },
   { id: "profile", label: "Profile" },
+  { id: "chat", label: "Chat" },
   { id: "characters", label: "Characters" },
   { id: "roleplay", label: "Roleplay" },
   { id: "editor", label: "Editor" },
@@ -122,6 +125,8 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
   <ThemesSettings />
 ) : activeCategory === "profile" ? (
   <ProfileSettings />
+) : activeCategory === "chat" ? (
+  <ChatSettings />
 ) : (
   <div className="settings-placeholder">
     <div className="settings-placeholder-symbol">✦</div>
