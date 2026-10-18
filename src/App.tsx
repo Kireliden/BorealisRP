@@ -571,7 +571,7 @@ function sanitiseHtml(html: string) {
                           )?.image ?? ""}")`,
                         }}
                       />
-                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
+                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}</div><button className="message-menu" type="button" title="Edit message" aria-label={`Edit message by ${message.author}`} onClick={() => beginEditingMessage(message)}>✎</button></article>)}
             {hasNewMessages && <button className="scroll-to-latest" type="button" onClick={scrollToLatestMessage}>↓ New messages · Jump to latest</button>}
           </section>
 
