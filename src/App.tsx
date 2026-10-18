@@ -452,7 +452,7 @@ function sanitiseHtml(html: string) {
           content,
           source,
           avatar: character.avatar,
-          expression: selectedExpression,
+          expression: selectedCharacter === "You" ? "" : selectedExpression,
         },
       ];
     }
@@ -561,17 +561,17 @@ function sanitiseHtml(html: string) {
                     onClick={() => { setShowAvatarPreview(true); setShowCharacterPicker(false); setShowExpressions(false); }}
                   >
                     {character.avatarAssetPath ? <img className="character-portrait-image" src={profileMediaSource(character.avatarAssetPath) ?? undefined} alt="" /> : <span className="character-portrait-initials">{character.initials}</span>}
-                    <span
+                    {selectedCharacter !== "You" && <span
                       className="character-portrait-expression"
                       aria-hidden="true"
                       style={{
                         maskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
                         WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === selectedExpression)?.image ?? ""}")`,
                       }}
-                    />
+                    />}
                   </button>
                   <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}>👤</button>
-                  <button
+                  {selectedCharacter !== "You" && <button
                     className="portrait-picker-button expression-picker-button"
                     type="button"
                     aria-label="Choose expression"
@@ -594,13 +594,13 @@ function sanitiseHtml(html: string) {
                       }}
                       aria-hidden="true"
                     />
-                  </button>
+                  </button>}
                 </div>
                 {showCharacterPicker && <div className="portrait-popover character-picker-popover">
                   <span className="portrait-popover-label">WRITING AS</span>
-                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => setSelectedCharacter(event.target.value)}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select>
+                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => { setSelectedCharacter(event.target.value); setShowExpressions(false); }}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select>
                 </div>}
-                {showExpressions && <div className="portrait-popover expression-picker-popover">
+                {showExpressions && selectedCharacter !== "You" && <div className="portrait-popover expression-picker-popover">
                   <span className="portrait-popover-label">EXPRESSION</span>
                   <div className="expression-grid" aria-label="Choose character expression">
                     {expressions.map((expression) => (
