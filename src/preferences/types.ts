@@ -49,7 +49,7 @@ export interface Character {
 }
 
 export interface AppPreferences {
-  schemaVersion: 2;
+  schemaVersion: 3;
 
   appearance: {
     theme: CatppuccinFlavor;
@@ -73,6 +73,10 @@ export interface AppPreferences {
     motto: string;
     description: string;
     frameStyle: "none" | "lavender" | "ornate";
+    avatarPositionX: number;
+    avatarPositionY: number;
+    bannerPositionX: number;
+    bannerPositionY: number;
   };
 
   /** App-level image paths for the current interim character picker. */
