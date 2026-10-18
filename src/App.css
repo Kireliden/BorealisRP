@@ -494,6 +494,65 @@ button:disabled {
   flex-basis: 6px;
 }
 
+.scene-options-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.scene-options-popover {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 7px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 205px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+
+.scene-options-popover button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ctp-text);
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.scene-options-popover button:hover:not(:disabled) {
+  background: var(--surface-hover, var(--ctp-surface1));
+}
+
+.scene-options-popover button:disabled {
+  color: var(--ctp-overlay1);
+  cursor: not-allowed;
+}
+
+.scene-options-divider {
+  height: 1px;
+  margin: 3px 4px;
+  background: var(--border);
+}
+
+.scene-options-popover .scene-clean-action:not(:disabled) {
+  color: var(--ctp-red);
+}
+
+.scene-options-popover .scene-clean-action:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ctp-red) 12%, transparent);
+}
+
 .scene-toolbar {
   display: flex;
   align-items: center;
