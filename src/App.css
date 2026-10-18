@@ -794,16 +794,84 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+.message-actions {
+  position: relative;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
 .message-menu {
+  display: grid;
+  place-items: center;
   width: 27px;
   height: 27px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ctp-subtext1);
   opacity: 0;
-  font-size: 17px;
+  cursor: pointer;
 }
 
 .message:hover .message-menu,
-.message-menu:focus-visible {
+.message-menu:focus-visible,
+.message-menu[aria-expanded="true"] {
   opacity: 1;
+}
+
+.message-actions-popover {
+  position: absolute;
+  z-index: 20;
+  top: 30px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 190px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+
+.message-actions-popover button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ctp-text);
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.message-actions-popover button:hover:not(:disabled) {
+  background: var(--surface-hover, var(--ctp-surface1));
+}
+
+.message-actions-popover button:disabled {
+  color: var(--ctp-overlay1);
+  cursor: not-allowed;
+}
+
+.message-actions-popover button small {
+  margin-left: auto;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.message-actions-popover .message-delete-action:not(:disabled) {
+  color: var(--ctp-red);
+}
+
+.message-actions-popover .message-delete-action:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ctp-red) 12%, transparent);
 }
 
 .cancel-edit-button {
