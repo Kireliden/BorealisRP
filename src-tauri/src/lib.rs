@@ -291,7 +291,7 @@ fn read_dropped_resource_files(paths: Vec<String>) -> Result<Vec<DroppedResource
             continue;
         }
         if metadata.len() > MAX_FILE_BYTES {
-            return Err(format!("'{}' is larger than the 128 MB drag-and-drop limit. Use Import files for this file.", path.file_name().unwrap_or_default().to_string_lossy()));
+            return Err(format!("'{}' is larger than the 128 MB drag-and-drop limit. Use Import files for this file.", path.display()));
         }
         let file_name = path.file_name()
             .ok_or_else(|| "A dropped item has no file name.".to_string())?
