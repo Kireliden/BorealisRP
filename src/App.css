@@ -1802,3 +1802,126 @@ textarea:focus-visible {
   .message.message-entering { animation: none !important; will-change: auto; }
 }
 html[data-animations="off"] .message.message-entering { animation: none !important; will-change: auto; }
+
+
+/* Keep the sidebar footer anchored while the scene list grows independently. */
+.sidebar {
+  min-height: 0;
+  overflow: hidden;
+}
+.sidebar > .brand,
+.sidebar > .workspace-switcher,
+.sidebar > .sidebar-section:not(.scenes-section),
+.sidebar > .sidebar-footer {
+  flex-shrink: 0;
+}
+.scenes-section {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 18px;
+  overflow: hidden;
+}
+.scenes-section > .section-heading,
+.scenes-section > .project-label,
+.scenes-section > .new-scene-button {
+  flex-shrink: 0;
+}
+.scenes-section .scene-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+}
+.sidebar-spacer {
+  display: none;
+}
+.sidebar-footer {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  margin-top: auto;
+  background: var(--sidebar-bg);
+}
+.scenes-collapse-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.scenes-collapse-button:hover {
+  color: var(--ctp-text);
+}
+.scenes-collapse-chevron {
+  color: var(--ctp-overlay1);
+  font-size: 15px;
+}
+.scene-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  border-radius: 8px;
+}
+.scene-row .scene-item {
+  flex: 1 1 auto;
+  width: auto;
+  padding-right: 34px;
+}
+.scene-row .scene-item.selected {
+  border-color: transparent;
+  background: transparent;
+}
+.scene-row.selected {
+  border: 1px solid var(--accent);
+  background: var(--selected-bg);
+}
+.scene-row.selected .scene-icon {
+  color: var(--accent);
+}
+.scene-row.selected .scene-name {
+  color: var(--ctp-text);
+}
+.scene-delete-button {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ctp-overlay1);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 120ms ease, color 120ms ease, background 120ms ease;
+}
+.scene-row:hover .scene-delete-button,
+.scene-row:focus-within .scene-delete-button {
+  opacity: 1;
+}
+.scene-delete-button:hover:not(:disabled) {
+  color: var(--ctp-red);
+  background: color-mix(in srgb, var(--ctp-red) 13%, transparent);
+}
+.scene-delete-button:disabled {
+  cursor: not-allowed;
+}
+.scenes-collapsed .project-label {
+  margin-bottom: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-delete-button { transition: none; }
+}
