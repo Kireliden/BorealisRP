@@ -175,6 +175,7 @@ function sanitiseHtml(html: string) {
   const [avatarTilt, setAvatarTilt] = useState({ x: 0, y: 0, shineX: 50, shineY: 35 });
   const [isMaximized, setIsMaximized] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+  const characterPanelRef = useRef<HTMLElement>(null);
   const conversationRef = useRef<HTMLElement>(null);
   const previousMessageCountRef = useRef(messages.length);
   const [isAtLatestMessage, setIsAtLatestMessage] = useState(true);
@@ -278,6 +279,31 @@ function sanitiseHtml(html: string) {
     const conversation = conversationRef.current;
     if (conversation) conversation.scrollTop = conversation.scrollHeight;
   }, []);
+
+  useEffect(() => {
+    if (!showCharacterPicker && !showExpressions) return;
+
+    function handlePopoverPointerDown(event: PointerEvent) {
+      if (!characterPanelRef.current?.contains(event.target as Node)) {
+        setShowCharacterPicker(false);
+        setShowExpressions(false);
+      }
+    }
+
+    function handlePopoverKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setShowCharacterPicker(false);
+        setShowExpressions(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePopoverPointerDown);
+    window.addEventListener("keydown", handlePopoverKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePopoverPointerDown);
+      window.removeEventListener("keydown", handlePopoverKeyDown);
+    };
+  }, [showCharacterPicker, showExpressions]);
 
   useEffect(() => {
     if (!showAvatarPreview) return;
@@ -531,7 +557,7 @@ function sanitiseHtml(html: string) {
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => <article className={`message chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</div><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
+            {messages.map((message) => <article className={`message ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</div><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
@@ -552,7 +578,7 @@ function sanitiseHtml(html: string) {
           <footer className="composer-area">
             <div className="composer-context"><span className="composer-context-dot" />Writing in <strong>{activeScene?.name ?? "no scene selected"}</strong></div>
             <div className="composer-layout">
-              <aside className="character-panel">
+              <aside className="character-panel" ref={characterPanelRef}>
                 <div className={`character-portrait avatar-${character.avatar}`}>
                   <button
                     className="character-portrait-preview"
