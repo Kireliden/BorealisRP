@@ -307,10 +307,8 @@ function sanitiseHtml(html: string) {
         // node above another category. Promote the single provisional category
         // from the previous tree layout, or create that root category for older
         // workspaces that have not created one yet.
-        if (activeWorkspace && validCategories.length <= 1) {
-          const rootCategory = validCategories[0]
-            ? { ...validCategories[0], name: activeWorkspace.manifest.name }
-            : { id: crypto.randomUUID(), name: activeWorkspace.manifest.name };
+        if (activeWorkspace && validCategories.length === 1 && validCategories[0].name.trim().toLocaleLowerCase() === "category") {
+          const rootCategory = { ...validCategories[0], name: activeWorkspace.manifest.name };
           validCategories = [rootCategory];
           const migratedFolders = validFolders.map((folder) =>
             folder.categoryId ? folder : { ...folder, categoryId: rootCategory.id },
