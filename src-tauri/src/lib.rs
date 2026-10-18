@@ -1,8 +1,169 @@
-
-use std::time::Duration;
+use serde::{Deserialize, Serialize};
+use std::{
+    fs::{self, OpenOptions},
+    io::Write,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 use tauri::{PhysicalPosition, Window};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use uuid::Uuid;
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+const WORKSPACE_FORMAT: &str = "borealis-roleplay-den-workspace";
+const WORKSPACE_SCHEMA_VERSION: u32 = 1;
+const WORKSPACE_MANIFEST: &str = "workspace.json";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorkspaceManifest {
+    format: String,
+    schema_version: u32,
+    id: String,
+    name: String,
+    created_at: String,
+    updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WorkspaceInfo {
+    path: String,
+    manifest: WorkspaceManifest,
+}
+
+fn now_rfc3339() -> Result<String, String> {
+    OffsetDateTime::now_utc()
+        .format(&Rfc3339)
+        .map_err(|error| format!("Could not create workspace timestamp: {error}"))
+}
+
+fn validate_workspace_name(name: &str) -> Result<(), String> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("Workspace name cannot be empty.".into());
+    }
+    if name == "." || name == ".." {
+        return Err("Choose a different workspace name.".into());
+    }
+    if name.chars().any(|character| {
+        character.is_control() || ['<', '>', ':', '"', '/', '\\', '|', '?', '*'].contains(&character)
+    }) || name.ends_with('.') || name.ends_with(' ') {
+        return Err("The workspace name contains characters that are not supported in folder names.".into());
+    }
+    Ok(())
+}
+
+fn read_workspace(path: &Path) -> Result<WorkspaceInfo, String> {
+    let root = path
+        .canonicalize()
+        .map_err(|error| format!("Could not access workspace folder: {error}"))?;
+    if !root.is_dir() {
+        return Err("The selected path is not a folder.".into());
+    }
+
+    let manifest_path = root.join(WORKSPACE_MANIFEST);
+    let manifest_text = fs::read_to_string(&manifest_path)
+        .map_err(|error| format!("This folder does not contain a readable workspace.json: {error}"))?;
+    let manifest: WorkspaceManifest = serde_json::from_str(&manifest_text)
+        .map_err(|error| format!("The workspace manifest is invalid JSON: {error}"))?;
+
+    if manifest.format != WORKSPACE_FORMAT {
+        return Err("This folder is not a Borealis Roleplay Den workspace.".into());
+    }
+    if manifest.schema_version != WORKSPACE_SCHEMA_VERSION {
+        return Err(format!(
+            "Unsupported workspace schema version {} (this version of BRD supports {}).",
+            manifest.schema_version, WORKSPACE_SCHEMA_VERSION
+        ));
+    }
+    if manifest.id.trim().is_empty()
+        || manifest.name.trim().is_empty()
+        || manifest.created_at.trim().is_empty()
+        || manifest.updated_at.trim().is_empty()
+    {
+        return Err("The workspace manifest is missing required fields.".into());
+    }
+
+    Ok(WorkspaceInfo {
+        path: root.to_string_lossy().into_owned(),
+        manifest,
+    })
+}
+
+/// Creates a workspace inside a parent folder selected by the user.
+#[tauri::command]
+fn create_workspace(parent_path: String, name: String) -> Result<WorkspaceInfo, String> {
+    validate_workspace_name(&name)?;
+    let display_name = name.trim();
+    let parent = PathBuf::from(parent_path)
+        .canonicalize()
+        .map_err(|error| format!("Could not access the selected destination folder: {error}"))?;
+    if !parent.is_dir() {
+        return Err("The selected destination is not a folder.".into());
+    }
+
+    let root = parent.join(display_name);
+    fs::create_dir(&root).map_err(|error| {
+        if error.kind() == std::io::ErrorKind::AlreadyExists {
+            format!("A folder named '{display_name}' already exists there. Choose another name or destination.")
+        } else {
+            format!("Could not create the workspace folder: {error}")
+        }
+    })?;
+
+    let creation_result = (|| -> Result<(), String> {
+        for directory in [
+            "Settings",
+            "Characters",
+            "Stories",
+            "Chats",
+            "Themes",
+            "Resources/Backgrounds",
+            "Resources/Audio",
+            "Resources/Other",
+        ] {
+            fs::create_dir_all(root.join(directory))
+                .map_err(|error| format!("Could not create workspace folder '{directory}': {error}"))?;
+        }
+
+        let timestamp = now_rfc3339()?;
+        let manifest = WorkspaceManifest {
+            format: WORKSPACE_FORMAT.into(),
+            schema_version: WORKSPACE_SCHEMA_VERSION,
+            id: Uuid::new_v4().to_string(),
+            name: display_name.into(),
+            created_at: timestamp.clone(),
+            updated_at: timestamp,
+        };
+        let bytes = serde_json::to_vec_pretty(&manifest)
+            .map_err(|error| format!("Could not serialize workspace manifest: {error}"))?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(root.join(WORKSPACE_MANIFEST))
+            .map_err(|error| format!("Could not create workspace.json: {error}"))?;
+        file.write_all(&bytes)
+            .map_err(|error| format!("Could not write workspace.json: {error}"))?;
+        file.write_all(b"\n")
+            .map_err(|error| format!("Could not finish workspace.json: {error}"))?;
+        Ok(())
+    })();
+
+    if let Err(error) = creation_result {
+        // The target folder did not exist before this command created it.
+        let _ = fs::remove_dir_all(&root);
+        return Err(error);
+    }
+
+    read_workspace(&root)
+}
+
+/// Reads and validates an existing workspace without modifying its files.
+#[tauri::command]
+fn inspect_workspace(path: String) -> Result<WorkspaceInfo, String> {
+    read_workspace(Path::new(&path))
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -22,32 +183,20 @@ fn shake_window(window: Window) -> Result<(), String> {
 
     std::thread::spawn(move || {
         let offsets: [(i32, i32); 12] = [
-            (-10, 0),
-            (10, 0),
-            (-12, 2),
-            (12, -2),
-            (-10, -2),
-            (10, 2),
-            (-7, 0),
-            (7, 0),
-            (-5, 0),
-            (5, 0),
-            (-2, 0),
-            (0, 0),
+            (-10, 0), (10, 0), (-12, 2), (12, -2),
+            (-10, -2), (10, 2), (-7, 0), (7, 0),
+            (-5, 0), (5, 0), (-2, 0), (0, 0),
         ];
 
         for (x, y) in offsets {
             let position = PhysicalPosition::new(origin.x + x, origin.y + y);
-
             if let Err(error) = window.set_position(position) {
                 eprintln!("THE NUDGE could not move the window: {error}");
                 break;
             }
-
             std::thread::sleep(Duration::from_millis(40));
         }
 
-        // Always attempt to restore the original position.
         if let Err(error) = window.set_position(origin) {
             eprintln!("THE NUDGE could not restore the window: {error}");
         }
@@ -61,7 +210,12 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, shake_window])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            shake_window,
+            create_workspace,
+            inspect_workspace
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
