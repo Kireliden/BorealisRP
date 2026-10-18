@@ -15,7 +15,7 @@ export type CharacterRecord = {
   updatedAt: string;
 };
 
-export type CharacterDraft = Pick<CharacterRecord, "name" | "subtitle" | "description" | "initials" | "accent" | "portraitResourceId" | "portraitFit" | "tags">;
+export type CharacterDraft = Pick<CharacterRecord, "name" | "subtitle" | "description" | "initials" | "accent" | "portraitResourceId" | "portraitFit" | "portraitPositionX" | "portraitPositionY" | "portraitZoom" | "tags">;
 
 export const CHARACTER_LIBRARY_KEY = "brd.character-library.v1";
 
