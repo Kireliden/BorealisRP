@@ -749,6 +749,14 @@ button:disabled {
   color: var(--ctp-sapphire);
 }
 
+.message-rich-content {
+  color: var(--ctp-subtext1);
+  font-size: var(--chat-font-size, 16px);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .message-body p {
   margin: 9px 0 0;
   color: var(--ctp-subtext1);
