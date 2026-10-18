@@ -1564,3 +1564,106 @@ textarea:focus-visible {
 .scene-empty-state span {
   font-size: 12px;
 }
+
+
+/* Two-step confirmation for cleaning a scene conversation */
+.clean-confirmation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(17 18 27 / 72%);
+  backdrop-filter: blur(5px);
+}
+
+.clean-confirmation-dialog {
+  display: flex;
+  width: min(100%, 430px);
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 27px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--ctp-mantle);
+  box-shadow: 0 22px 70px rgb(0 0 0 / 38%);
+}
+
+.clean-confirmation-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  margin-bottom: 18px;
+  border: 1px solid color-mix(in srgb, var(--ctp-red) 35%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ctp-red) 13%, var(--ctp-base));
+  color: var(--ctp-red);
+}
+
+.clean-confirmation-eyebrow {
+  color: var(--ctp-overlay1);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.clean-confirmation-dialog h2 {
+  margin: 9px 0 8px;
+  color: var(--ctp-text);
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+}
+
+.clean-confirmation-dialog p {
+  margin: 0;
+  color: var(--ctp-subtext1);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.clean-confirmation-actions {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.clean-confirmation-actions button {
+  min-height: 37px;
+  padding: 0 13px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.clean-cancel-button {
+  background: var(--control-bg);
+  color: var(--ctp-text);
+}
+
+.clean-cancel-button:hover {
+  background: var(--control-hover);
+}
+
+.clean-continue-button {
+  border-color: var(--ctp-red) !important;
+  background: var(--ctp-red);
+  color: var(--ctp-crust);
+}
+
+.clean-continue-button:hover {
+  filter: brightness(1.08);
+}
+
+.clean-confirmation-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
