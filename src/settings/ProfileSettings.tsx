@@ -58,6 +58,7 @@ export default function ProfileSettings() {
         <p>Shape the little corner of BRD that represents you. Your profile is saved locally and stays separate from your roleplay characters.</p>
       </div>
 
+      <div className="profile-preview-layout">
       <article className={`profile-card frame-${draft.frameStyle}`}>
         <div className="profile-banner">
           {bannerSrc ? <img src={bannerSrc} alt="" className="profile-banner-image" style={{ objectPosition: `${draft.bannerPositionX}% ${draft.bannerPositionY}%`, transform: `scale(${draft.bannerZoom / 100})`, transformOrigin: `${draft.bannerPositionX}% ${draft.bannerPositionY}%` }} /> : <div className="profile-banner-art" />}
@@ -133,6 +134,7 @@ export default function ProfileSettings() {
           </label>
         </div>
       </section>
+      </div>
 
       {error && <p className="profile-media-error profile-settings-error" role="alert">{error}</p>}
       <div className="profile-settings-actions">
