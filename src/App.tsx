@@ -296,7 +296,7 @@ function sanitiseHtml(html: string) {
     setActiveSceneId(null);
     setMessages([]);
     loadWorkspaceContent(activeWorkspace.path)
-      .then((content) => {
+      .then(async (content) => {
         if (cancelled) return;
         const validScenes = Array.isArray(content.scenes) ? content.scenes : [];
         setScenes(validScenes);
@@ -305,9 +305,20 @@ function sanitiseHtml(html: string) {
         let validCategories = Array.isArray(content.categories) ? content.categories : [];
         // The selected roleplay's name is the default root category, not a parent
         // node above another category. Promote the single provisional category
-        // created by the previous tree layout to the roleplay's visible root name.
-        if (activeWorkspace && validCategories.length === 1 && validCategories[0].name !== activeWorkspace.manifest.name) {
-          validCategories = [{ ...validCategories[0], name: activeWorkspace.manifest.name }];
+        // from the previous tree layout, or create that root category for older
+        // workspaces that have not created one yet.
+        if (activeWorkspace && validCategories.length <= 1) {
+          const rootCategory = validCategories[0]
+            ? { ...validCategories[0], name: activeWorkspace.manifest.name }
+            : { id: crypto.randomUUID(), name: activeWorkspace.manifest.name };
+          validCategories = [rootCategory];
+          const migratedFolders = validFolders.map((folder) =>
+            folder.categoryId ? folder : { ...folder, categoryId: rootCategory.id },
+          );
+          if (migratedFolders.some((folder, index) => folder.categoryId !== validFolders[index]?.categoryId)) {
+            validFolders.splice(0, validFolders.length, ...migratedFolders);
+            setFolders(validFolders);
+          }
           await saveWorkspaceContent(activeWorkspace.path, {
             schemaVersion: 1,
             scenes: validScenes,
