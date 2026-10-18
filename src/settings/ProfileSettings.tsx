@@ -99,7 +99,7 @@ export default function ProfileSettings() {
               <option value="ornate">Ornate glow</option>
             </select>
           </label>
-          <div className="profile-settings-note">Portraits use a 4:5 frame and fill it with a centred crop. Animated GIFs stay animated. Supported formats: GIF, PNG, JPG and WebP (up to 25 MiB).</div>
+          <div className="profile-settings-note">Portraits use a 4:5 frame with adjustable position and zoom. Animated GIFs stay animated. Supported formats: GIF, PNG, JPG and WebP (up to 25 MiB).</div>
         </div>
       </article>
 
