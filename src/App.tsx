@@ -18,6 +18,7 @@ import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import CharactersPage from "./characters/CharactersPage";
 import { loadCharacters } from "./characters/characters.storage";
+import { getResourceBlob } from "./resources/resources.storage";
 import CharacterPortraitArt from "./characters/CharacterPortraitArt";
 import ResourcesPage from "./resources/ResourcesPage";
 import GlobalSearch from "./GlobalSearch";
@@ -29,7 +30,7 @@ import "./popup-motion.css";
 const appWindow = getCurrentWindow();
 
 type Role = "Narration" | "Dialogue";
-type Character = { name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null };
+type Character = { name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null; portraitResourceId?: string | null };
 type AvatarPreviewCharacter = Character & { expression?: string };
 type Message = WorkspaceMessage;
 
@@ -40,6 +41,7 @@ function charactersFromLibrary(): Character[] {
     avatar: item.accent === "lavender" ? "mauve" : item.accent,
     description: item.subtitle || item.description,
     avatarAssetPath: null,
+    portraitResourceId: item.portraitResourceId,
   }));
   return [...libraryCharacters, { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" }];
 }
@@ -297,8 +299,26 @@ function sanitiseHtml(html: string) {
   const workspaceSelectionMadeRef = useRef(false);
 
   const selectedCharacterBase = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
+  const selectedPortraitResourceId = selectedCharacter === "You" ? null : selectedCharacterBase?.portraitResourceId ?? null;
+  const [characterResourcePortraitUrl, setCharacterResourcePortraitUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    if (!selectedPortraitResourceId) {
+      setCharacterResourcePortraitUrl(null);
+      return;
+    }
+    void getResourceBlob(selectedPortraitResourceId).then((blob) => {
+      if (cancelled) return;
+      objectUrl = blob ? URL.createObjectURL(blob) : null;
+      setCharacterResourcePortraitUrl(objectUrl);
+    }).catch(() => { if (!cancelled) setCharacterResourcePortraitUrl(null); });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [selectedPortraitResourceId]);
   // "You" always uses the saved user profile portrait (including animated GIFs).
-  // Character portraits will be managed through the dedicated character workflow later.
   const character: Character = {
     ...selectedCharacterBase,
     avatarAssetPath: selectedCharacter === "You" ? preferences.profile.avatarAssetPath : null,
@@ -1122,7 +1142,7 @@ function sanitiseHtml(html: string) {
                   >
                     <CharacterPortraitArt
                       initials={character.initials}
-                      imageSrc={character.avatarAssetPath ? profileMediaSource(character.avatarAssetPath) : null}
+                      imageSrc={character.avatarAssetPath ? profileMediaSource(character.avatarAssetPath) : characterResourcePortraitUrl}
                       expressionImage={selectedCharacter !== "You" ? expressions.find((expression) => expression.emoji === selectedExpression)?.image : null}
                       expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
                     />
@@ -1389,6 +1409,8 @@ function sanitiseHtml(html: string) {
                 <div className="avatar-preview-orbit avatar-preview-orbit-two" />
                 {previewCharacter.avatarAssetPath ? (
                   <img className="avatar-preview-image profile-media-image" src={profileMediaSource(previewCharacter.avatarAssetPath) ?? undefined} alt={previewCharacter.name} />
+                ) : previewCharacter.portraitResourceId && characterResourcePortraitUrl ? (
+                  <img className="avatar-preview-image" src={characterResourcePortraitUrl} alt={previewCharacter.name} />
                 ) : previewCharacter.name === "Keira" ? (
                   <img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" />
                 ) : (
