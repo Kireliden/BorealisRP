@@ -22,7 +22,7 @@ const scaleOptions = [90, 100, 110, 125, 150] as const;
 
 export default function AppearanceSettings() {
   const { preferences, updatePreferences } = usePreferences();
-  const { interfaceFont, uiScale, density, chatFontSize } =
+  const { interfaceFont, uiScale, density } =
     preferences.appearance;
 
   function updateAppearance(
