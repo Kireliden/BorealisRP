@@ -158,6 +158,21 @@ fn create_workspace(parent_path: String, name: String) -> Result<WorkspaceInfo, 
     read_workspace(&root)
 }
 
+/// Renames the workspace's displayed name in its manifest without moving its folder.
+#[tauri::command]
+fn rename_workspace(path: String, name: String) -> Result<WorkspaceInfo, String> {
+    validate_workspace_name(&name)?;
+    let workspace = read_workspace(Path::new(&path))?;
+    let mut manifest = workspace.manifest;
+    manifest.name = name.trim().to_string();
+    manifest.updated_at = now_rfc3339()?;
+    let bytes = serde_json::to_vec_pretty(&manifest)
+        .map_err(|error| format!("Could not serialize workspace manifest: {error}"))?;
+    fs::write(Path::new(&workspace.path).join(WORKSPACE_MANIFEST), bytes)
+        .map_err(|error| format!("Could not rename workspace: {error}"))?;
+    read_workspace(Path::new(&workspace.path))
+}
+
 /// Reads and validates an existing workspace without modifying its files.
 #[tauri::command]
 fn inspect_workspace(path: String) -> Result<WorkspaceInfo, String> {
@@ -302,6 +317,7 @@ pub fn run() {
             greet,
             shake_window,
             create_workspace,
+            rename_workspace,
             inspect_workspace,
             load_workspace_content,
             save_workspace_content,
