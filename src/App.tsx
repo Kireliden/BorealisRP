@@ -18,7 +18,7 @@ import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder, type WorkspaceCategory } from "./workspace/workspaceContent";
-import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath, renameWorkspace } from "./workspace/workspaceStorage";
+import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath } from "./workspace/workspaceStorage";
 import "./popup-motion.css";
 
 const appWindow = getCurrentWindow();
@@ -171,7 +171,6 @@ function sanitiseHtml(html: string) {
   const [draggingNode, setDraggingNode] = useState<{ type: "scene" | "folder" | "category"; id: string } | null>(null);
   const [pendingSceneMoveId, setPendingSceneMoveId] = useState<string | null>(null);
   const [isScenesCollapsed, setIsScenesCollapsed] = useState(false);
-  const [isWorkspaceContentsCollapsed, setIsWorkspaceContentsCollapsed] = useState(false);
   const [isUnfiledScenesCollapsed, setIsUnfiledScenesCollapsed] = useState(false);
   const [draggingSceneId, setDraggingSceneId] = useState<string | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
@@ -591,19 +590,6 @@ function sanitiseHtml(html: string) {
       }
       setWorkspaceError("");
       setScenePendingDeletion(null);
-    } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
-    }
-  }
-
-  async function renameRoleplay() {
-    if (!activeWorkspace || workspaceLoading) return;
-    const name = window.prompt("Rename roleplay", activeWorkspace.manifest.name)?.trim();
-    if (!name || name === activeWorkspace.manifest.name) return;
-    try {
-      const renamed = await renameWorkspace(activeWorkspace.path, name);
-      setActiveWorkspace(renamed);
-      setWorkspaceError("");
     } catch (reason) {
       setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
     }
