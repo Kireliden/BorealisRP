@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./SettingsModal.css";
 import AppearanceSettings from "./AppearanceSettings";
 import ThemesSettings from "./ThemesSettings";
+import ProfileSettings from "./ProfileSettings";
 
 type SettingsCategory =
   | "appearance"
@@ -14,6 +15,7 @@ type SettingsCategory =
 
 interface SettingsModalProps {
   onClose: () => void;
+  initialCategory?: SettingsCategory;
 }
 
 const categories: { id: SettingsCategory; label: string }[] = [
@@ -26,9 +28,9 @@ const categories: { id: SettingsCategory; label: string }[] = [
   { id: "data", label: "Data and Storage" },
 ];
 
-export default function SettingsModal({ onClose }: SettingsModalProps) {
+export default function SettingsModal({ onClose, initialCategory = "appearance" }: SettingsModalProps) {
   const [activeCategory, setActiveCategory] =
-    useState<SettingsCategory>("appearance");
+    useState<SettingsCategory>(initialCategory);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -118,6 +120,8 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
   <AppearanceSettings />
 ) : activeCategory === "themes" ? (
   <ThemesSettings />
+) : activeCategory === "profile" ? (
+  <ProfileSettings />
 ) : (
   <div className="settings-placeholder">
     <div className="settings-placeholder-symbol">✦</div>
@@ -132,7 +136,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
 
           <footer className="settings-content-footer">
-            <span>Changes will be saved automatically</span>
+            <span>{activeCategory === "profile" ? "Profile changes apply when you save" : "Changes will be saved automatically"}</span>
           </footer>
         </main>
       </section>
