@@ -165,6 +165,56 @@ fn inspect_workspace(path: String) -> Result<WorkspaceInfo, String> {
 }
 
 #[tauri::command]
+fn load_workspace_content(path: String) -> Result<serde_json::Value, String> {
+    let workspace = read_workspace(Path::new(&path))?;
+    let content_path = Path::new(&workspace.path).join("workspace-content.json");
+    if !content_path.exists() {
+        return Ok(serde_json::json!({ "schemaVersion": 1, "scenes": [] }));
+    }
+
+    let text = fs::read_to_string(&content_path)
+        .map_err(|error| format!("Could not read workspace content: {error}"))?;
+    let content: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|error| format!("Workspace content is invalid JSON: {error}"))?;
+    if content.get("schemaVersion").and_then(serde_json::Value::as_u64) != Some(1)
+        || !content.get("scenes").map_or(false, serde_json::Value::is_array)
+    {
+        return Err("Workspace content has an unsupported or invalid format.".into());
+    }
+    Ok(content)
+}
+
+#[tauri::command]
+fn save_workspace_content(path: String, content: serde_json::Value) -> Result<(), String> {
+    let workspace = read_workspace(Path::new(&path))?;
+    if content.get("schemaVersion").and_then(serde_json::Value::as_u64) != Some(1)
+        || !content.get("scenes").map_or(false, serde_json::Value::is_array)
+    {
+        return Err("Refusing to save workspace content with an unsupported or invalid format.".into());
+    }
+
+    let bytes = serde_json::to_vec_pretty(&content)
+        .map_err(|error| format!("Could not serialize workspace content: {error}"))?;
+    if bytes.len() > 20 * 1024 * 1024 {
+        return Err("Workspace content is larger than the 20 MB safety limit.".into());
+    }
+
+    let content_path = Path::new(&workspace.path).join("workspace-content.json");
+    fs::write(&content_path, bytes)
+        .map_err(|error| format!("Could not save workspace content: {error}"))?;
+
+    let manifest_path = Path::new(&workspace.path).join(WORKSPACE_MANIFEST);
+    let mut manifest = workspace.manifest;
+    manifest.updated_at = now_rfc3339()?;
+    let manifest_bytes = serde_json::to_vec_pretty(&manifest)
+        .map_err(|error| format!("Could not update workspace manifest: {error}"))?;
+    fs::write(manifest_path, manifest_bytes)
+        .map_err(|error| format!("Could not update workspace timestamp: {error}"))?;
+
+    Ok(())
+}
+
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
@@ -215,7 +265,9 @@ pub fn run() {
             greet,
             shake_window,
             create_workspace,
-            inspect_workspace
+            inspect_workspace,
+            load_workspace_content,
+            save_workspace_content
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

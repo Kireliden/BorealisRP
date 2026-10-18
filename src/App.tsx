@@ -14,55 +14,17 @@ import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
+import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene } from "./workspace/workspaceContent";
 
 const appWindow = getCurrentWindow();
 
 type Role = "Narration" | "Dialogue";
 type Character = { name: string; initials: string; avatar: string; description: string };
-type Message = {
-  id: number;
-  author: string;
-  initials: string;
-  role: Role;
-  time: string;
-  content: string;
-  avatar: string;
-  expression?: string;
-  history?: string[];
-  source?: string;
-};
+type Message = WorkspaceMessage;
 
 const characters: Character[] = [
   { name: "Keira", initials: "KR", avatar: "mauve", description: "Neon Requiem · Main character" },
   { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" },
-];
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    author: "Keira",
-    initials: "KR",
-    role: "Dialogue",
-    time: "21:42",
-    content: "The rain had turned the streets into a mirror of neon lights. Mara stopped beneath the awning, watching the silhouette across the road. She knew that coat.",
-    avatar: "mauve",
-    expression: "😐",
-  },
-  {
-    id: 2,
-    author: "You",
-    initials: "Y",
-    role: "Narration",
-    time: "21:44",
-    content: "For a moment, neither of them moved. The city carried on around them, oblivious to the history standing between two people.",
-    avatar: "blue",
-  },
-];
-
-const scenes = [
-  { name: "The Neon District", detail: "Last night · 24 messages", icon: "◈" },
-  { name: "A Familiar Stranger", detail: "Yesterday · 12 messages", icon: "◇" },
-  { name: "The Aftermath", detail: "12 October · 8 messages", icon: "◌" },
 ];
 
 function markdownSourceFromHtml(html: string) {
@@ -193,8 +155,11 @@ function sanitiseHtml(html: string) {
   });
   return output.innerHTML;
 }function App() {
-  const [activeScene, setActiveScene] = useState("The Neon District");
-  const [messages, setMessages] = useState(initialMessages);
+  const [scenes, setScenes] = useState<WorkspaceScene[]>([]);
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [workspaceLoading, setWorkspaceLoading] = useState(false);
+  const [workspaceError, setWorkspaceError] = useState("");
   const [draftHtml, setDraftHtml] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
@@ -215,8 +180,43 @@ function sanitiseHtml(html: string) {
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
 
-
   const character = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
+  const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    setWorkspaceError("");
+    setDraftHtml("");
+    setEditingMessageId(null);
+    if (!activeWorkspace) {
+      setScenes([]);
+      setActiveSceneId(null);
+      setMessages([]);
+      setWorkspaceLoading(false);
+      return;
+    }
+
+    setWorkspaceLoading(true);
+    setScenes([]);
+    setActiveSceneId(null);
+    setMessages([]);
+    loadWorkspaceContent(activeWorkspace.path)
+      .then((content) => {
+        if (cancelled) return;
+        const validScenes = Array.isArray(content.scenes) ? content.scenes : [];
+        setScenes(validScenes);
+        setActiveSceneId(validScenes[0]?.id ?? null);
+        setMessages(validScenes[0]?.messages ?? []);
+      })
+      .catch((reason: unknown) => {
+        if (!cancelled) setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      })
+      .finally(() => {
+        if (!cancelled) setWorkspaceLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [activeWorkspace?.path]);
 
   useEffect(() => {
     const conversation = conversationRef.current;
@@ -316,8 +316,56 @@ function sanitiseHtml(html: string) {
     if (editorRef.current) editorRef.current.innerHTML = "";
   }
 
-  function sendMessage(event: FormEvent<HTMLFormElement>) {
+  async function persistSceneMessages(nextMessages: Message[]) {
+    if (!activeWorkspace || !activeSceneId) return;
+    const nextScenes = scenes.map((scene) =>
+      scene.id === activeSceneId ? { ...scene, messages: nextMessages } : scene,
+    );
+    const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes };
+    setScenes(nextScenes);
+    setMessages(nextMessages);
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, content);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  async function createScene() {
+    if (!activeWorkspace || workspaceLoading) return;
+    const name = window.prompt("Name your new scene")?.trim();
+    if (!name) return;
+    if (scenes.some((scene) => scene.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setWorkspaceError("A scene with that name already exists in this workspace.");
+      return;
+    }
+    const scene: WorkspaceScene = { id: crypto.randomUUID(), name, icon: "◈", messages: [] };
+    const nextScenes = [...scenes, scene];
+    try {
+      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes });
+      setScenes(nextScenes);
+      setActiveSceneId(scene.id);
+      setMessages([]);
+      setDraftHtml("");
+      setEditingMessageId(null);
+      setWorkspaceError("");
+    } catch (reason) {
+      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  function selectScene(scene: WorkspaceScene) {
+    setActiveSceneId(scene.id);
+    setMessages(scene.messages);
+    setDraftHtml("");
+    setEditingMessageId(null);
+    setWorkspaceError("");
+  }
+
+  async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!activeWorkspace || !activeSceneId || workspaceLoading) return;
     const editor = editorRef.current;
     const plainText = editor?.innerText.trim() ?? "";
     if (!plainText) return;
@@ -328,23 +376,17 @@ function sanitiseHtml(html: string) {
     applyMarkdownToTextNodes(contentRoot);
     const content = sanitiseHtml(contentRoot.innerHTML);
 
+    let nextMessages: Message[];
     if (editingMessageId !== null) {
-      setMessages((current) =>
-        current.map((message) =>
-          message.id === editingMessageId
-            ? {
-                ...message,
-                content,
-                source,
-                history: [...(message.history ?? []), message.content],
-              }
-            : message,
-        ),
+      nextMessages = messages.map((message) =>
+        message.id === editingMessageId
+          ? { ...message, content, source, history: [...(message.history ?? []), message.content] }
+          : message,
       );
       setEditingMessageId(null);
     } else {
-      setMessages((current) => [
-        ...current,
+      nextMessages = [
+        ...messages,
         {
           id: Date.now(),
           author: character.name,
@@ -356,9 +398,10 @@ function sanitiseHtml(html: string) {
           avatar: character.avatar,
           expression: selectedExpression,
         },
-      ]);
+      ];
     }
 
+    await persistSceneMessages(nextMessages);
     setDraftHtml("");
     if (editor) editor.innerHTML = "";
   }
@@ -382,9 +425,9 @@ function sanitiseHtml(html: string) {
           <div className="brand"><div className="brand-mark">✦</div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
           <WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => setActiveWorkspace(workspace)} onAddNew={() => setIsWorkspaceManagerOpen(true)} />
           <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className="nav-item"><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item"><span className="nav-icon">♧</span>Characters</button><button className="nav-item"><span className="nav-icon">▧</span>Resources</button></div>
-          <div className="sidebar-section scenes-section"><div className="section-heading"><span>YOUR PROJECTS</span><button className="tiny-button" title="Add project">＋</button></div><div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>Neon Requiem</span></div>
-            <div className="scene-list">{scenes.map((scene) => <button key={scene.name} className={`scene-item ${activeScene === scene.name ? "selected" : ""}`} onClick={() => setActiveScene(scene.name)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.detail}</span></span></button>)}</div>
-            <button className="new-scene-button"><span>＋</span> New scene</button>
+          <div className="sidebar-section scenes-section"><div className="section-heading"><span>YOUR PROJECTS</span><button className="tiny-button" title="Add project">＋</button></div><div className="project-label"><span className="project-chevron">⌄</span><span className="project-symbol">✦</span><span>{activeWorkspace?.manifest.name ?? "Your story"}</span></div>
+            <div className="scene-list">{scenes.map((scene) => <button key={scene.id} className={`scene-item ${activeSceneId === scene.id ? "selected" : ""}`} onClick={() => selectScene(scene)}><span className="scene-icon">{scene.icon}</span><span className="scene-copy"><span className="scene-name">{scene.name}</span><span className="scene-detail">{scene.messages.length} {scene.messages.length === 1 ? "message" : "messages"}</span></span></button>)}</div>
+            <button className="new-scene-button" onClick={() => void createScene()} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
           </div>
           
 <div className="sidebar-spacer" />
@@ -421,12 +464,13 @@ function sanitiseHtml(html: string) {
         </aside>
 
         <section className="main-panel">
-          <header className="topbar"><div className="breadcrumbs"><span>Neon Requiem</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><button className="icon-button" title="More options">⋯</button></div></header>
-          <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">◈</div><div><h1>{activeScene}</h1><p>Neon Requiem <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button><button className="secondary-button">↗ <span>Share</span></button></div></div>
-          <div className="demo-notice"><span className="notice-icon">i</span><span><strong>Preview mode.</strong> These messages are temporary and will reset when the app restarts.</span></div>
+          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><button className="icon-button" title="More options">⋯</button></div></header>
+          <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button><button className="secondary-button">↗ <span>Share</span></button></div></div>
+          <div className="demo-notice"><span className="notice-icon">i</span><span><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span></div>
 
           <section ref={conversationRef} className="conversation" aria-label="Scene conversation" onScroll={handleConversationScroll}>
-            <div className="date-divider"><span /><p>15 OCTOBER 2026</p><span /></div>
+            {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
+            {activeScene && !messages.length && !workspaceLoading && <div className="workspace-empty"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
             {messages.map((message) => <article className="message" key={message.id}><div className={`message-avatar avatar-${message.avatar}`}>{message.initials}</div><div className="message-body"><div className="message-meta"><strong>{message.author}</strong>{message.expression && (
                       <span
                         className="message-expression"
@@ -446,7 +490,7 @@ function sanitiseHtml(html: string) {
           </section>
 
           <footer className="composer-area">
-            <div className="composer-context"><span className="composer-context-dot" />Writing in <strong>{activeScene}</strong></div>
+            <div className="composer-context"><span className="composer-context-dot" />Writing in <strong>{activeScene?.name ?? "no scene selected"}</strong></div>
             <div className="composer-layout">
               <aside className="character-panel">
                 <div className={`character-portrait avatar-${character.avatar}`}>
@@ -529,7 +573,7 @@ function sanitiseHtml(html: string) {
                                   </div>}
               </aside>
 
-              <form className="composer" onSubmit={sendMessage}>
+              <form className="composer" onSubmit={(event) => void sendMessage(event)}>
                 <div className="composer-tools">
                   <div className="composer-role-switch" role="group" aria-label="Passage type">
                     <button
@@ -583,8 +627,8 @@ function sanitiseHtml(html: string) {
 <span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
-                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : "Write your next passage..."} onInput={(event) => setDraftHtml(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
-                <div className="composer-bottom"><span className="composer-hint">{editingMessageId !== null ? <>Editing message <span>·</span> <kbd>Enter</kbd> to save</> : <><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line <span>·</span> <kbd>↑</kbd> to edit latest</>}</span>{editingMessageId !== null && <button className="cancel-edit-button" type="button" onClick={cancelEditingMessage}>Cancel</button>}<button className="send-button" type="submit" disabled={!draftHtml.replace(/<[^>]*>/g, "").trim()}>{editingMessageId !== null ? "Save changes" : "Send passage"} <span>↑</span></button></div>
+                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => setDraftHtml(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                <div className="composer-bottom"><span className="composer-hint">{editingMessageId !== null ? <>Editing message <span>·</span> <kbd>Enter</kbd> to save</> : <><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line <span>·</span> <kbd>↑</kbd> to edit latest</>}</span>{editingMessageId !== null && <button className="cancel-edit-button" type="button" onClick={cancelEditingMessage}>Cancel</button>}<button className="send-button" type="submit" disabled={!activeWorkspace || !activeSceneId || workspaceLoading || !draftHtml.replace(/<[^>]*>/g, "").trim()}>{editingMessageId !== null ? "Save changes" : "Send passage"} <span>↑</span></button></div>
               </form>
             </div>
             <p className="composer-footnote">Your story, your pace. Take it one passage at a time.</p>
