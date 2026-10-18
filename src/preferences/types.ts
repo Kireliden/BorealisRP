@@ -63,8 +63,16 @@ export interface AppPreferences {
   profile: {
     displayName: string;
     avatarAssetId: string | null;
+    avatarAssetPath: string | null;
+    bannerAssetPath: string | null;
+    title: string;
+    motto: string;
     description: string;
+    frameStyle: "none" | "lavender" | "ornate";
   };
+
+  /** App-level image paths for the current interim character picker. */
+  characterAvatarPaths: Record<string, string | null>;
 
   editor: {
     fontSize: number;
