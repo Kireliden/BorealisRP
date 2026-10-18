@@ -1769,3 +1769,17 @@ textarea:focus-visible {
   }
 }
 
+
+/* A newly sent passage arrives gently without replaying the animation on older messages. */
+.message.message-entering {
+  animation: brd-message-enter 360ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+@keyframes brd-message-enter {
+  from { opacity: 0; translate: 0 9px; }
+  72% { opacity: 1; translate: 0 -1px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .message.message-entering { animation: none; }
+}
+html[data-animations="off"] .message.message-entering { animation: none !important; }
