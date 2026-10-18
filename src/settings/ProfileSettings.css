@@ -32,3 +32,11 @@
 
 /* The settings preview keeps its normal card clipping; the floating preview stays free to tilt. */
 .profile-settings .profile-card { overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--panel-bg); }
+
+.profile-image-framing { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: color-mix(in srgb, var(--panel-bg) 88%, var(--surface)); }
+.profile-framing-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; }
+.profile-framing-group > strong { grid-column: 1 / -1; color: var(--ctp-text); font-size: 12px; }
+.profile-framing-control { display: grid; grid-template-columns: 1fr auto; gap: 8px; color: var(--ctp-subtext1); font-size: 11px; }
+.profile-framing-control span { color: var(--ctp-lavender); font-variant-numeric: tabular-nums; }
+.profile-framing-control input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+@media (max-width: 560px) { .profile-framing-group { grid-template-columns: 1fr; } }
