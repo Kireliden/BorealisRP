@@ -2305,3 +2305,48 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
   }
 }
 
+/* Keep sidebar edit/delete actions quiet until their row is hovered or focused. */
+.roleplay-tree .category-row > .rename-node-button,
+.roleplay-tree .category-row > .folder-delete-button,
+.roleplay-tree .folder-row > .rename-node-button,
+.roleplay-tree .folder-row > .folder-delete-button,
+.roleplay-tree .scene-row > .rename-node-button,
+.roleplay-tree .scene-row > .scene-delete-button {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease,
+    color 120ms ease,
+    background-color 120ms ease;
+}
+
+.roleplay-tree .category-row:hover > .rename-node-button,
+.roleplay-tree .category-row:hover > .folder-delete-button,
+.roleplay-tree .category-row:focus-within > .rename-node-button,
+.roleplay-tree .category-row:focus-within > .folder-delete-button,
+.roleplay-tree .folder-row:hover > .rename-node-button,
+.roleplay-tree .folder-row:hover > .folder-delete-button,
+.roleplay-tree .folder-row:focus-within > .rename-node-button,
+.roleplay-tree .folder-row:focus-within > .folder-delete-button,
+.roleplay-tree .scene-row:hover > .rename-node-button,
+.roleplay-tree .scene-row:hover > .scene-delete-button,
+.roleplay-tree .scene-row:focus-within > .rename-node-button,
+.roleplay-tree .scene-row:focus-within > .scene-delete-button {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roleplay-tree .category-row > .rename-node-button,
+  .roleplay-tree .category-row > .folder-delete-button,
+  .roleplay-tree .folder-row > .rename-node-button,
+  .roleplay-tree .folder-row > .folder-delete-button,
+  .roleplay-tree .scene-row > .rename-node-button,
+  .roleplay-tree .scene-row > .scene-delete-button {
+    transition: none;
+  }
+}
+
