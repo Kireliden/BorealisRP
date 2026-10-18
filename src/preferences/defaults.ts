@@ -10,7 +10,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     uiScale: 100,
     density: "comfortable",
     interfaceFont: "ubuntu",
-    chatFontSize: 12,
+    chatFontSize: 16,
   },
 
   profile: {
@@ -45,7 +45,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
 
   characterDisplayDefaults: {
     showAvatar: true,
-    avatarSize: "medium",
+    avatarSize: "large",
     nameMode: "character-name",
     showRoleLabel: true,
     showExpression: true,
