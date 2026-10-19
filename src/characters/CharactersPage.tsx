@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, Search, Tag, Trash2, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, Tag, X } from "lucide-react";
 import { loadCharacters, saveCharacters } from "./characters.storage";
-import { characterAccentColor, makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
+import { characterAccentColor, createEmptyCharacterDraft, makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
+import CharacterEditorModal from "./CharacterEditorModal";
 import "./characters.css";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import { getResourceBlob, listResources } from "../resources/resources.storage";
@@ -9,30 +10,14 @@ import type { ResourceRecord } from "../resources/resources.types";
 
 type Props = { onClose: () => void };
 
-const emptyDraft: CharacterDraft = {
-  name: "",
-  subtitle: "",
-  description: "",
-  initials: "",
-  accent: "#b4befe",
-  portraitResourceId: null,
-  portraitFit: "contain",
-  portraitPositionX: 50,
-  portraitPositionY: 50,
-  portraitZoom: 100,
-  tags: [],
-};
-
 export default function CharactersPage({ onClose }: Props) {
   const [characters, setCharacters] = useState<CharacterRecord[]>(loadCharacters);
   const [imageResources, setImageResources] = useState<ResourceRecord[]>([]);
   const [portraitUrls, setPortraitUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [tagDraft, setTagDraft] = useState("");
-  const [draft, setDraft] = useState<CharacterDraft>(emptyDraft);
+  const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
-  const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
   useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
   useEffect(() => {
     let cancelled = false;
@@ -50,10 +35,58 @@ export default function CharactersPage({ onClose }: Props) {
   function persist(next: CharacterRecord[]) { setCharacters(next); saveCharacters(next); }
   function openCharacter(character: CharacterRecord) {
     setSelectedId(character.id);
-    setDraft({ name: character.name, subtitle: character.subtitle, description: character.description, initials: character.initials, accent: character.accent, portraitResourceId: character.portraitResourceId, portraitFit: "contain", portraitPositionX: character.portraitPositionX ?? 50, portraitPositionY: character.portraitPositionY ?? 50, portraitZoom: character.portraitZoom ?? 100, tags: character.tags });
+    setDraft({
+      ...createEmptyCharacterDraft(),
+      ...character,
+      name: character.name ?? "",
+      subtitle: character.subtitle ?? "",
+      description: character.description ?? "",
+      initials: character.initials ?? "",
+      accent: character.accent ?? "#b4befe",
+      portraitResourceId: character.portraitResourceId ?? null,
+      portraitFit: "contain",
+      portraitPositionX: character.portraitPositionX ?? 50,
+      portraitPositionY: character.portraitPositionY ?? 50,
+      portraitZoom: character.portraitZoom ?? 100,
+      tags: Array.isArray(character.tags) ? character.tags : [],
+      deityOf: character.deityOf ?? "",
+      age: character.age ?? "",
+      species: character.species ?? "",
+      gender: character.gender ?? "",
+      sexuality: character.sexuality ?? "",
+      abilities: character.abilities ?? [],
+      personality: character.personality ?? "",
+      likes: character.likes ?? [],
+      dislikes: character.dislikes ?? [],
+      hobbies: character.hobbies ?? [],
+      fears: character.fears ?? [],
+      knowledge: character.knowledge ?? [],
+      associatedColor: character.associatedColor ?? "#b4befe",
+      height: character.height ?? "",
+      bodyType: character.bodyType ?? "",
+      birthmarks: character.birthmarks ?? [],
+      scars: character.scars ?? [],
+      bodyArt: character.bodyArt ?? [],
+      eyeColor: character.eyeColor ?? "",
+      hairColor: character.hairColor ?? "",
+      hairstyles: character.hairstyles ?? [],
+      facialHair: character.facialHair ?? "",
+      piercings: character.piercings ?? [],
+      clothingStyles: character.clothingStyles ?? [],
+      weapons: character.weapons ?? [],
+      diseases: character.diseases ?? [],
+      mentalDisorders: character.mentalDisorders ?? [],
+      physicalDisorders: character.physicalDisorders ?? [],
+      allergies: character.allergies ?? [],
+      relationships: Array.isArray(character.relationships) ? character.relationships.map((relationship) => ({ id: relationship.id || crypto.randomUUID(), kind: relationship.kind ?? "Other", characterId: relationship.characterId ?? null, characterName: relationship.characterName ?? "", notes: relationship.notes ?? "" })) : [],
+      relationshipStatus: character.relationshipStatus ?? "",
+      occupation: character.occupation ?? "",
+      residence: character.residence ?? "",
+      biography: character.biography ?? "",
+    });
     setIsCreating(false);
   }
-  function startCreate() { setSelectedId(null); setDraft(emptyDraft); setTagDraft(""); setIsCreating(true); }
+  function startCreate() { setSelectedId(null); setDraft(createEmptyCharacterDraft()); setIsCreating(true); }
   function save() {
     if (!draft.name.trim()) return;
     if (isCreating) {
@@ -65,15 +98,10 @@ export default function CharactersPage({ onClose }: Props) {
       persist(characters.map((character) => character.id === selected.id ? makeCharacterRecord(draft, character) : character));
     }
   }
-  function addTag() {
-    const tag = tagDraft.trim();
-    if (tag && !draft.tags.some((item) => item.toLowerCase() === tag.toLowerCase())) setDraft({ ...draft, tags: [...draft.tags, tag] });
-    setTagDraft("");
-  }
   function removeSelected() {
     if (!selected) return;
     const next = characters.filter((character) => character.id !== selected.id);
-    persist(next); setSelectedId(null); setDraft(emptyDraft);
+    persist(next); setSelectedId(null); setDraft(createEmptyCharacterDraft());
   }
 
   return <div className="library-overlay">
@@ -94,30 +122,18 @@ export default function CharactersPage({ onClose }: Props) {
             <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
       </section>
-      {(selected || isCreating) && <aside className="character-editor">
-        <div className="character-editor-top"><span>{isCreating ? "NEW CHARACTER" : "CHARACTER PROFILE"}</span><button type="button" onClick={() => { setSelectedId(null); setIsCreating(false); }} aria-label="Close editor"><X size={16} /></button></div>
-        <button type="button" className="character-editor-portrait" style={{ "--character-accent": characterAccentColor(draft.accent) } as React.CSSProperties} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} aria-label="Adjust portrait image" title={draft.portraitResourceId ? "Click to adjust portrait image" : "Choose a portrait image first"}><CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] : null} alt={draft.name} fit="contain" positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} /><small>{draft.portraitResourceId ? "CLICK TO ADJUST" : "PORTRAIT PREVIEW"}</small></button>
-        <label className="character-field"><span>Character name *</span><input autoFocus value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value, initials: draft.initials || event.target.value.slice(0, 2).toUpperCase() })} placeholder="e.g. Keira" /><small className="character-field-hint">“You” is reserved for your personal profile.</small></label>
-        <label className="character-field"><span>Subtitle</span><input value={draft.subtitle} onChange={(event) => setDraft({ ...draft, subtitle: event.target.value })} placeholder="Story · Role" /></label>
-        <label className="character-field"><span>Initials</span><input maxLength={3} value={draft.initials} onChange={(event) => setDraft({ ...draft, initials: event.target.value.toUpperCase() })} placeholder="KR" /></label>
-        <label className="character-field"><span>Portrait image</span><select value={draft.portraitResourceId ?? ""} onChange={(event) => setDraft({ ...draft, portraitResourceId: event.target.value || null })}><option value="">Use initials</option>{imageResources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</select>{imageResources.length === 0 && <small className="character-field-hint">Import images in Resources to use them as portraits.</small>}</label>
-        <label className="character-field character-accent-field"><span>Accent colour <output>{characterAccentColor(draft.accent).toUpperCase()}</output></span><div className="character-colour-picker"><input type="color" value={characterAccentColor(draft.accent)} onChange={(event) => setDraft({ ...draft, accent: event.target.value })} aria-label="Choose character accent colour" /><small>Choose any colour from the spectrum</small></div></label>
-        <label className="character-field"><span>Description</span><textarea rows={4} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} placeholder="Who are they? What should you remember?" /></label>
-        <div className="character-field"><span>Tags</span><div className="character-tag-input"><input value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addTag(); } }} placeholder="Add a tag…" /><button type="button" onClick={addTag}><Plus size={14} /></button></div><div className="character-edit-tags">{draft.tags.map((tag) => <button type="button" key={tag} onClick={() => setDraft({ ...draft, tags: draft.tags.filter((item) => item !== tag) })}>{tag}<X size={11} /></button>)}</div></div>
-        <div className="character-editor-actions">{selected && <button type="button" className="library-danger" onClick={removeSelected}><Trash2 size={14} /> Delete</button>}<button type="button" className="library-primary" onClick={save} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button></div>
-      </aside>}
-      {portraitAdjustOpen && draft.portraitResourceId && <div className="portrait-adjust-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPortraitAdjustOpen(false); }}>
-        <section className="portrait-adjust-modal" role="dialog" aria-modal="true" aria-labelledby="portrait-adjust-title">
-          <div className="portrait-adjust-heading"><div><span>CHARACTER PORTRAIT</span><h2 id="portrait-adjust-title">Adjust image</h2><p>Use the sliders to position and zoom the image. Your original file stays untouched.</p></div><button type="button" onClick={() => setPortraitAdjustOpen(false)} aria-label="Close portrait adjustment"><X size={18} /></button></div>
-          <div className="portrait-adjust-preview" style={{ "--character-accent": characterAccentColor(draft.accent) } as React.CSSProperties}><CharacterPortraitArt initials={draft.initials || "✦"} imageSrc={portraitUrls[draft.portraitResourceId] ?? null} alt={draft.name} fit="contain" positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} /></div>
-          <div className="portrait-framing-controls">
-            <label className="profile-framing-control">Horizontal <span>{draft.portraitPositionX}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionX} onChange={(event) => setDraft({ ...draft, portraitPositionX: Number(event.target.value) })} /></label>
-            <label className="profile-framing-control">Vertical <span>{draft.portraitPositionY}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionY} onChange={(event) => setDraft({ ...draft, portraitPositionY: Number(event.target.value) })} /></label>
-            <label className="profile-framing-control">Zoom <span>{draft.portraitZoom}%</span><input type="range" min="25" max="300" step="1" value={draft.portraitZoom} onChange={(event) => setDraft({ ...draft, portraitZoom: Number(event.target.value) })} /></label>
-          </div>
-          <div className="portrait-adjust-actions"><button type="button" className="library-primary" onClick={() => setPortraitAdjustOpen(false)}>Done</button></div>
-        </section>
-      </div>}
+      {(selected || isCreating) && <CharacterEditorModal
+        draft={draft}
+        setDraft={setDraft}
+        characters={characters}
+        selected={selected}
+        isCreating={isCreating}
+        imageResources={imageResources}
+        portraitUrls={portraitUrls}
+        onClose={() => { setSelectedId(null); setIsCreating(false); }}
+        onSave={save}
+        onDelete={removeSelected}
+      />}
     </main>
   </div>;
 }
