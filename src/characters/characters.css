@@ -227,3 +227,47 @@
 @media(max-width:680px){
   .studio-cover{padding:14px;margin:0 0 0}
 }
+
+
+/* Make every profile section read as its own surface, with theme-aware accents */
+.studio-section{
+  border-color:color-mix(in srgb,var(--ctp-mauve) 23%,var(--border));
+  background:
+    radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-blue) 9%,transparent),transparent 54%),
+    linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 46%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 60%,var(--sidebar-bg)));
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ctp-text) 7%,transparent),0 7px 22px color-mix(in srgb,var(--ctp-crust) 10%,transparent);
+}
+.studio-section:before{
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:0;
+  width:3px;
+  background:linear-gradient(180deg,var(--section-glow,var(--ctp-mauve)),color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 12%,transparent));
+  opacity:.78;
+  content:"";
+  pointer-events:none;
+}
+.studio-section:nth-of-type(2){--section-glow:var(--ctp-mauve);background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-mauve) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
+.studio-section:nth-of-type(3){--section-glow:var(--ctp-pink)}
+.studio-section:nth-of-type(4){--section-glow:var(--ctp-blue);background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-blue) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
+.studio-section:nth-of-type(5){--section-glow:var(--ctp-green)}
+.studio-section:nth-of-type(6){--section-glow:var(--ctp-teal);background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-teal) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
+.studio-section:nth-of-type(7){--section-glow:var(--ctp-peach)}
+.studio-section:nth-of-type(8){--section-glow:var(--ctp-pink);background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-pink) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
+.studio-section .studio-section-heading{padding-bottom:13px;border-bottom:1px solid color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 22%,var(--border))}
+.studio-section .studio-section-icon{
+  border-color:color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 38%,var(--border));
+  background:linear-gradient(145deg,color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 21%,var(--surface)),color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 8%,var(--sidebar-bg)));
+  color:var(--section-glow,var(--ctp-mauve));
+}
+.studio-section .studio-section-heading h2{letter-spacing:-.25px}
+.studio-section .studio-subsection{border-top-color:color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 24%,var(--border))}
+.studio-section .studio-subsection h3{color:color-mix(in srgb,var(--section-glow,var(--ctp-mauve)) 48%,var(--ctp-text))}
+.studio-section .studio-relationship-card{
+  border-color:color-mix(in srgb,var(--ctp-teal) 26%,var(--border));
+  background:linear-gradient(125deg,color-mix(in srgb,var(--ctp-teal) 8%,var(--surface)),color-mix(in srgb,var(--app-bg) 72%,var(--surface)));
+}
+@media(max-width:680px){
+  .studio-section .studio-section-heading{padding-bottom:11px}
+}
