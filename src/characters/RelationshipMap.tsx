@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight } from "lucide-react";
 import type { CharacterRecord } from "./characters.types";
+import "./relationship-map.css";
 
 type Props = {
   characters: CharacterRecord[];
