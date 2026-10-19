@@ -1,7 +1,8 @@
-import { CHARACTER_LIBRARY_KEY, type CharacterRecord } from "./characters.types";
+import { CHARACTER_LIBRARY_KEY, createEmptyCharacterDraft, type CharacterRecord } from "./characters.types";
 
 const starterCharacters: CharacterRecord[] = [
   {
+    ...createEmptyCharacterDraft(),
     id: "brd-keira",
     name: "Keira",
     subtitle: "Neon Requiem · Main character",
