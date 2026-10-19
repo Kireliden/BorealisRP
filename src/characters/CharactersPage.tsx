@@ -5,6 +5,8 @@ import { characterAccentColor, createEmptyCharacterDraft, makeCharacterRecord, t
 import CharacterEditorModal from "./CharacterEditorModal";
 import "./characters.css";
 import CharacterPortraitArt from "./CharacterPortraitArt";
+import RelationshipMap from "./RelationshipMap";
+import { GitFork, LayoutGrid } from "lucide-react";
 import { getResourceBlob, listResources } from "../resources/resources.storage";
 import type { ResourceRecord } from "../resources/resources.types";
 
@@ -18,6 +20,7 @@ export default function CharactersPage({ onClose }: Props) {
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
+  const [viewMode, setViewMode] = useState<"characters" | "map">("characters");
   useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
   useEffect(() => {
     let cancelled = false;
