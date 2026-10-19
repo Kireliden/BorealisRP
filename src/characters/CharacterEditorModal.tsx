@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, Brain, Check, ChevronRight, HeartPulse, Link2, Plus, Quote, ScanFace, SlidersHorizontal, Trash2, UserRound, UsersRound, X } from "lucide-react";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import { characterAccentColor, type CharacterDraft, type CharacterRecord, type CharacterRelationship, type RelationshipKind } from "./characters.types";
@@ -72,7 +73,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
     patch({ relationships: draft.relationships.filter((relationship) => relationship.id !== id) });
   }
 
-  return <div className="character-modal-backdrop">
+  return createPortal(<div className="character-modal-backdrop">
     <section className="character-studio-modal" role="dialog" aria-modal="true" aria-labelledby="character-studio-title">
       <header className="studio-header">
         <div className="studio-header-brand"><div className="studio-brand-mark">✦</div><div><span>BOREALIS ROLEPLAY DEN</span><h1 id="character-studio-title">{isCreating ? "Create character" : "Edit character"}</h1></div></div>
@@ -200,7 +201,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
         <div className="portrait-adjust-actions"><button type="button" className="library-primary" onClick={() => setPortraitAdjustOpen(false)}>Done</button></div>
       </section>
     </div>}
-  </div>;
+  </div>, document.body);
 }
 
 function RelationshipEditor({ relationship, characters, currentCharacterId, onChange, onRemove }: { relationship: CharacterRelationship; characters: CharacterRecord[]; currentCharacterId: string | null; onChange: (changes: Partial<CharacterRelationship>) => void; onRemove: () => void }) {
