@@ -115,7 +115,8 @@ export default function CharactersPage({ onClose }: Props) {
       <button className="library-close" onClick={onClose} type="button" aria-label="Close Characters"><X size={18} /></button>
     </header>
     <main className="characters-layout">
-      <section className="characters-library">
+      <div className="characters-view-switch" role="tablist" aria-label="Character views"><button type="button" role="tab" aria-selected={viewMode === "characters"} className={viewMode === "characters" ? "active" : ""} onClick={() => setViewMode("characters")}><LayoutGrid size={15}/> Characters</button><button type="button" role="tab" aria-selected={viewMode === "map"} className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")}><GitFork size={15}/> Relationship Map</button></div>
+      {viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : <section className="characters-library">
         <div className="library-eyebrow">GLOBAL ATELIER · {characters.length.toString().padStart(2, "0")} CHARACTERS</div>
         <div className="library-heading-row"><div><h1>Characters</h1><p>A cast of characters, ready for any story.</p></div><button className="library-primary" type="button" onClick={startCreate}><Plus size={16} /> New character</button></div>
         <label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search names, descriptions and tags…" /></label>
@@ -125,8 +126,8 @@ export default function CharactersPage({ onClose }: Props) {
             <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit="contain" positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} fadeEdges /><small>CHARACTER FILE</small></div>
             <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
-      </section>
-      {(selected || isCreating) && <CharacterEditorModal
+      </section>}
+      {viewMode === "characters" && (selected || isCreating) && <CharacterEditorModal
         draft={draft}
         setDraft={setDraft}
         characters={characters}
