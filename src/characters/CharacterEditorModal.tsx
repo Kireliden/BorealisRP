@@ -76,7 +76,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   return createPortal(<div className="character-modal-backdrop">
     <section className="character-studio-modal" role="dialog" aria-modal="true" aria-labelledby="character-studio-title">
       <header className="studio-header">
-        <div className="studio-header-brand"><div className="studio-brand-mark">✦</div><div><span>BOREALIS ROLEPLAY DEN</span><h1 id="character-studio-title">{isCreating ? "Create character" : "Edit character"}</h1></div></div>
+        <div className="studio-header-brand"><div className="studio-brand-mark">✦</div><div><span>BOREALIS ROLEPLAY DEN</span><h1 id="character-studio-title">{isCreating ? "Create character" : isEditing ? "Edit character" : "Character profile"}</h1></div></div>
         <button className="studio-icon-button" type="button" onClick={onClose} aria-label="Close character editor"><X size={19} /></button>
       </header>
 
