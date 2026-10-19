@@ -98,8 +98,6 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
               <TextField label="Age" value={draft.age} onChange={(value) => patch({ age: value })} placeholder="Age or age range" />
               <TextField label="Species / ethnicity" value={draft.species} onChange={(value) => patch({ species: value })} placeholder="Human, elf, etc." />
               <TextField label="Gender" value={draft.gender} onChange={(value) => patch({ gender: value })} placeholder="Gender" />
-              <TextField label="Sexuality" value={draft.sexuality} onChange={(value) => patch({ sexuality: value })} placeholder="Sexuality" />
-              <TextField label="Deity of… / titles" value={draft.deityOf} onChange={(value) => patch({ deityOf: value })} placeholder="Optional" />
             </div>
             <ListField label="Tags" values={draft.tags} onChange={(tags) => patch({ tags })} placeholder="Add a tag…" />
           </div>
@@ -107,6 +105,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
 
         <section className="studio-section">
           <SectionHeading icon={<UserRound size={18} />} title="General Information" description="Titles, identity and defining abilities." />
+          <div className="studio-field-grid"><TextField label="Deity of… / titles" value={draft.deityOf} onChange={(deityOf) => patch({ deityOf })} placeholder="Optional" /><TextField label="Sexuality" value={draft.sexuality} onChange={(sexuality) => patch({ sexuality })} placeholder="Sexuality" /></div>
           <ListField label="Abilities" values={draft.abilities} onChange={(abilities) => patch({ abilities })} placeholder="Add an ability…" />
         </section>
 
