@@ -64,6 +64,56 @@ export type CharacterRecord = CharacterDraft & {
 
 export const CHARACTER_LIBRARY_KEY = "brd.character-library.v1";
 
+export function createEmptyCharacterDraft(): CharacterDraft {
+  return {
+    name: "",
+    subtitle: "",
+    description: "",
+    initials: "",
+    accent: "#b4befe",
+    portraitResourceId: null,
+    portraitFit: "contain",
+    portraitPositionX: 50,
+    portraitPositionY: 50,
+    portraitZoom: 100,
+    tags: [],
+    deityOf: "",
+    age: "",
+    species: "",
+    gender: "",
+    sexuality: "",
+    abilities: [],
+    personality: "",
+    likes: [],
+    dislikes: [],
+    hobbies: [],
+    fears: [],
+    knowledge: [],
+    associatedColor: "#b4befe",
+    height: "",
+    bodyType: "",
+    birthmarks: [],
+    scars: [],
+    bodyArt: [],
+    eyeColor: "",
+    hairColor: "",
+    hairstyles: [],
+    facialHair: "",
+    piercings: [],
+    clothingStyles: [],
+    weapons: [],
+    diseases: [],
+    mentalDisorders: [],
+    physicalDisorders: [],
+    allergies: [],
+    relationships: [],
+    relationshipStatus: "",
+    occupation: "",
+    residence: "",
+    biography: "",
+  };
+}
+
 export function characterAccentColor(accent: string | undefined): string {
   if (accent && /^#[0-9a-f]{3,8}$/i.test(accent)) return accent;
   const legacy: Record<string, string> = {
