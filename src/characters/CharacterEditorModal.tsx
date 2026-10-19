@@ -47,7 +47,9 @@ function SectionHeading({ icon, title, description }: { icon: ReactNode; title: 
 }
 
 export default function CharacterEditorModal({ draft, setDraft, characters, selected, isCreating, imageResources, portraitUrls, onClose, onSave, onDelete }: Props) {
-  const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);\n  const [isEditing, setIsEditing] = useState(isCreating);\n  const [originalDraft, setOriginalDraft] = useState<CharacterDraft | null>(null);
+  const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(isCreating);
+  const [originalDraft, setOriginalDraft] = useState<CharacterDraft | null>(null);
   const patch = (changes: Partial<CharacterDraft>) => setDraft({ ...draft, ...changes });
   const portraitUrl = draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] ?? null : null;
 
@@ -179,11 +181,11 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
       </div>
 
       <footer className="studio-footer">
-        <div className="studio-save-hint">{draft.name.trim() ? <><Check size={14} /> {isCreating ? "Ready to create" : "Changes will be saved to this profile"}</> : "A character name is required"}</div>
+        <div className="studio-save-hint">{!isEditing ? <><Check size={14} /> Character profile</> : draft.name.trim() ? <><Check size={14} /> {isCreating ? "Ready to create" : "Changes will be saved to this profile"}</> : "A character name is required"}</div>
         <div className="studio-footer-actions">
-          {!isCreating && <button type="button" className="studio-delete-button" onClick={onDelete}><Trash2 size={14} /> Delete</button>}
-          <button type="button" className="studio-cancel-button" onClick={onClose}>Cancel</button>
-          <button type="button" className="studio-save-button" onClick={onSave} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button>
+          {isEditing && !isCreating && <button type="button" className="studio-delete-button" onClick={onDelete}><Trash2 size={14} /> Delete</button>}
+          {!isEditing ? <><button type="button" className="studio-cancel-button" onClick={onClose}>Close</button><button type="button" className="studio-save-button" onClick={() => { setOriginalDraft(draft); setIsEditing(true); }}><Pencil size={14} /> Edit character</button></> :
+            <><button type="button" className="studio-cancel-button" onClick={() => { if (isCreating) onClose(); else { if (originalDraft) setDraft(originalDraft); setIsEditing(false); setOriginalDraft(null); } }}>Cancel</button><button type="button" className="studio-save-button" onClick={() => { onSave(); setIsEditing(false); setOriginalDraft(null); }} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button></>}
         </div>
       </footer>
     </section>
