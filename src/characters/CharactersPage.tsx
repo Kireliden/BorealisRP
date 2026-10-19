@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, Search, Tag, X } from "lucide-react";
+import { ArrowLeft, Plus, Search, Tag, X, GitFork, LayoutGrid } from "lucide-react";
 import { loadCharacters, saveCharacters } from "./characters.storage";
 import { characterAccentColor, createEmptyCharacterDraft, makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
 import CharacterEditorModal from "./CharacterEditorModal";
@@ -20,6 +20,7 @@ export default function CharactersPage({ onClose }: Props) {
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
+  const [viewMode, setViewMode] = useState<"characters" | "map">("characters");
   const [viewMode, setViewMode] = useState<"characters" | "map">("characters");
   useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
   useEffect(() => {
