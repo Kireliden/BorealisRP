@@ -3,3 +3,13 @@
 @media(max-width:1050px){.relationship-workspace{grid-template-columns:minmax(0,1fr) 220px}.relationship-stats{gap:9px}.relationship-filters button{padding:7px 8px}.relationship-page{padding:26px 20px}.relationship-node{width:100px}.relationship-node-avatar{width:49px;height:49px;border-radius:16px}}
 @media(max-width:760px){.relationship-heading{align-items:flex-start;flex-direction:column}.relationship-workspace{height:auto;grid-template-columns:1fr}.relationship-canvas{height:520px}.relationship-inspector{display:none}.relationship-stats{align-self:stretch;justify-content:space-around}.relationship-filters{order:3;width:100%;justify-content:space-between}.relationship-filters button{flex:1}.relationship-zoom{margin-left:auto}.relationship-search{max-width:none}.relationship-node{width:90px}.relationship-node strong{font-size:9px}.relationship-link-label{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.relationship-graph,.relationship-node-avatar,.relationship-node strong,.relationship-inspector-link{transition:none}}
+
+.characters-layout:has(.characters-view-switch){flex-direction:column}
+.characters-view-switch{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:10px clamp(20px,3vw,46px) 0;border-bottom:1px solid color-mix(in srgb,var(--ctp-mauve) 10%,var(--border));background:color-mix(in srgb,var(--sidebar-bg) 75%,var(--app-bg))}
+.characters-view-switch button{position:relative;display:inline-flex;align-items:center;gap:8px;padding:10px 13px 12px;border:0;border-radius:9px 9px 0 0;background:transparent;color:var(--muted);font-size:11px;font-weight:650;cursor:pointer;transition:color .18s,background .18s}
+.characters-view-switch button:hover{color:var(--ctp-text);background:color-mix(in srgb,var(--ctp-mauve) 5%,transparent)}
+.characters-view-switch button.active{color:var(--ctp-text);background:linear-gradient(180deg,color-mix(in srgb,var(--ctp-mauve) 11%,transparent),transparent)}
+.characters-view-switch button.active:after{position:absolute;right:10px;bottom:-1px;left:10px;height:2px;border-radius:2px 2px 0 0;background:linear-gradient(90deg,var(--ctp-mauve),var(--ctp-blue));content:""}
+.characters-view-switch button.active svg{color:var(--ctp-mauve)}
+.characters-layout:has(.relationship-page)>.relationship-page{flex:1;min-height:0;height:auto}
+@media(max-width:680px){.characters-view-switch{padding-left:14px;padding-right:14px}}
