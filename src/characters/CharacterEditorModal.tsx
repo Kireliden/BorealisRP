@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, Brain, Check, ChevronRight, HeartPulse, Link2, Plus, Quote, ScanFace, SlidersHorizontal, Trash2, UserRound, UsersRound, X } from "lucide-react";
+import { BookOpen, Brain, Check, ChevronRight, HeartPulse, Link2, Pencil, Plus, Quote, ScanFace, SlidersHorizontal, Trash2, UserRound, UsersRound, X } from "lucide-react";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import { characterAccentColor, type CharacterDraft, type CharacterRecord, type CharacterRelationship, type RelationshipKind } from "./characters.types";
 import type { ResourceRecord } from "../resources/resources.types";
@@ -47,7 +47,7 @@ function SectionHeading({ icon, title, description }: { icon: ReactNode; title: 
 }
 
 export default function CharacterEditorModal({ draft, setDraft, characters, selected, isCreating, imageResources, portraitUrls, onClose, onSave, onDelete }: Props) {
-  const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
+  const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);\n  const [isEditing, setIsEditing] = useState(isCreating);\n  const [originalDraft, setOriginalDraft] = useState<CharacterDraft | null>(null);
   const patch = (changes: Partial<CharacterDraft>) => setDraft({ ...draft, ...changes });
   const portraitUrl = draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] ?? null : null;
 
@@ -80,7 +80,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
         <button className="studio-icon-button" type="button" onClick={onClose} aria-label="Close character editor"><X size={19} /></button>
       </header>
 
-      <div className="studio-scroll">
+      <div className={`studio-scroll ${!isEditing ? "is-readonly" : ""}`}>
         <section className="studio-cover">
           <div className="studio-portrait-column">
             <button type="button" className="studio-portrait" style={{ "--character-accent": characterAccentColor(draft.accent) } as CSSProperties} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} title={draft.portraitResourceId ? "Adjust portrait framing" : "Choose a portrait image below"}>
