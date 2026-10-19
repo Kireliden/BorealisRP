@@ -100,7 +100,6 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
               <TextField label="Sexuality" value={draft.sexuality} onChange={(value) => patch({ sexuality: value })} placeholder="Sexuality" />
               <TextField label="Deity of… / titles" value={draft.deityOf} onChange={(value) => patch({ deityOf: value })} placeholder="Optional" />
             </div>
-            <TextAreaField label="Brief description" value={draft.description} onChange={(value) => patch({ description: value })} placeholder="A concise summary shown on character cards…" rows={3} />
             <ListField label="Tags" values={draft.tags} onChange={(tags) => patch({ tags })} placeholder="Add a tag…" />
           </div>
         </section>
