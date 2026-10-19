@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, Brain, Check, ChevronRight, HeartPulse, Link2, Plus, Quote, ScanFace, SlidersHorizontal, Trash2, UserRound, UsersRound, X } from "lucide-react";
 import CharacterPortraitArt from "./CharacterPortraitArt";
@@ -83,7 +83,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
       <div className="studio-scroll">
         <section className="studio-cover">
           <div className="studio-portrait-column">
-            <button type="button" className="studio-portrait" style={{ "--character-accent": characterAccentColor(draft.accent) } as React.CSSProperties} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} title={draft.portraitResourceId ? "Adjust portrait framing" : "Choose a portrait image below"}>
+            <button type="button" className="studio-portrait" style={{ "--character-accent": characterAccentColor(draft.accent) } as CSSProperties} onClick={() => draft.portraitResourceId && setPortraitAdjustOpen(true)} title={draft.portraitResourceId ? "Adjust portrait framing" : "Choose a portrait image below"}>
               <CharacterPortraitArt initials={draft.initials.trim() || draft.name.slice(0, 2).toUpperCase() || "✦"} imageSrc={portraitUrl} alt={draft.name} fit="contain" positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} />
               <span className="studio-portrait-overlay"><SlidersHorizontal size={14} /> {draft.portraitResourceId ? "Adjust framing" : "Portrait preview"}</span>
             </button>
@@ -191,7 +191,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
     {portraitAdjustOpen && draft.portraitResourceId && <div className="portrait-adjust-backdrop studio-nested-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPortraitAdjustOpen(false); }}>
       <section className="portrait-adjust-modal" role="dialog" aria-modal="true" aria-labelledby="portrait-adjust-title">
         <div className="portrait-adjust-heading"><div><span>CHARACTER PORTRAIT</span><h2 id="portrait-adjust-title">Adjust image</h2><p>Use the sliders to position and zoom the image. Your original file stays untouched.</p></div><button type="button" onClick={() => setPortraitAdjustOpen(false)} aria-label="Close portrait adjustment"><X size={18} /></button></div>
-        <div className="portrait-adjust-preview" style={{ "--character-accent": characterAccentColor(draft.accent) } as React.CSSProperties}><CharacterPortraitArt initials={draft.initials || "✦"} imageSrc={portraitUrl} alt={draft.name} fit="contain" positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} /></div>
+        <div className="portrait-adjust-preview" style={{ "--character-accent": characterAccentColor(draft.accent) } as CSSProperties}><CharacterPortraitArt initials={draft.initials || "✦"} imageSrc={portraitUrl} alt={draft.name} fit="contain" positionX={draft.portraitPositionX} positionY={draft.portraitPositionY} zoom={draft.portraitZoom} /></div>
         <div className="portrait-framing-controls">
           <label className="profile-framing-control">Horizontal <span>{draft.portraitPositionX}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionX} onChange={(event) => patch({ portraitPositionX: Number(event.target.value) })} /></label>
           <label className="profile-framing-control">Vertical <span>{draft.portraitPositionY}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionY} onChange={(event) => patch({ portraitPositionY: Number(event.target.value) })} /></label>
