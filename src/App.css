@@ -349,7 +349,7 @@ button:disabled {
 .sidebar-footer {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 8px;
   padding: 13px 5px 6px;
   border-top: 1px solid var(--border);
   min-width: 0;
@@ -2528,3 +2528,25 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 .titlebar-logo .borealis-moon-mark { width: 18px; height: 18px; }
 .profile-sparkle { display: inline-flex; align-items: center; justify-content: center; }
 .profile-sparkle .borealis-moon-mark { width: 17px; height: 17px; }
+
+
+/* Resizable sidebar: all footer controls remain in the sidebar and follow its width. */
+.app-content { --sidebar-width: 272px; }
+.sidebar { flex-basis: var(--sidebar-width); }
+.sidebar-resize-handle {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 5px;
+  width: 5px;
+  margin-left: -2px;
+  margin-right: -3px;
+  cursor: col-resize;
+  touch-action: none;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle:focus-visible { background: color-mix(in srgb, var(--accent) 65%, transparent); outline: none; }
+body.sidebar-resizing { cursor: col-resize !important; user-select: none !important; }
+body.sidebar-resizing * { cursor: col-resize !important; user-select: none !important; }
+@media (prefers-reduced-motion: reduce) { .sidebar-resize-handle { transition: none; } }
