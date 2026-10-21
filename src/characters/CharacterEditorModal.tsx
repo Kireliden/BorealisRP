@@ -211,7 +211,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
           <div className="studio-relationships">
             <p className="studio-relationship-types-hint">Use the <MoreHorizontal size={13} /> button beside a relationship type to manage your global list.</p>
             {draft.relationships.map((relationship) => <RelationshipEditor key={relationship.id} relationship={relationship} relationshipKinds={relationshipKinds} characters={characters} currentCharacterId={selected?.id ?? null} onChange={(changes) => updateRelationship(relationship.id, changes)} onRemove={() => removeRelationship(relationship.id)} />)}
-            <button type="button" className="studio-add-relationship" onClick={addRelationship}><Plus size={15} /> Add relationship</button>
+            <div className="studio-relationship-actions"><button type="button" className="studio-add-relationship" onClick={addRelationship}><Plus size={15} /> Add relationship</button><button type="button" className="studio-manage-relationship-types studio-manage-relationship-types-secondary" onClick={() => setRelationshipTypeManagerOpen(true)}><MoreHorizontal size={16}/> Manage types</button></div>
           </div>
         </section>
 
