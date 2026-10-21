@@ -14,11 +14,19 @@ type Props = {
   imageResources: ResourceRecord[];
   portraitUrls: Record<string, string>;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (reciprocalRelationshipIds: string[]) => void;
   onDelete: () => void;
 };
 
-const relationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
+const defaultRelationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
+const RELATIONSHIP_KINDS_KEY = "brd.relationship-kinds.v1";
+
+function loadRelationshipKinds(): RelationshipKind[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RELATIONSHIP_KINDS_KEY) ?? "[]");
+    return [...new Set([...defaultRelationshipKinds, ...(Array.isArray(saved) ? saved.filter((item): item is string => typeof item === "string") : [])])];
+  } catch { return defaultRelationshipKinds; }
+}
 
 function TextField({ label, value, onChange, placeholder, type = "text", hint }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; hint?: string }) {
   return <label className="studio-field"><span>{label}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />{hint && <small>{hint}</small>}</label>;
@@ -50,19 +58,45 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(isCreating);
   const [originalDraft, setOriginalDraft] = useState<CharacterDraft | null>(null);
+  const [relationshipKinds, setRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
+  const [newRelationshipKind, setNewRelationshipKind] = useState("");
+  const [reciprocalPromptOpen, setReciprocalPromptOpen] = useState(false);
+  const [reciprocalIds, setReciprocalIds] = useState<string[]>([]);
   const patch = (changes: Partial<CharacterDraft>) => setDraft({ ...draft, ...changes });
   const portraitUrl = draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] ?? null : null;
+
+  useEffect(() => { localStorage.setItem(RELATIONSHIP_KINDS_KEY, JSON.stringify(relationshipKinds.filter((kind) => !defaultRelationshipKinds.includes(kind)))); }, [relationshipKinds]);
+
+  function addRelationshipKind() {
+    const next = newRelationshipKind.trim();
+    if (!next || relationshipKinds.some((kind) => kind.toLocaleLowerCase() === next.toLocaleLowerCase())) return;
+    setRelationshipKinds((current) => [...current, next]);
+    setNewRelationshipKind("");
+  }
+
+  function requestSave() {
+    const linked = draft.relationships.filter((relationship) => relationship.characterId && characters.some((character) => character.id === relationship.characterId && character.id !== selected?.id));
+    if (linked.length) {
+      setReciprocalIds(linked.map((relationship) => relationship.id));
+      setReciprocalPromptOpen(true);
+      return;
+    }
+    onSave([]);
+    setIsEditing(false);
+    setOriginalDraft(null);
+  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        if (portraitAdjustOpen) setPortraitAdjustOpen(false);
+        if (reciprocalPromptOpen) setReciprocalPromptOpen(false);
+        else if (portraitAdjustOpen) setPortraitAdjustOpen(false);
         else onClose();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose, portraitAdjustOpen]);
+  }, [onClose, portraitAdjustOpen, reciprocalPromptOpen]);
 
   function addRelationship() {
     const relationship: CharacterRelationship = { id: crypto.randomUUID(), kind: "Other", characterId: null, characterName: "", notes: "" };
@@ -185,7 +219,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
         <div className="studio-footer-actions">
           {isEditing && !isCreating && <button type="button" className="studio-delete-button" onClick={onDelete}><Trash2 size={14} /> Delete</button>}
           {!isEditing ? <><button type="button" className="studio-cancel-button" onClick={onClose}>Close</button><button type="button" className="studio-save-button" onClick={() => { setOriginalDraft(draft); setIsEditing(true); }}><Pencil size={14} /> Edit character</button></> :
-            <><button type="button" className="studio-cancel-button" onClick={() => { if (isCreating) onClose(); else { if (originalDraft) setDraft(originalDraft); setIsEditing(false); setOriginalDraft(null); } }}>Cancel</button><button type="button" className="studio-save-button" onClick={() => { onSave(); setIsEditing(false); setOriginalDraft(null); }} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button></>}
+            <><button type="button" className="studio-cancel-button" onClick={() => { if (isCreating) onClose(); else { if (originalDraft) setDraft(originalDraft); setIsEditing(false); setOriginalDraft(null); } }}>Cancel</button><button type="button" className="studio-save-button" onClick={requestSave} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button></>}
         </div>
       </footer>
     </section>
@@ -197,7 +231,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
         <div className="portrait-framing-controls">
           <label className="profile-framing-control">Horizontal <span>{draft.portraitPositionX}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionX} onChange={(event) => patch({ portraitPositionX: Number(event.target.value) })} /></label>
           <label className="profile-framing-control">Vertical <span>{draft.portraitPositionY}%</span><input type="range" min="0" max="100" step="1" value={draft.portraitPositionY} onChange={(event) => patch({ portraitPositionY: Number(event.target.value) })} /></label>
-          <label className="profile-framing-control">Zoom <span>{draft.portraitZoom}%</span><input type="range" min="25" max="300" step="1" value={draft.portraitZoom} onChange={(event) => patch({ portraitZoom: Number(event.target.value) })} /></label>
+          <label className="profile-framing-control">Zoom <span>{draft.portraitZoom}%</span><input type="range" min="25" max="500" step="1" value={draft.portraitZoom} onChange={(event) => patch({ portraitZoom: Number(event.target.value) })} /></label>
         </div>
         <div className="portrait-adjust-actions"><button type="button" className="library-primary" onClick={() => setPortraitAdjustOpen(false)}>Done</button></div>
       </section>
