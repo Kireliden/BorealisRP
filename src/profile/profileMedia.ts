@@ -19,3 +19,27 @@ export async function chooseProfileMedia(): Promise<string | null> {
   if (typeof selected !== "string") return null;
   return invoke<string>("import_profile_media", { sourcePath: selected });
 }
+
+/** Create a high-quality sidebar-only thumbnail; the original and GIF animation stay untouched elsewhere. */
+export async function saveSidebarAvatarThumbnail(path: string, positionX: number, positionY: number, zoom: number): Promise<string> {
+  const image = new Image();
+  image.src = profileMediaSource(path) ?? "";
+  await image.decode();
+  const width = 168, height = 210;
+  const canvas = document.createElement("canvas");
+  canvas.width = width; canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Could not prepare the sidebar avatar thumbnail.");
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight) * (zoom / 100);
+  const drawnWidth = image.naturalWidth * scale, drawnHeight = image.naturalHeight * scale;
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.drawImage(image, (width - drawnWidth) * positionX / 100, (height - drawnHeight) * positionY / 100, drawnWidth, drawnHeight);
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Could not encode the sidebar avatar thumbnail.")), "image/png");
+  });
+  const bytes = Array.from(new Uint8Array(await blob.arrayBuffer()));
+  return invoke<string>("save_profile_sidebar_thumbnail", { bytes });
+}
+export function getSidebarAvatarThumbnailPath(): Promise<string> { return invoke<string>("profile_sidebar_thumbnail_path"); }
+export function removeSidebarAvatarThumbnail(): Promise<void> { return invoke<void>("remove_profile_sidebar_thumbnail"); }
