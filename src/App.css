@@ -2521,3 +2521,10 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 /* Keep a clear, intentional gap between the easter-egg star and app name. */
 .custom-titlebar .titlebar-brand{display:flex;align-items:center;gap:9px}
 .custom-titlebar .titlebar-easter-egg{display:inline-flex;align-items:center;margin:0;flex:0 0 auto}
+
+
+/* OpenMoji-inspired crescent mark sizing for the app brand and titlebar easter egg. */
+.brand-mark .borealis-moon-mark { width: 27px; height: 27px; }
+.titlebar-logo .borealis-moon-mark { width: 18px; height: 18px; }
+.profile-sparkle { display: inline-flex; align-items: center; justify-content: center; }
+.profile-sparkle .borealis-moon-mark { width: 17px; height: 17px; }
