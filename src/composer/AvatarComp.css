@@ -825,3 +825,33 @@
 .avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
   filter: none !important;
 }
+
+
+/* Extend the portrait beyond the artwork box so its fade does not stop at
+   the artwork's own top/bottom edges (the visible horizontal seams). */
+.avatar-preview-art.has-portrait-image {
+  overflow: visible;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade {
+  inset: -30px 0 -42px;
+  overflow: visible;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.avatar-preview-art.has-portrait-image::after {
+  inset: -30px 0 -42px;
+  background: linear-gradient(
+    to bottom,
+    #292b31 0%,
+    rgb(41 43 49 / 78%) 10%,
+    rgb(41 43 49 / 24%) 22%,
+    transparent 34%,
+    transparent 68%,
+    rgb(41 43 49 / 24%) 78%,
+    rgb(41 43 49 / 76%) 90%,
+    #292b31 100%
+  );
+}
