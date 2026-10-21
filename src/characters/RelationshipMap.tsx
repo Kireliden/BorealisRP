@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
 import CharacterPortraitArt from "./CharacterPortraitArt";
+import { characterAccentColor } from "./characters.types";
 import "./relationship-map.css";
 
 type Props = {
@@ -20,6 +21,14 @@ type RelationshipEdge = {
 };
 
 const defaultRelationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
+function loadRelationshipKinds(): RelationshipKind[] {
+  try {
+    const current = localStorage.getItem("brd.relationship-kinds.v2");
+    if (current !== null) { const parsed = JSON.parse(current); return Array.isArray(parsed) ? parsed.filter((kind): kind is string => typeof kind === "string") : defaultRelationshipKinds; }
+    const legacy = JSON.parse(localStorage.getItem("brd.relationship-kinds.v1") ?? "[]");
+    return [...new Set([...defaultRelationshipKinds, ...(Array.isArray(legacy) ? legacy.filter((kind): kind is string => typeof kind === "string") : [])])];
+  } catch { return defaultRelationshipKinds; }
+}
 const relationshipPalette = ["#b4befe", "#89b4fa", "#94e2d5", "#fab387", "#f5c2e7", "#a6e3a1", "#f9e2af", "#cba6f7", "#74c7ec", "#f2cdcd"];
 
 function relationshipColor(kind: RelationshipKind): string {
@@ -38,7 +47,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   const [zoom, setZoom] = useState(100);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
-  const [customRelationshipKinds] = useState<RelationshipKind[]>(() => { try { const saved = JSON.parse(localStorage.getItem("brd.relationship-kinds.v1") ?? "[]"); return Array.isArray(saved) ? saved.filter((kind): kind is string => typeof kind === "string") : []; } catch { return []; } });
+  const [configuredRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
 
   const allEdges = useMemo(() => {
     const byPair = new Map<string, RelationshipEdge>();
@@ -72,7 +81,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     [characters, query],
   );
   const visibleIds = useMemo(() => new Set(visibleCharacters.map((character) => character.id)), [visibleCharacters]);
-  const relationshipFilters = useMemo(() => ["All connections", ...new Set([...defaultRelationshipKinds, ...customRelationshipKinds, ...allEdges.flatMap((edge) => edge.kinds)].sort((a, b) => a.localeCompare(b)))], [allEdges, customRelationshipKinds]);
+  const relationshipFilters = useMemo(() => ["All connections", ...new Set([...configuredRelationshipKinds, ...allEdges.flatMap((edge) => edge.kinds)].sort((a, b) => a.localeCompare(b)))], [allEdges, configuredRelationshipKinds]);
   const visibleEdges = useMemo(
     () => allEdges.filter((edge) => visibleIds.has(edge.from.id) && visibleIds.has(edge.to.id) && matchesFilter(edge, filter)),
     [allEdges, visibleIds, filter],
@@ -137,9 +146,10 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
         {selectedCharacter ? <>
-          <div className="relationship-inspector-avatar node-lavender" style={{overflow:"hidden",isolation:"isolate"}}><CharacterPortraitArt initials={selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()} imageSrc={selectedCharacter.portraitResourceId ? portraitUrls[selectedCharacter.portraitResourceId] : null} alt={selectedCharacter.name} fit={selectedCharacter.portraitFit ?? "contain"} positionX={selectedCharacter.portraitPositionX ?? 50} positionY={selectedCharacter.portraitPositionY ?? 50} zoom={selectedCharacter.portraitZoom ?? 100} /></div>
-          <h2>{selectedCharacter.name}</h2>
-          {selectedCharacter.subtitle && <p className="relationship-inspector-role">{selectedCharacter.subtitle}</p>}
+          <div className="relationship-inspector-character-card" style={{ "--character-accent": characterAccentColor(selectedCharacter.accent) } as React.CSSProperties}>
+            <div className="relationship-inspector-character-art"><CharacterPortraitArt initials={selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()} imageSrc={selectedCharacter.portraitResourceId ? portraitUrls[selectedCharacter.portraitResourceId] : null} alt={selectedCharacter.name} fit={selectedCharacter.portraitFit ?? "contain"} positionX={selectedCharacter.portraitPositionX ?? 50} positionY={selectedCharacter.portraitPositionY ?? 50} zoom={selectedCharacter.portraitZoom ?? 100} fadeEdges /></div>
+            <div className="relationship-inspector-character-copy"><h2>{selectedCharacter.name}</h2><p className="relationship-inspector-role">{selectedCharacter.subtitle || "\u00a0"}</p><div className="relationship-inspector-character-tags">{selectedCharacter.tags.slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}</div></div>
+          </div>
           <div className="relationship-inspector-rule"/>
           <div className="relationship-inspector-label">CONNECTED TO · {selectedEdges.length.toString().padStart(2, "0")}</div>
           {selectedEdges.length > 0 ? selectedEdges.map((edge) => {
