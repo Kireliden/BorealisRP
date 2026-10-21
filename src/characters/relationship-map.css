@@ -21,8 +21,8 @@
 
 
 /* Relationship map: quiet colored links, hover-only labels, and aligned focus rings. */
-.relationship-line{stroke-width:.22;stroke-dasharray:none;opacity:.25;transition:opacity .16s,stroke-width .16s}
-.relationship-line.is-hovered{opacity:1;stroke-width:.55}
+.relationship-line{stroke-width:1px;stroke-dasharray:none;opacity:.24;transition:opacity .16s,stroke-width .16s}
+.relationship-line.is-hovered{opacity:1;stroke-width:2px}
 .relationship-line-hit-area{fill:none;stroke:transparent;stroke-width:2.4;pointer-events:stroke;cursor:help;vector-effect:non-scaling-stroke}
 .relationship-edge-tooltip{position:absolute;z-index:8;max-width:220px;transform:translate(-50%,-50%);padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--sidebar-bg) 96%,transparent);color:var(--ctp-text);font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 8px 22px #0003;pointer-events:none}
 .relationship-node-orbit{display:none!important}
