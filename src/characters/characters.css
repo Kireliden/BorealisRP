@@ -351,3 +351,7 @@
 .character-card-tags{min-height:20px;max-height:20px;overflow:hidden;flex-wrap:nowrap;margin-top:0}
 .character-card-tags i{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:560px){.relationship-type-header{padding:19px 18px 14px}.relationship-type-list{padding:12px 18px 4px}.relationship-type-add{padding:13px 18px 4px}.relationship-type-footnote{margin-left:18px;margin-right:18px}.relationship-type-footer{padding:12px 18px 17px}.relationship-type-name{padding:0 4px}.relationship-type-name small{font-size:8px}}
+
+.studio-relationship-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.studio-relationship-actions .studio-add-relationship{flex:1;justify-content:center}
+.studio-manage-relationship-types-secondary{width:auto;flex:0 0 auto;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:10px}
