@@ -7,6 +7,15 @@ import "./ProfileSettings.css";
 
 type Profile = AppPreferences["profile"];
 
+function SpecialTitle({ displayName }: { displayName: string }) {
+  const isZero = displayName.trim().toLocaleLowerCase() === "zero";
+  return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
+    <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : "☾"}</span>
+    <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
+    <span className="special-title-glint" aria-hidden="true">✧</span>
+  </span>;
+}
+
 export default function ProfileSettings() {
   const { preferences, updatePreferences } = usePreferences();
   const [draft, setDraft] = useState<Profile>(preferences.profile);
@@ -80,9 +89,14 @@ export default function ProfileSettings() {
             <label className="profile-field-label">Display name <span>Required</span>
               <input maxLength={80} value={draft.displayName} onChange={(event) => update({ displayName: event.target.value })} placeholder="Your name" />
             </label>
-            <label className="profile-field-label">Title <span>Optional</span>
+            <label className="profile-field-label">Title <span>Optional · hidden while special title is enabled</span>
               <input maxLength={80} value={draft.title} onChange={(event) => update({ title: event.target.value })} placeholder="A little title" />
             </label>
+            <label className="profile-special-title-toggle">
+              <input type="checkbox" checked={draft.showSpecialTitle} onChange={(event) => update({ showSpecialTitle: event.target.checked })} />
+              <span><strong>Show special title</strong><small>Display your Borealis developer identity instead of your regular title.</small></span>
+            </label>
+            <div className="profile-special-title-preview"><SpecialTitle displayName={draft.displayName} /></div>
           </div>
         </div>
 
