@@ -89,16 +89,38 @@ export default function CharactersPage({ onClose }: Props) {
     setIsCreating(false);
   }
   function startCreate() { setSelectedId(null); setDraft(createEmptyCharacterDraft()); setIsCreating(true); }
-  function save() {
+  function save(reciprocalRelationshipIds: string[] = []) {
     if (!draft.name.trim()) return;
-    if (isCreating) {
-      const next = [...characters, makeCharacterRecord(draft)];
-      persist(next);
-      setSelectedId(next[next.length - 1].id);
-      setIsCreating(false);
-    } else if (selected) {
-      persist(characters.map((character) => character.id === selected.id ? makeCharacterRecord(draft, character) : character));
+    const sourceRecord = isCreating
+      ? makeCharacterRecord(draft)
+      : selected ? makeCharacterRecord(draft, selected) : null;
+    if (!sourceRecord) return;
+    let next = isCreating
+      ? [...characters, sourceRecord]
+      : characters.map((character) => character.id === sourceRecord.id ? sourceRecord : character);
+
+    for (const relationship of draft.relationships) {
+      if (!reciprocalRelationshipIds.includes(relationship.id) || !relationship.characterId) continue;
+      const target = next.find((character) => character.id === relationship.characterId);
+      if (!target || target.id === sourceRecord.id) continue;
+      const alreadyLinked = target.relationships.some((item) => item.characterId === sourceRecord.id && item.kind === relationship.kind);
+      if (alreadyLinked) continue;
+      const updatedTarget = makeCharacterRecord({
+        ...target,
+        relationships: [...target.relationships, {
+          id: crypto.randomUUID(),
+          kind: relationship.kind,
+          characterId: sourceRecord.id,
+          characterName: sourceRecord.name,
+          notes: "",
+        }],
+      }, target);
+      next = next.map((character) => character.id === target.id ? updatedTarget : character);
     }
+
+    persist(next);
+    if (isCreating) setSelectedId(sourceRecord.id);
+    setIsCreating(false);
   }
   function removeSelected() {
     if (!selected) return;
@@ -122,7 +144,7 @@ export default function CharactersPage({ onClose }: Props) {
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
           <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card ${selectedId === character.id ? "is-selected" : ""}`} style={{ "--character-accent": characterAccentColor(character.accent) } as React.CSSProperties} onClick={() => openCharacter(character)}>
             <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit="contain" positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} fadeEdges /><small>CHARACTER FILE</small></div>
-            <div className="character-card-copy"><strong>{character.name}</strong><span>{character.subtitle || "Character profile"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
+            <div className="character-card-copy"><strong>{character.name}</strong>{character.subtitle && <span>{character.subtitle}</span>}<div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
       </section>}
       {viewMode === "characters" && (selected || isCreating) && <CharacterEditorModal
