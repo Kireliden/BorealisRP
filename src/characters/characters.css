@@ -355,3 +355,10 @@
 .studio-relationship-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .studio-relationship-actions .studio-add-relationship{flex:1;justify-content:center}
 .studio-manage-relationship-types-secondary{width:auto;flex:0 0 auto;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:10px}
+
+.character-library-tools{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.character-library-tools .library-search{flex:1;min-width:140px}
+.character-sort-control{display:flex;align-items:center;gap:8px;flex:0 0 auto;color:var(--muted);font-size:10px}
+.character-sort-control select{max-width:175px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--sidebar-bg);color:var(--ctp-text);font:inherit;font-size:11px;outline:0}
+.character-sort-control select:focus{border-color:var(--accent)}
+@media(max-width:600px){.character-library-tools{align-items:stretch;flex-direction:column}.character-sort-control{justify-content:space-between}.character-sort-control select{flex:1;max-width:none}}
