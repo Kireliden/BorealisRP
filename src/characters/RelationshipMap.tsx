@@ -36,6 +36,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   const [filter, setFilter] = useState("All connections");
   const [zoom, setZoom] = useState(100);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
 
   const allEdges = useMemo(() => {
     const byPair = new Map<string, RelationshipEdge>();
@@ -69,6 +70,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     [characters, query],
   );
   const visibleIds = useMemo(() => new Set(visibleCharacters.map((character) => character.id)), [visibleCharacters]);
+  const relationshipFilters = useMemo(() => ["All connections", ...new Set(allEdges.flatMap((edge) => edge.kinds).sort((a, b) => a.localeCompare(b)))], [allEdges]);
   const visibleEdges = useMemo(
     () => allEdges.filter((edge) => visibleIds.has(edge.from.id) && visibleIds.has(edge.to.id) && matchesFilter(edge, filter)),
     [allEdges, visibleIds, filter],
@@ -95,8 +97,8 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     </div>
     <div className="relationship-toolbar">
       <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label>
-      <div className="relationship-filters">{["All connections", "Family", "Romance", "Friendship", "Enmity"].map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
-      <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setQuery(""); setFilter("All connections"); setSelectedId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
+      <div className="relationship-filters">{relationshipFilters.map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
+      <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setQuery(""); setFilter("All connections"); setSelectedId(null); setHoveredEdgeId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
     </div>
     <div className="relationship-workspace">
       <div className="relationship-canvas">
