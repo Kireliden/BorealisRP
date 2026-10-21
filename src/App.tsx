@@ -21,6 +21,7 @@ import { loadCharacters } from "./characters/characters.storage";
 import { characterAccentColor } from "./characters/characters.types";
 import { getResourceBlob } from "./resources/resources.storage";
 import CharacterPortraitArt from "./characters/CharacterPortraitArt";
+import EffectLayer from "./effects/components/EffectLayer";
 import ResourcesPage from "./resources/ResourcesPage";
 import GlobalSearch from "./GlobalSearch";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
@@ -1406,6 +1407,7 @@ function sanitiseHtml(html: string) {
               transform: `perspective(1100px) rotateX(${avatarTilt.x}deg) rotateY(${avatarTilt.y}deg)`,
               "--shine-x": `${avatarTilt.shineX}%`,
               "--shine-y": `${avatarTilt.shineY}%`,
+              "--character-accent": characterAccentColor(previewCharacter.avatar),
             } as React.CSSProperties}
             onMouseMove={(event) => {
               const bounds = event.currentTarget.getBoundingClientRect();
@@ -1430,15 +1432,15 @@ function sanitiseHtml(html: string) {
                   <div className="avatar-preview-orbit avatar-preview-orbit-two" />
                 </>}
                 {previewCharacter.avatarAssetPath ? (
-                  <div className="avatar-preview-image-layer">
+                  <div className="avatar-preview-image-layer avatar-preview-image-layer-fade">
                     <img className="avatar-preview-image profile-media-image" src={profileMediaSource(previewCharacter.avatarAssetPath) ?? undefined} alt={previewCharacter.name} />
                   </div>
                 ) : previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId] ? (
-                  <div className="avatar-preview-image-layer">
+                  <div className="avatar-preview-image-layer avatar-preview-image-layer-fade">
                     <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: previewCharacter.portraitFit ?? "contain", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
                   </div>
                 ) : previewCharacter.name === "Keira" ? (
-                  <div className="avatar-preview-image-layer"><img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" /></div>
+                  <div className="avatar-preview-image-layer avatar-preview-image-layer-fade"><img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" /></div>
                 ) : (
                   <span className="avatar-preview-initials">{previewCharacter.initials}</span>
                 )}
@@ -1458,6 +1460,7 @@ function sanitiseHtml(html: string) {
               </div>
               <div className="avatar-preview-footer"><span>BRD</span><span>HOLOGRAPHIC EDITION</span></div>
             </div>
+            <EffectLayer effect="particles" intensity="balanced" className="avatar-preview-effect-layer" />
           </section>
         </div>
       )}
