@@ -699,6 +699,6 @@
 .avatar-preview-image-layer-fade { mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 56%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 56%, transparent 100%); }
 .avatar-preview-image-layer-fade .avatar-preview-image { mask-image: none; -webkit-mask-image: none; }
 .avatar-preview-art.has-portrait-image .avatar-preview-image { mask-image: none; -webkit-mask-image: none; filter: drop-shadow(0 10px 26px color-mix(in srgb, var(--character-accent, #b4befe) 18%, transparent)); }
-.avatar-preview-card > .avatar-preview-effect-layer { z-index: 4; top: 0; right: 0; bottom: auto; left: 0; height: 64px; inset: 0 0 auto; overflow: visible; }
+.avatar-preview-card > .avatar-preview-effect-layer { --effect-color: var(--character-accent, #b4befe); z-index: 4; top: 0; right: 0; bottom: auto; left: 0; height: 64px; inset: 0 0 auto; overflow: visible; }
 .avatar-preview-card > .avatar-preview-effect-layer i { bottom: 0; }
 .avatar-preview-card .avatar-preview-close { z-index: 6; }
