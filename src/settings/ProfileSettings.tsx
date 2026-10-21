@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import type { AppPreferences } from "../preferences/types";
-import { chooseProfileMedia, profileMediaSource } from "../profile/profileMedia";
+import { chooseProfileMedia, profileMediaSource, removeSidebarAvatarThumbnail, saveSidebarAvatarThumbnail } from "../profile/profileMedia";
 import EffectLayer from "../effects/components/EffectLayer";
 import "../profile/ProfileModal.css";
 import "./ProfileSettings.css";
@@ -42,14 +42,22 @@ export default function ProfileSettings() {
     }
   }
 
-  function save() {
+  async function save() {
     if (!draft.displayName.trim()) return;
-    updatePreferences((current) => ({
-      ...current,
-      profile: { ...draft, displayName: draft.displayName.trim() },
-    }));
-    setSaved(true);
-    setError("");
+    try {
+      setError("");
+      if (draft.avatarAssetPath) {
+        const thumbnailPath = await saveSidebarAvatarThumbnail(draft.avatarAssetPath, draft.avatarPositionX, draft.avatarPositionY, draft.avatarZoom);
+        window.dispatchEvent(new CustomEvent("brd-sidebar-avatar-thumbnail-updated", { detail: thumbnailPath }));
+      } else {
+        await removeSidebarAvatarThumbnail();
+        window.dispatchEvent(new CustomEvent("brd-sidebar-avatar-thumbnail-updated", { detail: "" }));
+      }
+      updatePreferences((current) => ({ ...current, profile: { ...draft, displayName: draft.displayName.trim() } }));
+      setSaved(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
   }
 
   function cancel() {
