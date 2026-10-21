@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight, ChevronLeft, ChevronRight, Palette } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import { characterAccentColor } from "./characters.types";
@@ -45,6 +45,11 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All connections");
   const [zoom, setZoom] = useState(100);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+  const canvasDragRef = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const [mapBackground, setMapBackground] = useState(() => { try { return localStorage.getItem("brd.relationship-map.background") ?? "default"; } catch { return "default"; } });
+  const [showBackgroundOptions, setShowBackgroundOptions] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [configuredRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
@@ -120,6 +125,32 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     [visibleCharacters],
   );
   const selectedCharacter = visibleCharacters.find((character) => character.id === selectedId) ?? visibleCharacters[0] ?? null;
+
+  function changeMapBackground(value: string) {
+    setMapBackground(value);
+    setShowBackgroundOptions(false);
+    try { localStorage.setItem("brd.relationship-map.background", value); } catch { /* Keep the selection for this session if storage is unavailable. */ }
+  }
+  function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0 || (event.target as HTMLElement).closest("button, input, .relationship-node, .relationship-edge-tooltip")) return;
+    canvasDragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, originX: pan.x, originY: pan.y };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsDraggingCanvas(true);
+  }
+  function handleCanvasPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = canvasDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    setPan({ x: drag.originX + event.clientX - drag.startX, y: drag.originY + event.clientY - drag.startY });
+  }
+  function handleCanvasPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (canvasDragRef.current?.pointerId !== event.pointerId) return;
+    canvasDragRef.current = null;
+    setIsDraggingCanvas(false);
+  }
+  function handleCanvasWheel(event: React.WheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setZoom((current) => Math.max(60, Math.min(160, current + (event.deltaY < 0 ? 5 : -5))));
+  }
   const selectedEdges = selectedCharacter
     ? visibleEdges.filter((edge) => edge.from.id === selectedCharacter.id || edge.to.id === selectedCharacter.id)
     : [];
@@ -138,13 +169,13 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
         <div className="relationship-filters" ref={filterStripRef} onScroll={updateFilterStripState}>{relationshipFilters.map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
         <button className="relationship-filter-scroll relationship-filter-scroll-right" type="button" aria-label="Scroll relationship types right" disabled={!filterStripState.canScrollRight} onClick={() => { if (filterStripRef.current) filterStripRef.current.scrollBy({ left: 180, behavior: "smooth" }); }}><ChevronRight size={15}/></button>
       </div>
-      <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setQuery(""); setFilter("All connections"); setSelectedId(null); setHoveredEdgeId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
+      <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setPan({ x: 0, y: 0 }); setQuery(""); setFilter("All connections"); setSelectedId(null); setHoveredEdgeId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
     </div>
     <div className="relationship-workspace">
-      <div className="relationship-canvas">
+      <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
         <div className="relationship-canvas-glow relationship-canvas-glow-a"/><div className="relationship-canvas-glow relationship-canvas-glow-b"/>
         <div className="relationship-canvas-grid"/>
-        {visibleCharacters.length > 0 ? <div className="relationship-graph relationship-real-graph" style={{ transform: `scale(${zoom / 100})` }}>
+        {visibleCharacters.length > 0 ? <div className="relationship-graph relationship-real-graph" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})` }}>
           <svg className="relationship-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {visibleEdges.map((edge) => {
               const a = actualNodes.find((node) => node.character.id === edge.from.id);
@@ -171,6 +202,10 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
           </button>)}
         </div> : <div className="relationship-preview-note"><Users size={16}/><span>{characters.length === 0 ? <><strong>Your cast is empty.</strong> Create a character first, then link profiles to start building your map.</> : <>No characters match “{query}”. Try a different search.</>}</span></div>}
         <div className="relationship-canvas-caption"><Sparkles size={13}/>{hasRelationships ? "Live map · linked character profiles" : "Your map · based on saved character profiles"}</div>
+        <div className="relationship-map-background-controls">
+          <button type="button" className={showBackgroundOptions ? "active" : ""} onClick={() => setShowBackgroundOptions((open) => !open)} aria-expanded={showBackgroundOptions}><Palette size={14}/> Map background <span>{showBackgroundOptions ? "−" : "+"}</span></button>
+          {showBackgroundOptions && <div className="relationship-map-background-options" role="group" aria-label="Map background"><button type="button" className={mapBackground === "default" ? "active" : ""} onClick={() => changeMapBackground("default")}><i className="background-swatch background-swatch-default"/>Default</button><button type="button" className={mapBackground === "midnight" ? "active" : ""} onClick={() => changeMapBackground("midnight")}><i className="background-swatch background-swatch-midnight"/>Midnight</button><button type="button" className={mapBackground === "dusk" ? "active" : ""} onClick={() => changeMapBackground("dusk")}><i className="background-swatch background-swatch-dusk"/>Dusk</button><button type="button" className={mapBackground === "forest" ? "active" : ""} onClick={() => changeMapBackground("forest")}><i className="background-swatch background-swatch-forest"/>Forest</button></div>}
+        </div>
       </div>
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
