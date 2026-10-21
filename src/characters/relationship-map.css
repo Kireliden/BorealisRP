@@ -58,3 +58,22 @@
 .reciprocal-prompt-actions button{border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 5px #0001,inset 0 1px 0 #fff1;transition:transform .16s,border-color .16s,box-shadow .16s}
 .reciprocal-prompt-actions button:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 55%,var(--border));box-shadow:0 5px 13px #0002}
 @media(max-width:1100px){.relationship-inspector-character-art{aspect-ratio:4/4.4}}
+
+
+/* Relationship Map filter strip: finite horizontal rail with edge cues and hover-to-scroll. */
+.relationship-filter-strip{position:relative;display:flex;align-items:center;flex:1;min-width:150px;max-width:100%;overflow:hidden;border:1px solid var(--border);border-radius:11px;background:color-mix(in srgb,var(--sidebar-bg) 85%,transparent)}
+.relationship-filter-strip .relationship-filters{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;border:0;border-radius:0;background:transparent;white-space:nowrap;scroll-behavior:smooth}
+.relationship-filter-strip .relationship-filters::-webkit-scrollbar{display:none}
+.relationship-filter-strip .relationship-filters button{flex:0 0 auto;white-space:nowrap}
+.relationship-filter-scroll{position:absolute;z-index:2;top:0;bottom:0;display:grid;place-items:center;width:27px;border:0;background:linear-gradient(90deg,var(--sidebar-bg),color-mix(in srgb,var(--sidebar-bg) 88%,transparent));color:var(--ctp-text);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .16s}
+.relationship-filter-scroll-left{left:0;background:linear-gradient(90deg,var(--sidebar-bg) 60%,transparent)}
+.relationship-filter-scroll-right{right:0;background:linear-gradient(270deg,var(--sidebar-bg) 60%,transparent)}
+.relationship-filter-strip.can-scroll-left .relationship-filter-scroll-left,.relationship-filter-strip.can-scroll-right .relationship-filter-scroll-right{opacity:.9;pointer-events:auto}
+.relationship-filter-scroll:disabled{opacity:0!important;pointer-events:none!important}
+.relationship-filter-strip.can-scroll-left .relationship-filters{mask-image:linear-gradient(90deg,transparent 0,#000 26px,#000 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 26px,#000 100%)}
+.relationship-filter-strip.can-scroll-right .relationship-filters{mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent 100%);-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent 100%)}
+.relationship-filter-strip.can-scroll-left.can-scroll-right .relationship-filters{mask-image:linear-gradient(90deg,transparent 0,#000 26px,#000 calc(100% - 28px),transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 26px,#000 calc(100% - 28px),transparent 100%)}
+.relationship-inspector-link{background:linear-gradient(135deg,color-mix(in srgb,var(--node-color,var(--ctp-lavender)) 8%,var(--surface)),color-mix(in srgb,var(--ctp-mauve) 4%,var(--sidebar-bg)))}
+.relationship-inspector-link:hover{background:linear-gradient(135deg,color-mix(in srgb,var(--node-color,var(--ctp-lavender)) 14%,var(--surface)),color-mix(in srgb,var(--ctp-mauve) 7%,var(--sidebar-bg)))}
+@media(max-width:1050px){.relationship-filter-strip{order:3;flex:1 1 100%;width:100%}.relationship-filter-strip .relationship-filters{justify-content:flex-start}.relationship-filter-scroll{width:25px}}
+@media(max-width:760px){.relationship-filter-strip{width:100%;flex:1 1 100%;order:3}.relationship-filter-strip .relationship-filters{justify-content:flex-start}.relationship-toolbar{align-items:stretch}}
