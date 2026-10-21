@@ -117,3 +117,15 @@
 
 .relationship-background-file-input{display:none}.background-swatch-custom{background:linear-gradient(135deg,var(--ctp-lavender),var(--ctp-blue),var(--ctp-green))}
 .relationship-map-background-options button:focus-visible,.relationship-map-background-controls>button:focus-visible{outline:2px solid var(--ctp-lavender);outline-offset:2px}
+
+/* Keep characters unrelated to the selected relationship type in the background. */
+.relationship-node{transition:opacity .2s ease,transform .2s ease}
+.relationship-node.is-filter-dimmed{pointer-events:auto}
+.relationship-node-avatar .character-portrait-initials{display:grid;place-items:center;width:100%;height:100%;font-size:25px;font-weight:800;letter-spacing:-1px;line-height:1;text-shadow:0 2px 12px color-mix(in srgb,var(--node-color,var(--ctp-lavender)) 30%,transparent)}
+.relationship-resource-background-picker{display:flex;flex-direction:column;gap:5px;min-width:180px;max-width:260px;max-height:190px;overflow:auto;padding:7px;border:1px solid var(--border);border-radius:9px;background:var(--sidebar-bg)}
+.relationship-resource-background-picker>span{padding:2px 4px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:1.3px}
+.relationship-resource-background-picker button{display:flex;align-items:center;gap:8px;min-width:0;text-align:left}
+.relationship-resource-background-picker button>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.relationship-resource-background-picker button:disabled{opacity:.45;cursor:wait}
+.relationship-resource-background-thumb{display:block;flex:0 0 34px;width:34px;height:27px;overflow:hidden;border:1px solid var(--border);border-radius:5px;background:var(--surface)}
+.relationship-resource-background-thumb img{width:100%;height:100%;object-fit:cover}
