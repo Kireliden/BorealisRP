@@ -988,7 +988,7 @@ function sanitiseHtml(html: string) {
     <main className="app-shell">
       <div className="custom-titlebar" data-tauri-drag-region>
         <div className="titlebar-brand" data-tauri-drag-region>
-        <PotatoEgg />
+        <span className="titlebar-easter-egg"><PotatoEgg /></span>
         
         <span data-tauri-drag-region>Borealis Roleplay Den</span>
     </div>
