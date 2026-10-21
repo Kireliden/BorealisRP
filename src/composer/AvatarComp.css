@@ -977,3 +977,26 @@
     color-mix(in srgb, var(--character-accent, #b4befe) 80%, #292b31) 100%
   );
 }
+
+
+/* Restore the luminous holographic frame without changing the locked portrait fade. */
+.avatar-preview-card {
+  border: 1px solid color-mix(in srgb, var(--character-accent, #b4befe) 72%, #ffffff);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--character-accent, #b4befe) 82%, #ffffff) 0%,
+      color-mix(in srgb, var(--character-accent, #b4befe) 58%, #34363d) 18%,
+      color-mix(in srgb, var(--character-accent, #b4befe) 76%, #ffffff) 34%,
+      color-mix(in srgb, var(--character-accent, #b4befe) 36%, #34363d) 52%,
+      color-mix(in srgb, var(--character-accent, #b4befe) 72%, #ffffff) 72%,
+      color-mix(in srgb, var(--character-accent, #b4befe) 48%, #34363d) 86%,
+      color-mix(in srgb, var(--character-accent, #b4befe) 82%, #ffffff) 100%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--character-accent, #b4befe) 35%, transparent),
+    0 0 12px color-mix(in srgb, var(--character-accent, #b4befe) 48%, transparent),
+    0 0 30px color-mix(in srgb, var(--character-accent, #b4befe) 30%, transparent),
+    0 0 64px color-mix(in srgb, var(--character-accent, #b4befe) 18%, transparent),
+    0 28px 90px rgb(0 0 0 / 55%);
+}
