@@ -895,3 +895,39 @@
   z-index: 5;
   text-shadow: 0 2px 12px #292b31, 0 1px 3px #292b31;
 }
+
+
+/* Let the card portrait occupy nearly the full card height without changing
+   the saved crop, object-position, or per-character zoom settings. */
+.avatar-preview-art.has-portrait-image {
+  overflow: visible;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade {
+  inset: -48px 0 -112px;
+  overflow: visible;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.avatar-preview-art.has-portrait-image::after {
+  inset: -48px 0 -112px;
+  background: linear-gradient(
+    to bottom,
+    #292b31 0%,
+    rgb(41 43 49 / 76%) 8%,
+    rgb(41 43 49 / 22%) 18%,
+    transparent 29%,
+    transparent 82%,
+    rgb(41 43 49 / 18%) 88%,
+    rgb(41 43 49 / 64%) 96%,
+    #292b31 100%
+  );
+}
+.avatar-preview-topline,
+.avatar-preview-details,
+.avatar-preview-footer {
+  position: relative;
+  z-index: 4;
+}
