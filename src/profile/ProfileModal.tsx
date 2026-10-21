@@ -10,7 +10,7 @@ function SpecialTitle({ displayName }: { displayName: string }) {
   return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
     <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : "☾"}</span>
     <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
-    <span className="special-title-glint" aria-hidden="true">✧</span>
+    <span className="special-title-particles" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
   </span>;
 }
 
