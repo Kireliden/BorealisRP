@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type MouseEvent } from "react";
 import type { AppPreferences } from "../preferences/types";
 import { profileMediaSource } from "./profileMedia";
+import EffectLayer from "../effects/components/EffectLayer";
 import "./ProfileModal.css";
 
 type Profile = AppPreferences["profile"];
@@ -10,6 +11,7 @@ function SpecialTitle({ displayName }: { displayName: string }) {
   return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
     <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : <svg className="special-title-moon-icon" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>}</span>
     <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
+    <EffectLayer effect="particles" intensity="subtle" className="special-title-particles" />
   </span>;
 }
 
@@ -77,7 +79,7 @@ export default function ProfileModal({ profile, onEdit, onClose }: ProfileModalP
           {profile.motto && <p className="profile-motto">“{profile.motto}”</p>}
           <p className={`profile-description ${profile.description ? "" : "is-empty"}`}>{profile.description || "Your little corner of Borealis. Add a few words about yourself when you feel like it."}</p>
           <div className="profile-card-footer">
-            <span className="profile-sparkle" aria-label="Borealis moon"><svg className="borealis-moon-mark" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/><path d="M17.5 18.5l2.2 4.6 4.7 2.2-4.7 2.2-2.2 4.7-2.2-4.7-4.7-2.2 4.7-2.2Z" fill="#f5e0dc" stroke="#1e1e2e" strokeWidth="1.6" strokeLinejoin="round"/></svg></span>
+            <span className="profile-sparkle" aria-label="Borealis moon"><svg className="borealis-moon-mark" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/></svg></span>
             <span>BOREALIS ROLEPLAY DEN</span>
             <button type="button" className="profile-primary-button" onClick={onEdit}>Edit profile</button>
           </div>
