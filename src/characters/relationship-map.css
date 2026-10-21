@@ -147,3 +147,10 @@
 .relationship-inspector-character-card .character-card-tags i{padding:3px 5px;border-radius:4px;background:var(--surface);color:var(--muted);font-size:9px;font-style:normal}
 .relationship-lines .relationship-line{stroke-linecap:round}
 @media(max-width:760px){.relationship-map-sort{order:4;flex:1}.relationship-map-sort select{flex:1;max-width:none}}
+
+
+/* Compact Character-library card inside the narrower Connection Details inspector. */
+.relationship-inspector-character-card.character-card{margin:10px 0 12px}
+.relationship-inspector-character-card .character-card-art{height:145px;aspect-ratio:auto}
+.relationship-inspector-character-card .character-card-copy{padding:10px 11px}
+.relationship-inspector-character-card .character-card-tags{margin-top:6px}
