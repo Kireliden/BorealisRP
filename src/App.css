@@ -2506,3 +2506,14 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 .workspace-switcher-slot>*{width:100%;min-width:0}
 .workspace-search-button{display:grid;flex:0 0 38px;width:38px;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--muted);transition:color .15s,border-color .15s,background .15s}
 .workspace-search-button:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
+
+
+/* App-wide Catppuccin scrollbars, including webviews and nested panels. */
+*{scrollbar-width:thin;scrollbar-color:var(--ctp-surface2) transparent}
+*::-webkit-scrollbar{width:9px;height:9px}
+*::-webkit-scrollbar-track{background:transparent;border-radius:9px}
+*::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ctp-surface2) 88%,var(--ctp-overlay0));border:2px solid transparent;border-radius:9px;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--ctp-lavender) 55%,var(--ctp-surface2));border:2px solid transparent;background-clip:padding-box}
+*::-webkit-scrollbar-corner{background:transparent}
+.titlebar-easter-egg{display:inline-flex;align-items:center;margin-right:7px;flex:0 0 auto}
+.titlebar-brand{gap:0}
