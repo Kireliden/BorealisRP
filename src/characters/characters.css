@@ -282,3 +282,25 @@
 .studio-section:nth-of-type(6){background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-teal) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
 .studio-section:nth-of-type(7){background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-peach) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
 .studio-section:nth-of-type(8){background:radial-gradient(ellipse at 100% 0%,color-mix(in srgb,var(--ctp-pink) 13%,transparent),transparent 58%),linear-gradient(135deg,color-mix(in srgb,var(--ctp-surface0) 48%,var(--sidebar-bg)),color-mix(in srgb,var(--app-bg) 58%,var(--sidebar-bg)))}
+
+
+/* Relationship type management and reciprocal-link confirmation. */
+.studio-relationship-kind-manager{margin:0 0 14px;padding:12px;border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border));border-radius:10px;background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.studio-relationship-kind-manager .studio-field{margin:0}
+.studio-relationship-kind-manager>small{display:block;margin-top:7px;color:var(--muted);font-size:10px;line-height:1.5}
+.studio-relationship-kind-manager .studio-list-add button:disabled{opacity:.4;cursor:not-allowed}
+.reciprocal-prompt-backdrop{position:fixed;inset:0;z-index:150;display:grid;place-items:center;padding:24px;background:rgba(17,17,27,.66);backdrop-filter:blur(8px)}
+.reciprocal-prompt{width:min(520px,100%);max-height:85vh;overflow:auto;padding:24px;border:1px solid color-mix(in srgb,var(--accent) 32%,var(--border));border-radius:16px;background:var(--sidebar-bg);color:var(--ctp-text);box-shadow:0 24px 80px #0006}
+.reciprocal-prompt-kicker{color:var(--accent);font-size:9px;font-weight:800;letter-spacing:1.8px}
+.reciprocal-prompt h2{margin:9px 0 8px;font-size:20px;letter-spacing:-.4px}
+.reciprocal-prompt>p{margin:0 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
+.reciprocal-prompt-list{display:grid;gap:7px;max-height:300px;overflow:auto}
+.reciprocal-prompt-item{display:flex;align-items:center;gap:11px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--app-bg);cursor:pointer}
+.reciprocal-prompt-item:has(input:checked){border-color:color-mix(in srgb,var(--accent) 60%,var(--border));background:color-mix(in srgb,var(--accent) 7%,var(--app-bg))}
+.reciprocal-prompt-item input{accent-color:var(--accent)}
+.reciprocal-prompt-avatar{display:grid;width:34px;height:34px;flex:0 0 34px;place-items:center;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--border));border-radius:9px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));font-size:10px;font-weight:800}
+.reciprocal-prompt-item>span:last-child{display:grid;gap:3px;min-width:0}
+.reciprocal-prompt-item strong{font-size:12px}
+.reciprocal-prompt-item small{color:var(--muted);font-size:10px}
+.reciprocal-prompt-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:20px}
+@media(max-width:560px){.reciprocal-prompt{padding:18px}.reciprocal-prompt-actions{flex-direction:column-reverse}.reciprocal-prompt-actions button{width:100%;justify-content:center}}
