@@ -1,4 +1,4 @@
-export type RelationshipKind = "Mother" | "Father" | "Sibling" | "Partner" | "Close friend" | "Other";
+export type RelationshipKind = "Mother" | "Father" | "Sibling" | "Partner" | "Close friend" | "Enemy" | "Other";
 
 export type CharacterRelationship = {
   id: string;
