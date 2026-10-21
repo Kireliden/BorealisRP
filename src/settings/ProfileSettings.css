@@ -6,6 +6,12 @@
 .profile-settings .profile-portrait { width: 124px; aspect-ratio: 4 / 5; }
 .profile-settings .profile-details { padding: 4px 18px 18px; }
 .profile-settings-fields { display: flex; flex-direction: column; gap: 12px; }
+.profile-special-title-toggle { display: flex; align-items: flex-start; gap: 9px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--panel-bg) 88%, var(--surface)); cursor: pointer; }
+.profile-special-title-toggle input { margin: 3px 0 0; accent-color: var(--accent); }
+.profile-special-title-toggle span { display: grid; gap: 3px; }
+.profile-special-title-toggle strong { color: var(--ctp-text); font-size: 11px; }
+.profile-special-title-toggle small { color: var(--muted); font-size: 10px; line-height: 1.45; }
+.profile-special-title-preview { min-width: 0; }
 .profile-settings .profile-field-label input,
 .profile-settings .profile-field-label textarea,
 .profile-settings .profile-field-label select { box-sizing: border-box; }
