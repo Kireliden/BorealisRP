@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
 import CharacterPortraitArt from "./CharacterPortraitArt";
@@ -146,7 +146,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
         {selectedCharacter ? <>
-          <div className="relationship-inspector-character-card" style={{ "--character-accent": characterAccentColor(selectedCharacter.accent) } as React.CSSProperties}>
+          <div className="relationship-inspector-character-card" style={{ "--character-accent": characterAccentColor(selectedCharacter.accent) } as CSSProperties}>
             <div className="relationship-inspector-character-art"><CharacterPortraitArt initials={selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()} imageSrc={selectedCharacter.portraitResourceId ? portraitUrls[selectedCharacter.portraitResourceId] : null} alt={selectedCharacter.name} fit={selectedCharacter.portraitFit ?? "contain"} positionX={selectedCharacter.portraitPositionX ?? 50} positionY={selectedCharacter.portraitPositionY ?? 50} zoom={selectedCharacter.portraitZoom ?? 100} fadeEdges /></div>
             <div className="relationship-inspector-character-copy"><h2>{selectedCharacter.name}</h2><p className="relationship-inspector-role">{selectedCharacter.subtitle || "\u00a0"}</p><div className="relationship-inspector-character-tags">{selectedCharacter.tags.slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}</div></div>
           </div>
