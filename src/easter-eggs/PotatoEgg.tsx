@@ -117,7 +117,7 @@ export default function PotatoEgg() {
         title="Borealis"
         onClick={handleLogoClick}
       >
-        ✦
+        <svg className="borealis-moon-mark" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/><path d="M17.5 18.5l2.2 4.6 4.7 2.2-4.7 2.2-2.2 4.7-2.2-4.7-4.7-2.2 4.7-2.2Z" fill="#f5e0dc" stroke="#1e1e2e" strokeWidth="1.6" strokeLinejoin="round"/></svg>
       </button>
 
       {createPortal(
