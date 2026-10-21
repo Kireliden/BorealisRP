@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import type { AppPreferences } from "../preferences/types";
 import { chooseProfileMedia, profileMediaSource } from "../profile/profileMedia";
+import EffectLayer from "../effects/components/EffectLayer";
 import "../profile/ProfileModal.css";
 import "./ProfileSettings.css";
 
@@ -12,7 +13,7 @@ function SpecialTitle({ displayName }: { displayName: string }) {
   return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
     <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : "☾"}</span>
     <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
-    <span className="special-title-particles" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
+    <EffectLayer effect="particles" intensity="subtle" className="special-title-particles" />
   </span>;
 }
 
