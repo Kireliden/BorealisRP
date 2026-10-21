@@ -110,7 +110,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   }, [onClose, portraitAdjustOpen, reciprocalPromptOpen]);
 
   useEffect(() => { const openManager = () => setRelationshipTypeManagerOpen(true); window.addEventListener("brd:open-relationship-type-manager", openManager); return () => window.removeEventListener("brd:open-relationship-type-manager", openManager); }, []);\n\n  function addRelationship() {
-    const relationship: CharacterRelationship = { id: crypto.randomUUID(), kind: "Other", characterId: null, characterName: "", notes: "" };
+    const relationship: CharacterRelationship = { id: crypto.randomUUID(), kind: relationshipKinds.includes("Other") ? "Other" : relationshipKinds[0] ?? "Other", characterId: null, characterName: "", notes: "" };
     patch({ relationships: [...draft.relationships, relationship] });
   }
   function updateRelationship(id: string, changes: Partial<CharacterRelationship>) {
