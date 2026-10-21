@@ -127,14 +127,21 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
     () => allEdges.filter((edge) => visibleIds.has(edge.from.id) && visibleIds.has(edge.to.id) && matchesFilter(edge, filter)),
     [allEdges, visibleIds, filter],
   );
-  const actualNodes = useMemo(
-    () => visibleCharacters.map((character, index) => ({
-      character,
-      x: 50 + Math.cos(index / Math.max(visibleCharacters.length, 1) * Math.PI * 2 - Math.PI / 2) * (visibleCharacters.length <= 2 ? 20 : 31),
-      y: 49 + Math.sin(index / Math.max(visibleCharacters.length, 1) * Math.PI * 2 - Math.PI / 2) * (visibleCharacters.length <= 2 ? 20 : 31),
-    })),
-    [visibleCharacters],
-  );
+  const actualNodes = useMemo(() => {
+    const count = visibleCharacters.length;
+    // Grow the ring as the cast grows so adjacent nodes have more breathing room.
+    // Keep a little margin around the canvas so labels and portraits aren't pushed off-screen.
+    const radiusX = count <= 2 ? 20 : Math.min(41, Math.max(34, count * 2.7));
+    const radiusY = count <= 2 ? 20 : Math.min(39, Math.max(32, count * 2.55));
+    return visibleCharacters.map((character, index) => {
+      const angle = index / Math.max(count, 1) * Math.PI * 2 - Math.PI / 2;
+      return {
+        character,
+        x: 50 + Math.cos(angle) * radiusX,
+        y: 49 + Math.sin(angle) * radiusY,
+      };
+    });
+  }, [visibleCharacters]);
   const selectedCharacter = selectedId ? visibleCharacters.find((character) => character.id === selectedId) ?? null : null;
   const connectedCharacterIds = useMemo(() => new Set(visibleEdges.flatMap((edge) => [edge.from.id, edge.to.id])), [visibleEdges]);
 
