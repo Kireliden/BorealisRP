@@ -86,3 +86,10 @@
 .relationship-inspector-character-art>.character-portrait-image-layer-fade>.character-portrait-image{position:absolute;inset:0;width:100%;height:100%;mask-image:none!important;-webkit-mask-image:none!important}
 .relationship-inspector-character-art:after{position:absolute;inset:0;z-index:1;content:"";pointer-events:none;background:linear-gradient(to bottom,color-mix(in srgb,var(--ctp-mantle) 22%,transparent) 0%,transparent 22%,transparent 60%,color-mix(in srgb,var(--ctp-mantle) 78%,var(--sidebar-bg)) 100%);mix-blend-mode:multiply;opacity:.45}
 .relationship-inspector-character-copy{position:relative;z-index:2;background:linear-gradient(to bottom,color-mix(in srgb,var(--sidebar-bg) 96%,transparent),var(--sidebar-bg) 28%)}
+
+
+/* Match the working portrait fade used by character cards: fade the image wrapper, not a separate overlay. */
+.relationship-inspector-character-art>.character-portrait-image-layer-fade{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;overflow:hidden;mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 56%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 28%,#000 56%,transparent 100%)}
+.relationship-inspector-character-art>.character-portrait-image-layer-fade .character-portrait-image{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;mask-image:none;-webkit-mask-image:none}
+.relationship-inspector-character-art:after{display:none}
+.relationship-inspector-character-copy{margin-top:-1px;background:linear-gradient(to bottom,color-mix(in srgb,var(--ctp-mantle) 45%,var(--sidebar-bg)),var(--sidebar-bg) 18%)}
