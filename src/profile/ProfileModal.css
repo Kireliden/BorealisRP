@@ -105,10 +105,6 @@
 .special-title-moon { --special-title-tint: #c4b5fd; }
 .special-title-star { --special-title-tint: #f5d0fe; }
 .special-title-symbol { color: var(--special-title-tint); font-size: 14px; line-height: 1; text-shadow: 0 0 9px color-mix(in srgb, var(--special-title-tint) 65%, transparent); }
-.special-title-glint { position: absolute; top: 0; bottom: 0; left: -20%; display: grid; place-items: center; width: 20%; color: white; opacity: 0; pointer-events: none; animation: special-title-shimmer 5.2s ease-in-out infinite; }
-@keyframes special-title-shimmer { 0%, 68%, 100% { left: -20%; opacity: 0; } 74% { opacity: .7; } 88% { left: 110%; opacity: .35; } }
-:root[data-animations="off"] .special-title-particles i { animation: none; opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .special-title-particles i { animation: none; opacity: 0; } }
 .profile-details { display: flex; flex-direction: column; gap: 14px; padding: 4px 34px 26px; flex: 1 0 auto; }
 .profile-motto { margin: 0; color: var(--ctp-lavender); font-size: 15px; font-style: italic; line-height: 1.6; }
 .profile-description { margin: 0; color: var(--ctp-subtext1); font-size: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
