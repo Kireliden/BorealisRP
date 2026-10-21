@@ -163,6 +163,11 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
     setShowBackgroundOptions(false);
     try { localStorage.setItem("brd.relationship-map.background", value); } catch { /* Keep the selection for this session if storage is unavailable. */ }
   }
+  function handleCanvasClick(event: React.MouseEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement;
+    if (target.closest(".relationship-node, .relationship-edge-tooltip, .relationship-lines, button, input, label, select")) return;
+    setSelectedId(null);
+  }
   function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || (event.target as HTMLElement).closest("button, input, .relationship-node, .relationship-edge-tooltip")) return;
     canvasDragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, originX: pan.x, originY: pan.y };
@@ -205,7 +210,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
     </div>
     <div className="relationship-workspace">
       <div className="relationship-map-column">
-      <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} style={mapBackground === "custom" && effectiveMapBackgroundImage ? { backgroundImage: `linear-gradient(color-mix(in srgb, var(--ctp-crust) 46%, transparent), color-mix(in srgb, var(--ctp-crust) 62%, transparent)), url("${effectiveMapBackgroundImage}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
+      <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} style={mapBackground === "custom" && effectiveMapBackgroundImage ? { backgroundImage: `linear-gradient(color-mix(in srgb, var(--ctp-crust) 46%, transparent), color-mix(in srgb, var(--ctp-crust) 62%, transparent)), url("${effectiveMapBackgroundImage}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} onClick={handleCanvasClick} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
         <div className="relationship-canvas-glow relationship-canvas-glow-a"/><div className="relationship-canvas-glow relationship-canvas-glow-b"/>
         <div className="relationship-canvas-grid"/>
         {visibleCharacters.length > 0 ? <div className="relationship-graph relationship-real-graph" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})` }}>
@@ -237,7 +242,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
             if (!a || !b) return null;
             return <div key={edge.id} className="relationship-edge-tooltip" style={{ left: `${(a.x + b.x) / 2}%`, top: `${(a.y + b.y) / 2 - 4}%`, borderColor: relationshipColor(edge.kinds[0] ?? "Other") }}>{edge.labels.join(" · ")}</div>;
           })}
-          {actualNodes.map(({character, x, y}) => <button type="button" key={character.id} className={`relationship-node node-lavender ${selectedCharacter?.id === character.id ? "is-focused" : ""} ${filter !== "All connections" && !connectedCharacterIds.has(character.id) ? "is-filter-dimmed" : ""}`} style={{left:`${x}%`,top:`${y}%`,opacity:filter !== "All connections" && !connectedCharacterIds.has(character.id) ? 0.16 : 1}} onClick={() => setSelectedId(character.id)} onMouseEnter={() => setSelectedId(character.id)}>
+          {actualNodes.map(({character, x, y}) => <button type="button" key={character.id} className={`relationship-node node-lavender ${selectedCharacter?.id === character.id ? "is-focused" : ""} ${filter !== "All connections" && !connectedCharacterIds.has(character.id) ? "is-filter-dimmed" : ""}`} style={{left:`${x}%`,top:`${y}%`,opacity:filter !== "All connections" && !connectedCharacterIds.has(character.id) ? 0.16 : 1}} onClick={() => setSelectedId(character.id)}>
             <span className="relationship-node-orbit"/><span className="relationship-node-avatar" style={{overflow:"hidden",isolation:"isolate"}}><CharacterPortraitArt initials={character.initials || character.name.slice(0,2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "contain"} positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} /><span className="relationship-node-hover-card"><strong>{character.name}</strong>{character.subtitle && <small>{character.subtitle}</small>}{character.description && <p>{character.description}</p>}</span></span><strong>{character.name}</strong>{character.subtitle && <small>{character.subtitle}</small>}
           </button>)}
         </div> : <div className="relationship-preview-note"><Users size={16}/><span>{characters.length === 0 ? <><strong>Your cast is empty.</strong> Create a character first, then link profiles to start building your map.</> : <>No characters match “{query}”. Try a different search.</>}</span></div>}
