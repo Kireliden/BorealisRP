@@ -48,3 +48,19 @@
     opacity: 0;
   }
 }
+
+
+/* Give the compact sidebar badge a deliberately bolder particle treatment. */
+.sidebar-special-title .special-title-particles i {
+  width: 6px;
+  height: 6px;
+  background: var(--special-title-tint, var(--accent));
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--special-title-tint, var(--accent)) 100%, transparent),
+    0 0 15px color-mix(in srgb, var(--special-title-tint, var(--accent)) 85%, transparent),
+    0 0 23px color-mix(in srgb, var(--special-title-tint, var(--accent)) 55%, transparent);
+}
+
+.sidebar-special-title .special-title-particles.effect-layer--particles {
+  inset: -15px -9px;
+}
