@@ -19,26 +19,16 @@ type RelationshipEdge = {
   notes: string[];
 };
 
-const familyKinds: RelationshipKind[] = ["Mother", "Father", "Sibling"];
-const romanceKinds: RelationshipKind[] = ["Partner"];
-const friendshipKinds: RelationshipKind[] = ["Close friend"];
-const enemyKinds: RelationshipKind[] = ["Enemy"];
+const relationshipPalette = ["#b4befe", "#89b4fa", "#94e2d5", "#fab387", "#f5c2e7", "#a6e3a1", "#f9e2af", "#cba6f7", "#74c7ec", "#f2cdcd"];
 
-function relationshipEmoji(edge: RelationshipEdge): string {
-  if (edge.kinds.some((kind) => romanceKinds.includes(kind))) return "❤️";
-  if (edge.kinds.some((kind) => familyKinds.includes(kind))) return "🫂";
-  if (edge.kinds.some((kind) => friendshipKinds.includes(kind))) return "⭐";
-  if (edge.kinds.some((kind) => enemyKinds.includes(kind))) return "🗡️";
-  return "✦";
+function relationshipColor(kind: RelationshipKind): string {
+  let hash = 0;
+  for (let index = 0; index < kind.length; index += 1) hash = (hash * 31 + kind.charCodeAt(index)) | 0;
+  return relationshipPalette[Math.abs(hash) % relationshipPalette.length];
 }
 
 function matchesFilter(edge: RelationshipEdge, filter: string): boolean {
-  if (filter === "All connections") return true;
-  if (filter === "Family") return edge.kinds.some((kind) => familyKinds.includes(kind));
-  if (filter === "Romance") return edge.kinds.some((kind) => romanceKinds.includes(kind));
-  if (filter === "Friendship") return edge.kinds.some((kind) => friendshipKinds.includes(kind));
-  if (filter === "Enmity") return edge.kinds.some((kind) => enemyKinds.includes(kind));
-  return true;
+  return filter === "All connections" || edge.kinds.includes(filter);
 }
 
 export default function RelationshipMap({ characters, portraitUrls, onOpenCharacter }: Props) {
