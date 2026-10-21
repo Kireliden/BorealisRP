@@ -5,6 +5,15 @@ import "./ProfileModal.css";
 
 type Profile = AppPreferences["profile"];
 
+function SpecialTitle({ displayName }: { displayName: string }) {
+  const isZero = displayName.trim().toLocaleLowerCase() === "zero";
+  return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
+    <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : "☾"}</span>
+    <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
+    <span className="special-title-glint" aria-hidden="true">✧</span>
+  </span>;
+}
+
 interface ProfileModalProps {
   profile: Profile;
   onEdit: () => void;
@@ -62,7 +71,7 @@ export default function ProfileModal({ profile, onEdit, onClose }: ProfileModalP
           </div>
           <div className="profile-identity-copy">
             <h3>{profile.displayName || "Your name"}</h3>
-            {profile.title && <p className="profile-title">{profile.title}</p>}
+            {profile.showSpecialTitle ? <SpecialTitle displayName={profile.displayName} /> : profile.title && <p className="profile-title">{profile.title}</p>}
           </div>
         </div>
         <div className="profile-details">
