@@ -419,11 +419,35 @@
   min-height: 0;
   place-items: center;
   margin: -12px -20px -22px;
-  overflow: visible;
+  overflow: hidden;
   isolation: isolate;
   background:
     radial-gradient(ellipse at 50% 42%, rgb(166 181 245 / 24%), transparent 52%),
     radial-gradient(ellipse at 50% 76%, rgb(186 169 255 / 13%), transparent 55%);
+}
+.avatar-preview-art.has-portrait-image {
+  background: transparent;
+}
+.avatar-preview-art.has-portrait-image::before {
+  z-index: 1;
+  pointer-events: none;
+}
+.avatar-preview-image-layer {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.avatar-preview-image-layer .avatar-preview-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: 50% 50%;
+  transform-origin: 50% 50%;
 }
 
 .avatar-preview-art::after {
@@ -457,11 +481,11 @@
 }
 
 .avatar-preview-image {
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  z-index: 0;
   display: block;
-  width: 124%;
-  height: 124%;
+  width: 100%;
+  height: 100%;
   max-width: none;
   object-fit: cover;
   object-position: var(--profile-avatar-position, 50% 50%);
@@ -478,12 +502,28 @@
 }
 
 .avatar-preview-image.profile-media-image {
+  object-position: var(--profile-avatar-position, 50% 50%);
   transform: scale(var(--profile-avatar-zoom, 1));
   transform-origin: var(--profile-avatar-position, 50% 50%);
 }
+.avatar-preview-art.has-portrait-image .avatar-preview-image {
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 19%, #000 77%, transparent 100%),
+    radial-gradient(ellipse 76% 78% at 50% 45%, #000 56%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 19%, #000 77%, transparent 100%),
+    radial-gradient(ellipse 76% 78% at 50% 45%, #000 56%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  filter: drop-shadow(0 10px 26px rgb(186 169 255 / 16%));
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-expression {
+  z-index: 3;
+}
 
 .avatar-preview-initials {
-  z-index: 1;
+  position: relative;
+  z-index: 2;
   color: #f3eaff;
   font-size: clamp(92px, 27vw, 138px);
   font-weight: 800;
