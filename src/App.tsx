@@ -1137,6 +1137,26 @@ function sanitiseHtml(html: string) {
 
         </aside>
 
+        <div
+          className="sidebar-resize-handle"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize sidebar"
+          title="Drag to resize sidebar"
+          tabIndex={0}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            sidebarResizeRef.current = { startX: event.clientX, startWidth: sidebarWidth };
+            document.body.classList.add("sidebar-resizing");
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+            event.preventDefault();
+            setSidebarWidth((width) => Math.min(420, Math.max(220, width + (event.key === "ArrowRight" ? 12 : -12))));
+          }}
+        />
+
         <section className="main-panel">
           <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
           <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button></div></div>
