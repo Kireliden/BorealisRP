@@ -754,3 +754,38 @@
   -webkit-mask-size: 100% 100%;
   filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--character-accent, #b4befe) 10%, transparent));
 }
+
+
+/* Holographic portrait: use one vertical mask only.
+   The previous intersected multi-mask produced visible horizontal bands in WebView. */
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.18) 7%,
+    #000 20%,
+    #000 76%,
+    rgb(0 0 0 / 0.92) 83%,
+    rgb(0 0 0 / 0.58) 91%,
+    transparent 100%
+  ) !important;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.18) 7%,
+    #000 20%,
+    #000 76%,
+    rgb(0 0 0 / 0.92) 83%,
+    rgb(0 0 0 / 0.58) 91%,
+    transparent 100%
+  ) !important;
+  mask-composite: add;
+  -webkit-mask-composite: source-over;
+  filter: none;
+}
