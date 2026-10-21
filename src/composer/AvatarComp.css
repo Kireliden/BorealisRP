@@ -855,3 +855,43 @@
     #292b31 100%
   );
 }
+
+
+/* Keep the lower portrait fade inside the card and put the identity text above it. */
+.avatar-preview-art.has-portrait-image {
+  overflow: hidden;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade {
+  inset: -30px 0 -42px;
+}
+.avatar-preview-art.has-portrait-image::after {
+  inset: -30px 0 -42px;
+  background: linear-gradient(
+    to bottom,
+    #292b31 0%,
+    rgb(41 43 49 / 78%) 10%,
+    rgb(41 43 49 / 24%) 22%,
+    transparent 34%,
+    transparent 78%,
+    rgb(41 43 49 / 20%) 85%,
+    rgb(41 43 49 / 58%) 94%,
+    #292b31 100%
+  );
+}
+.avatar-preview-card-inner {
+  isolation: isolate;
+}
+.avatar-preview-topline,
+.avatar-preview-details,
+.avatar-preview-footer {
+  position: relative;
+  z-index: 4;
+}
+.avatar-preview-details {
+  margin-top: -10px;
+}
+.avatar-preview-details h2 {
+  position: relative;
+  z-index: 5;
+  text-shadow: 0 2px 12px #292b31, 0 1px 3px #292b31;
+}
