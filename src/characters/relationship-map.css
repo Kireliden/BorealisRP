@@ -111,3 +111,6 @@
 .relationship-map-background-options button:hover,.relationship-map-background-options button.active{border-color:color-mix(in srgb,var(--ctp-lavender) 38%,var(--border));background:color-mix(in srgb,var(--ctp-lavender) 9%,var(--surface));color:var(--ctp-text)}
 .background-swatch{display:block;width:17px;height:13px;border:1px solid color-mix(in srgb,var(--ctp-text) 18%,transparent);border-radius:4px}
 .background-swatch-default{background:linear-gradient(135deg,var(--ctp-surface0),var(--app-bg))}.background-swatch-midnight{background:linear-gradient(135deg,var(--ctp-blue),var(--ctp-crust))}.background-swatch-dusk{background:linear-gradient(135deg,var(--ctp-mauve),var(--ctp-crust))}.background-swatch-forest{background:linear-gradient(135deg,var(--ctp-green),var(--ctp-crust))}
+
+.relationship-map-column{display:flex;min-width:0;min-height:0;flex-direction:column}.relationship-map-column .relationship-canvas{flex:1;min-height:390px}
+@media(max-width:760px){.relationship-map-column{min-height:0}.relationship-map-column .relationship-canvas{height:520px;flex:none}.relationship-map-background-controls{margin-bottom:6px}}
