@@ -152,3 +152,22 @@
 /* Limit the card's vertical footprint in Connection Details without changing its portrait framing. */
 .relationship-inspector-character-card.character-card{max-height:360px;margin:10px 0 12px;overflow:hidden}
 .relationship-inspector-character-card .character-card-art{height:auto;aspect-ratio:4/4.4}
+
+
+/* Resource-library peek for choosing a custom map background. */
+.relationship-map-background-options .relationship-open-resource-picker{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:color-mix(in srgb,var(--ctp-lavender) 7%,var(--sidebar-bg));color:var(--ctp-text);padding:7px 9px}
+.relationship-resource-modal-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:24px;background:color-mix(in srgb,var(--ctp-crust) 76%,transparent);backdrop-filter:blur(8px)}
+.relationship-resource-modal{display:flex;flex-direction:column;gap:16px;width:min(760px,100%);max-height:min(78vh,760px);overflow:hidden;padding:20px;border:1px solid var(--border);border-radius:16px;background:var(--sidebar-bg);box-shadow:0 24px 80px color-mix(in srgb,var(--ctp-crust) 45%,transparent)}
+.relationship-resource-modal>header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.relationship-resource-modal>header>div>span{color:var(--ctp-lavender);font-size:9px;font-weight:800;letter-spacing:1.5px}
+.relationship-resource-modal>header h2{margin:5px 0;color:var(--ctp-text);font-size:20px}
+.relationship-resource-modal>header p{margin:0;color:var(--muted);font-size:12px}
+.relationship-resource-modal>header>button{flex:0 0 auto;width:32px;height:32px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ctp-text);font-size:22px;line-height:1;cursor:pointer}
+.relationship-resource-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:12px;overflow:auto;padding:2px}
+.relationship-resource-modal-grid>button{display:flex;min-width:0;flex-direction:column;gap:8px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--ctp-text);text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+.relationship-resource-modal-grid>button:hover,.relationship-resource-modal-grid>button.active{border-color:var(--ctp-lavender);background:color-mix(in srgb,var(--ctp-lavender) 9%,var(--surface))}
+.relationship-resource-modal-grid>button:disabled{opacity:.4;cursor:wait}
+.relationship-resource-modal-image{display:block;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:6px;background:var(--ctp-mantle)}
+.relationship-resource-modal-image img{display:block;width:100%;height:100%;object-fit:cover}
+.relationship-resource-modal-grid>button strong{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+@media(max-width:560px){.relationship-resource-modal-backdrop{padding:12px}.relationship-resource-modal{padding:14px}.relationship-resource-modal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
