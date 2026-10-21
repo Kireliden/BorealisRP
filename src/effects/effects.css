@@ -13,8 +13,8 @@
   width: var(--particle-size);
   height: var(--particle-size);
   border-radius: 50%;
-  background: var(--special-title-tint, var(--accent));
-  box-shadow: 0 0 5px color-mix(in srgb, var(--special-title-tint, var(--accent)) 65%, transparent);
+  background: var(--effect-color, var(--special-title-tint, var(--accent)));
+  box-shadow: 0 0 5px color-mix(in srgb, var(--effect-color, var(--special-title-tint, var(--accent))) 65%, transparent);
   opacity: 0;
   animation: effect-particle-drift var(--particle-duration) ease-out infinite;
   animation-delay: var(--particle-delay);
@@ -34,8 +34,8 @@
   100% { opacity: 0; transform: translate(var(--particle-side), var(--particle-rise)) scale(.2); }
 }
 
-.effect-layer--balanced i { box-shadow: 0 0 7px color-mix(in srgb, var(--special-title-tint, var(--accent)) 75%, transparent); }
-.effect-layer--bold i { box-shadow: 0 0 9px color-mix(in srgb, var(--special-title-tint, var(--accent)) 90%, transparent); }
+.effect-layer--balanced i { box-shadow: 0 0 7px color-mix(in srgb, var(--effect-color, var(--special-title-tint, var(--accent))) 75%, transparent); }
+.effect-layer--bold i { box-shadow: 0 0 9px color-mix(in srgb, var(--effect-color, var(--special-title-tint, var(--accent))) 90%, transparent); }
 
 :root[data-animations="off"] .effect-layer i {
   animation: none;
