@@ -931,3 +931,30 @@
   position: relative;
   z-index: 4;
 }
+
+
+/* Stronger, shorter edge fades: above the portrait, below the text. */
+.avatar-preview-art.has-portrait-image::after {
+  z-index: 3;
+  inset: -48px 0 -112px;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    #292b31 0%,
+    rgb(41 43 49 / 88%) 7%,
+    rgb(41 43 49 / 52%) 13%,
+    rgb(41 43 49 / 16%) 20%,
+    transparent 27%,
+    transparent 73%,
+    rgb(41 43 49 / 12%) 80%,
+    rgb(41 43 49 / 52%) 87%,
+    rgb(41 43 49 / 88%) 94%,
+    #292b31 100%
+  );
+}
+.avatar-preview-details {
+  z-index: 5;
+}
+.avatar-preview-details h2 {
+  z-index: 6;
+}
