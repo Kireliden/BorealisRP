@@ -216,3 +216,13 @@
 .editor-mode-label {
   font-size: calc(var(--chat-font-size, 16px) * 0.5);
 }
+
+
+/* The empty composer aligns with the default character portrait, then grows with content. */
+.composer-layout > .composer {
+  min-height: 205px;
+}
+
+.composer-layout > .composer .rich-editor {
+  min-height: 90px;
+}
