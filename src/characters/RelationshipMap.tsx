@@ -54,12 +54,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
           byPair.set(id, edge);
         }
 
-        if (relationship.characterName.trim()) {
-          const label = relationship.kind === "Other" ? relationship.characterName.trim() : relationship.kind;
-          if (!edge.labels.includes(label)) edge.labels.push(label);
-        } else if (!edge.labels.includes(relationship.kind)) {
-          edge.labels.push(relationship.kind);
-        }
+        if (!edge.labels.includes(relationship.kind)) edge.labels.push(relationship.kind);
         if (!edge.kinds.includes(relationship.kind)) edge.kinds.push(relationship.kind);
         if (relationship.notes.trim() && !edge.notes.includes(relationship.notes.trim())) edge.notes.push(relationship.notes.trim());
       }
