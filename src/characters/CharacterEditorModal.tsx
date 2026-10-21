@@ -209,7 +209,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
             <TextField label="Residence" value={draft.residence} onChange={(residence) => patch({ residence })} placeholder="Where they live" />
           </div>
           <div className="studio-relationships">
-            <div className="studio-relationship-kind-manager"><label className="studio-field"><span>Create a relationship type</span><div className="studio-list-add"><input value={newRelationshipKind} onChange={(event) => setNewRelationshipKind(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addRelationshipKind(); } }} placeholder="e.g. Ex-partner, Best friend…" /><button type="button" onClick={addRelationshipKind} aria-label="Add relationship type" disabled={!newRelationshipKind.trim()}><Plus size={15} /></button></div></label><small>Custom types are available for every character and in the map.</small></div>
+            <p className="studio-relationship-types-hint">Use the <MoreHorizontal size={13} /> button beside a relationship type to manage your global list.</p>
             {draft.relationships.map((relationship) => <RelationshipEditor key={relationship.id} relationship={relationship} relationshipKinds={relationshipKinds} characters={characters} currentCharacterId={selected?.id ?? null} onChange={(changes) => updateRelationship(relationship.id, changes)} onRemove={() => removeRelationship(relationship.id)} />)}
             <button type="button" className="studio-add-relationship" onClick={addRelationship}><Plus size={15} /> Add relationship</button>
           </div>
