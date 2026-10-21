@@ -349,7 +349,7 @@ button:disabled {
 .sidebar-footer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 11px;
   padding: 13px 5px 6px;
   border-top: 1px solid var(--border);
   min-width: 0;
