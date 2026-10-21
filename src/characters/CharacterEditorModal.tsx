@@ -75,7 +75,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   }
 
   function requestSave() {
-    const linked = draft.relationships.filter((relationship) => relationship.characterId && characters.some((character) => character.id === relationship.characterId && character.id !== selected?.id));
+    const linked = draft.relationships.filter((relationship) => relationship.characterId && !selected?.relationships.some((existing) => existing.id === relationship.id && existing.characterId === relationship.characterId) && characters.some((character) => character.id === relationship.characterId && character.id !== selected?.id));
     if (linked.length) {
       setReciprocalIds(linked.map((relationship) => relationship.id));
       setReciprocalPromptOpen(true);
