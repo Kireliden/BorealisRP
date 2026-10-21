@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type MouseEvent } from "react";
 import type { AppPreferences } from "../preferences/types";
 import { profileMediaSource } from "./profileMedia";
+import EffectLayer from "../effects/components/EffectLayer";
 import "./ProfileModal.css";
 
 type Profile = AppPreferences["profile"];
@@ -10,7 +11,7 @@ function SpecialTitle({ displayName }: { displayName: string }) {
   return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
     <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : "☾"}</span>
     <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
-    <span className="special-title-particles" aria-hidden="true"><i /><i /><i /><i /><i /><i /></span>
+    <EffectLayer effect="particles" intensity="subtle" className="special-title-particles" />
   </span>;
 }
 
