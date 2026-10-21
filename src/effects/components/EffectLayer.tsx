@@ -20,9 +20,10 @@ export default function EffectLayer({
       className={`effect-layer effect-layer--${effect} effect-layer--${intensity} ${className}`.trim()}
       aria-hidden="true"
     >
-      {Array.from({ length: definition.particleCount }, (_, index) => (
-        <i key={index} />
-      ))}
+      {definition.kind === "particles" &&
+        Array.from({ length: definition.particleCount }, (_, index) => (
+          <i key={index} />
+        ))}
     </span>
   );
 }
