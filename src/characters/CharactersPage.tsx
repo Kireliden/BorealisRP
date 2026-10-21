@@ -17,6 +17,7 @@ export default function CharactersPage({ onClose }: Props) {
   const [portraitUrls, setPortraitUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name-asc" | "name-desc" | "updated">("newest");
   const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"characters" | "map">("characters");
@@ -32,7 +33,13 @@ export default function CharactersPage({ onClose }: Props) {
   }, [imageResources]);
   const selected = characters.find((character) => character.id === selectedId) ?? null;
   const allTags = useMemo(() => [...new Set(characters.flatMap((character) => character.tags))].sort(), [characters]);
-  const filtered = characters.filter((character) => [character.name, character.subtitle, character.description, ...character.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+  const filtered = characters.filter((character) => [character.name, character.subtitle, character.description, ...character.tags].join(" ").toLowerCase().includes(query.toLowerCase())).slice().sort((a, b) => {
+    if (sortOrder === "name-asc") return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    if (sortOrder === "name-desc") return b.name.localeCompare(a.name, undefined, { sensitivity: "base" });
+    if (sortOrder === "oldest") return Date.parse(a.createdAt || "") - Date.parse(b.createdAt || "");
+    if (sortOrder === "updated") return Date.parse(b.updatedAt || b.createdAt || "") - Date.parse(a.updatedAt || a.createdAt || "");
+    return Date.parse(b.createdAt || "") - Date.parse(a.createdAt || "");
+  });
 
   function persist(next: CharacterRecord[]) { setCharacters(next); saveCharacters(next); }
   function openCharacter(character: CharacterRecord) {
@@ -151,10 +158,10 @@ export default function CharactersPage({ onClose }: Props) {
     </header>
     <main className="characters-layout">
       <div className="characters-view-switch" role="tablist" aria-label="Character views"><button type="button" role="tab" aria-selected={viewMode === "characters"} className={viewMode === "characters" ? "active" : ""} onClick={() => setViewMode("characters")}><LayoutGrid size={15}/> Characters</button><button type="button" role="tab" aria-selected={viewMode === "map"} className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")}><GitFork size={15}/> Relationship Map</button></div>
-      {viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : <section className="characters-library">
+      {viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} imageResources={imageResources} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : <section className="characters-library">
         <div className="library-eyebrow">GLOBAL ATELIER · {characters.length.toString().padStart(2, "0")} CHARACTERS</div>
         <div className="library-heading-row"><div><h1>Characters</h1><p>A cast of characters, ready for any story.</p></div><button className="library-primary" type="button" onClick={startCreate}><Plus size={16} /> New character</button></div>
-        <label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search names, descriptions and tags…" /></label>
+        <div className="character-library-tools"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search names, descriptions and tags…" /></label><label className="character-sort-control"><span>Sort by</span><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}><option value="newest">Recently created</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="updated">Recently updated</option></select></label></div>
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
           <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card ${selectedId === character.id ? "is-selected" : ""}`} style={{ "--character-accent": characterAccentColor(character.accent) } as React.CSSProperties} onClick={() => openCharacter(character)}>
