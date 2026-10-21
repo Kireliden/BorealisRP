@@ -49,6 +49,8 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
   const canvasDragRef = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number } | null>(null);
   const [mapBackground, setMapBackground] = useState(() => { try { return localStorage.getItem("brd.relationship-map.background") ?? "default"; } catch { return "default"; } });
+  const [mapBackgroundImage, setMapBackgroundImage] = useState(() => { try { return localStorage.getItem("brd.relationship-map.background-image") ?? ""; } catch { return ""; } });
+  const backgroundImageInputRef = useRef<HTMLInputElement | null>(null);
   const [showBackgroundOptions, setShowBackgroundOptions] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
@@ -126,6 +128,26 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   );
   const selectedCharacter = visibleCharacters.find((character) => character.id === selectedId) ?? visibleCharacters[0] ?? null;
 
+  function handleMapBackgroundImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { window.alert("Please choose an image file."); event.target.value = ""; return; }
+    if (file.size > 3 * 1024 * 1024) { window.alert("Please choose an image smaller than 3 MB so it can be stored locally."); event.target.value = ""; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) return;
+      try { localStorage.setItem("brd.relationship-map.background-image", result); setMapBackgroundImage(result); setMapBackground("custom"); localStorage.setItem("brd.relationship-map.background", "custom"); setShowBackgroundOptions(false); }
+      catch { window.alert("This image could not be saved in local storage. Try a smaller image."); }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+  function removeMapBackgroundImage() {
+    setMapBackgroundImage("");
+    try { localStorage.removeItem("brd.relationship-map.background-image"); } catch { /* Ignore unavailable storage. */ }
+    changeMapBackground("default");
+  }
   function changeMapBackground(value: string) {
     setMapBackground(value);
     setShowBackgroundOptions(false);
@@ -173,7 +195,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     </div>
     <div className="relationship-workspace">
       <div className="relationship-map-column">
-      <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
+      <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} style={mapBackground === "custom" && mapBackgroundImage ? { backgroundImage: `linear-gradient(color-mix(in srgb, var(--ctp-crust) 46%, transparent), color-mix(in srgb, var(--ctp-crust) 62%, transparent)), url("${mapBackgroundImage}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
         <div className="relationship-canvas-glow relationship-canvas-glow-a"/><div className="relationship-canvas-glow relationship-canvas-glow-b"/>
         <div className="relationship-canvas-grid"/>
         {visibleCharacters.length > 0 ? <div className="relationship-graph relationship-real-graph" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})` }}>
@@ -206,7 +228,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
       </div>
       <div className="relationship-map-background-controls">
           <button type="button" className={showBackgroundOptions ? "active" : ""} onClick={() => setShowBackgroundOptions((open) => !open)} aria-expanded={showBackgroundOptions}><Palette size={14}/> Map background <span>{showBackgroundOptions ? "−" : "+"}</span></button>
-          {showBackgroundOptions && <div className="relationship-map-background-options" role="group" aria-label="Map background"><button type="button" className={mapBackground === "default" ? "active" : ""} onClick={() => changeMapBackground("default")}><i className="background-swatch background-swatch-default"/>Default</button><button type="button" className={mapBackground === "midnight" ? "active" : ""} onClick={() => changeMapBackground("midnight")}><i className="background-swatch background-swatch-midnight"/>Midnight</button><button type="button" className={mapBackground === "dusk" ? "active" : ""} onClick={() => changeMapBackground("dusk")}><i className="background-swatch background-swatch-dusk"/>Dusk</button><button type="button" className={mapBackground === "forest" ? "active" : ""} onClick={() => changeMapBackground("forest")}><i className="background-swatch background-swatch-forest"/>Forest</button></div>}
+          {showBackgroundOptions && <div className="relationship-map-background-options" role="group" aria-label="Map background"><button type="button" className={mapBackground === "default" ? "active" : ""} onClick={() => changeMapBackground("default")}><i className="background-swatch background-swatch-default"/>Default</button><button type="button" className={mapBackground === "midnight" ? "active" : ""} onClick={() => changeMapBackground("midnight")}><i className="background-swatch background-swatch-midnight"/>Midnight</button><button type="button" className={mapBackground === "dusk" ? "active" : ""} onClick={() => changeMapBackground("dusk")}><i className="background-swatch background-swatch-dusk"/>Dusk</button><button type="button" className={mapBackground === "forest" ? "active" : ""} onClick={() => changeMapBackground("forest")}><i className="background-swatch background-swatch-forest"/>Forest</button><button type="button" className={mapBackground === "custom" ? "active" : ""} onClick={() => backgroundImageInputRef.current?.click()}><i className="background-swatch background-swatch-custom"/>Custom image</button>{mapBackgroundImage && <button type="button" onClick={removeMapBackgroundImage}>Remove image</button>}<input ref={backgroundImageInputRef} className="relationship-background-file-input" type="file" accept="image/*" onChange={handleMapBackgroundImageChange} aria-label="Choose map background image"/></div>}
       </div>
       </div>
       <aside className="relationship-inspector">
