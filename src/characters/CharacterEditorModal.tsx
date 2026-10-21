@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, Brain, Check, ChevronRight, HeartPulse, Link2, Pencil, Plus, Quote, ScanFace, SlidersHorizontal, Trash2, UserRound, UsersRound, X } from "lucide-react";
+import { BookOpen, Brain, Check, ChevronRight, HeartPulse, Link2, Pencil, Plus, Quote, ScanFace, SlidersHorizontal, Trash2, UserRound, UsersRound, X, MoreHorizontal } from "lucide-react";
 import CharacterPortraitArt from "./CharacterPortraitArt";
+import RelationshipTypeManagerModal from "./RelationshipTypeManagerModal";
 import { characterAccentColor, type CharacterDraft, type CharacterRecord, type CharacterRelationship, type RelationshipKind } from "./characters.types";
 import type { ResourceRecord } from "../resources/resources.types";
 
@@ -15,16 +16,20 @@ type Props = {
   portraitUrls: Record<string, string>;
   onClose: () => void;
   onSave: (reciprocalRelationshipIds: string[]) => void;
+  onRelationshipKindsChanged: (nextKinds: RelationshipKind[], renames: { from: string; to: string }[]) => void;
   onDelete: () => void;
 };
 
 const defaultRelationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
-const RELATIONSHIP_KINDS_KEY = "brd.relationship-kinds.v1";
+const RELATIONSHIP_KINDS_KEY = "brd.relationship-kinds.v2";
+const LEGACY_RELATIONSHIP_KINDS_KEY = "brd.relationship-kinds.v1";
 
 function loadRelationshipKinds(): RelationshipKind[] {
   try {
-    const saved = JSON.parse(localStorage.getItem(RELATIONSHIP_KINDS_KEY) ?? "[]");
-    return [...new Set([...defaultRelationshipKinds, ...(Array.isArray(saved) ? saved.filter((item): item is string => typeof item === "string") : [])])];
+    const current = localStorage.getItem(RELATIONSHIP_KINDS_KEY);
+    if (current !== null) { const saved = JSON.parse(current); return Array.isArray(saved) ? [...new Set(saved.filter((item): item is string => typeof item === "string"))] : [...defaultRelationshipKinds]; }
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_RELATIONSHIP_KINDS_KEY) ?? "[]");
+    return [...new Set([...defaultRelationshipKinds, ...(Array.isArray(legacy) ? legacy.filter((item): item is string => typeof item === "string") : [])])];
   } catch { return defaultRelationshipKinds; }
 }
 
@@ -54,25 +59,30 @@ function SectionHeading({ icon, title, description }: { icon: ReactNode; title: 
   return <div className="studio-section-heading"><div className="studio-section-icon">{icon}</div><div><h2>{title}</h2><p>{description}</p></div></div>;
 }
 
-export default function CharacterEditorModal({ draft, setDraft, characters, selected, isCreating, imageResources, portraitUrls, onClose, onSave, onDelete }: Props) {
+export default function CharacterEditorModal({ draft, setDraft, characters, selected, isCreating, imageResources, portraitUrls, onClose, onSave, onRelationshipKindsChanged, onDelete }: Props) {
   const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(isCreating);
   const [originalDraft, setOriginalDraft] = useState<CharacterDraft | null>(null);
   const [relationshipKinds, setRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
-  const [newRelationshipKind, setNewRelationshipKind] = useState("");
+  const [relationshipTypeManagerOpen, setRelationshipTypeManagerOpen] = useState(false);
   const [reciprocalPromptOpen, setReciprocalPromptOpen] = useState(false);
   const [reciprocalIds, setReciprocalIds] = useState<string[]>([]);
   const patch = (changes: Partial<CharacterDraft>) => setDraft({ ...draft, ...changes });
   const portraitUrl = draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] ?? null : null;
   const pendingReciprocalRelationships = draft.relationships.filter((relationship) => relationship.characterId && !selected?.relationships.some((existing) => existing.id === relationship.id && existing.characterId === relationship.characterId) && characters.some((character) => character.id === relationship.characterId && character.id !== selected?.id));
 
-  useEffect(() => { localStorage.setItem(RELATIONSHIP_KINDS_KEY, JSON.stringify(relationshipKinds.filter((kind) => !defaultRelationshipKinds.includes(kind)))); }, [relationshipKinds]);
+  useEffect(() => { localStorage.setItem(RELATIONSHIP_KINDS_KEY, JSON.stringify(relationshipKinds)); }, [relationshipKinds]);
 
-  function addRelationshipKind() {
-    const next = newRelationshipKind.trim();
-    if (!next || relationshipKinds.some((kind) => kind.toLocaleLowerCase() === next.toLocaleLowerCase())) return;
-    setRelationshipKinds((current) => [...current, next]);
-    setNewRelationshipKind("");
+  function saveRelationshipKinds(nextKinds: RelationshipKind[], renames: { from: string; to: string }[]) {
+    setRelationshipKinds(nextKinds);
+    if (renames.length) {
+      const renameMap = new Map(renames.map(({ from, to }) => [from, to]));
+      patch({ relationships: draft.relationships.map((relationship) => ({ ...relationship, kind: renameMap.get(relationship.kind) ?? relationship.kind })) });
+      onRelationshipKindsChanged(nextKinds, renames);
+    } else {
+      onRelationshipKindsChanged(nextKinds, []);
+    }
+    setRelationshipTypeManagerOpen(false);
   }
 
   function requestSave() {
@@ -99,7 +109,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose, portraitAdjustOpen, reciprocalPromptOpen]);
 
-  function addRelationship() {
+  useEffect(() => { const openManager = () => setRelationshipTypeManagerOpen(true); window.addEventListener("brd:open-relationship-type-manager", openManager); return () => window.removeEventListener("brd:open-relationship-type-manager", openManager); }, []);\n\n  function addRelationship() {
     const relationship: CharacterRelationship = { id: crypto.randomUUID(), kind: "Other", characterId: null, characterName: "", notes: "" };
     patch({ relationships: [...draft.relationships, relationship] });
   }
@@ -226,7 +236,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
       </footer>
     </section>
 
-      {reciprocalPromptOpen && <div className="reciprocal-prompt-backdrop"><section className="reciprocal-prompt" role="dialog" aria-modal="true" aria-labelledby="reciprocal-prompt-title"><div className="reciprocal-prompt-kicker">RELATIONSHIP LINKS</div><h2 id="reciprocal-prompt-title">Add these links to the other profiles too?</h2><p>Choose which linked characters should also list this character. Their relationship type will match; you can edit it later.</p><div className="reciprocal-prompt-list">{pendingReciprocalRelationships.map((relationship) => { const target = characters.find((character) => character.id === relationship.characterId); if (!target) return null; return <label key={relationship.id} className="reciprocal-prompt-item"><input type="checkbox" checked={reciprocalIds.includes(relationship.id)} onChange={(event) => setReciprocalIds((current) => event.target.checked ? [...current, relationship.id] : current.filter((id) => id !== relationship.id))}/><span className="reciprocal-prompt-avatar">{target.initials || target.name.slice(0,2).toUpperCase()}</span><span><strong>{target.name}</strong><small>{relationship.kind} · reciprocal link</small></span></label>; })}</div><div className="reciprocal-prompt-actions"><button type="button" className="studio-cancel-button" onClick={() => { setReciprocalPromptOpen(false); onSave([]); setIsEditing(false); setOriginalDraft(null); }}>Save without reciprocal links</button><button type="button" className="studio-save-button" onClick={() => { setReciprocalPromptOpen(false); onSave(reciprocalIds); setIsEditing(false); setOriginalDraft(null); }}>Save selected links</button></div></section></div>}
+      {relationshipTypeManagerOpen && <RelationshipTypeManagerModal relationshipKinds={relationshipKinds} usageCounts={characters.reduce<Record<string, number>>((counts, character) => { for (const relationship of character.relationships ?? []) counts[relationship.kind] = (counts[relationship.kind] ?? 0) + 1; for (const relationship of draft.relationships ?? []) counts[relationship.kind] = Math.max(counts[relationship.kind] ?? 0, 0); return counts; }, {})} onClose={() => setRelationshipTypeManagerOpen(false)} onSave={saveRelationshipKinds} />}\n      {reciprocalPromptOpen && <div className="reciprocal-prompt-backdrop"><section className="reciprocal-prompt" role="dialog" aria-modal="true" aria-labelledby="reciprocal-prompt-title"><div className="reciprocal-prompt-kicker">RELATIONSHIP LINKS</div><h2 id="reciprocal-prompt-title">Add these links to the other profiles too?</h2><p>Choose which linked characters should also list this character. Their relationship type will match; you can edit it later.</p><div className="reciprocal-prompt-list">{pendingReciprocalRelationships.map((relationship) => { const target = characters.find((character) => character.id === relationship.characterId); if (!target) return null; return <label key={relationship.id} className="reciprocal-prompt-item"><input type="checkbox" checked={reciprocalIds.includes(relationship.id)} onChange={(event) => setReciprocalIds((current) => event.target.checked ? [...current, relationship.id] : current.filter((id) => id !== relationship.id))}/><span className="reciprocal-prompt-avatar">{target.initials || target.name.slice(0,2).toUpperCase()}</span><span><strong>{target.name}</strong><small>{relationship.kind} · reciprocal link</small></span></label>; })}</div><div className="reciprocal-prompt-actions"><button type="button" className="studio-cancel-button" onClick={() => { setReciprocalPromptOpen(false); onSave([]); setIsEditing(false); setOriginalDraft(null); }}>Save without reciprocal links</button><button type="button" className="studio-save-button" onClick={() => { setReciprocalPromptOpen(false); onSave(reciprocalIds); setIsEditing(false); setOriginalDraft(null); }}>Save selected links</button></div></section></div>}
     {portraitAdjustOpen && draft.portraitResourceId && <div className="portrait-adjust-backdrop studio-nested-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPortraitAdjustOpen(false); }}>
       <section className="portrait-adjust-modal" role="dialog" aria-modal="true" aria-labelledby="portrait-adjust-title">
         <div className="portrait-adjust-heading"><div><span>CHARACTER PORTRAIT</span><h2 id="portrait-adjust-title">Adjust image</h2><p>Use the sliders to position and zoom the image. Your original file stays untouched.</p></div><button type="button" onClick={() => setPortraitAdjustOpen(false)} aria-label="Close portrait adjustment"><X size={18} /></button></div>
@@ -258,7 +268,7 @@ function RelationshipEditor({ relationship, relationshipKinds, characters, curre
     onChange({ characterName: value, characterId: null });
   }
   return <div className="studio-relationship-card">
-    <div className="studio-relationship-top"><select aria-label="Relationship type" value={relationship.kind} onChange={(event) => onChange({ kind: event.target.value as RelationshipKind })}>{relationshipKinds.map((kind) => <option key={kind} value={kind}>{kind}</option>)}</select><button type="button" onClick={onRemove} aria-label="Remove relationship"><X size={14} /></button></div>
+    <div className="studio-relationship-top"><div className="studio-relationship-type-select"><select aria-label="Relationship type" value={relationship.kind} onChange={(event) => onChange({ kind: event.target.value as RelationshipKind })}>{relationshipKinds.map((kind) => <option key={kind} value={kind}>{kind}</option>)}{!relationshipKinds.includes(relationship.kind) && <option value={relationship.kind}>{relationship.kind} (custom/removed)</option>}</select><button type="button" className="studio-manage-relationship-types" onClick={() => window.dispatchEvent(new CustomEvent("brd:open-relationship-type-manager"))} aria-label="Manage relationship types" title="Manage relationship types"><MoreHorizontal size={16}/></button></div><button type="button" onClick={onRemove} aria-label="Remove relationship"><X size={14} /></button></div>
     <div className="studio-mention-wrap">
       <label className="studio-field"><span>Character or person</span><div className={"studio-mention-input " + (relationship.characterId ? "is-linked" : "")}><input value={relationship.characterId ? (characters.find((character) => character.id === relationship.characterId)?.name ?? relationship.characterName) : relationship.characterName} onChange={(event) => changeName(event.target.value)} onFocus={() => { if (relationship.characterName.includes("@")) { setQuery(relationship.characterName.slice(relationship.characterName.lastIndexOf("@") + 1)); setShowSuggestions(true); } }} placeholder="Type @ to link a character…" /><span>{relationship.characterId ? <Link2 size={14} /> : <UsersRound size={14} />}</span></div></label>
       {showSuggestions && <div className="studio-mention-suggestions">{candidates.length ? candidates.map((character) => <button type="button" key={character.id} onClick={() => { onChange({ characterName: character.name, characterId: character.id }); setShowSuggestions(false); setQuery(""); }}><span className="studio-mention-avatar">{character.initials || character.name.slice(0, 2).toUpperCase()}</span><span><strong>{character.name}</strong>{character.subtitle && <small>{character.subtitle}</small>}</span><ChevronRight size={14} /></button>) : <p>{query ? "No matching characters" : "Create another character to link it here."}</p>}</div>}
