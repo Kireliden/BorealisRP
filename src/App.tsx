@@ -1460,7 +1460,7 @@ function sanitiseHtml(html: string) {
               </div>
               <div className="avatar-preview-footer"><span>BRD</span><span>HOLOGRAPHIC EDITION</span></div>
             </div>
-            <EffectLayer effect="particles" intensity="balanced" className="avatar-preview-effect-layer" />
+            <EffectLayer effect="particles" intensity="balanced" particleCount={18} className="avatar-preview-effect-layer" />
           </section>
         </div>
       )}
