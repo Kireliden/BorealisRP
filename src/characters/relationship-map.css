@@ -28,7 +28,7 @@
 .relationship-node-orbit{display:none!important}
 .relationship-node-avatar{width:68px;height:68px;border-radius:19px;outline:0 solid transparent;outline-offset:4px;transform-style:preserve-3d;transition:transform .42s cubic-bezier(.2,.8,.2,1),outline-color .2s,box-shadow .2s}
 .relationship-node.is-focused .relationship-node-avatar{outline:1px solid color-mix(in srgb,var(--node-color,var(--ctp-lavender)) 70%,transparent);outline-offset:4px}
-.relationship-node:hover .relationship-node-avatar{transform:perspective(600px) rotateY(180deg) scale(1.13)}
+.relationship-node:hover .relationship-node-avatar{transform:rotate(-3deg) scale(1.15)}
 .relationship-node-hover-card{display:none!important}
 .relationship-node:hover{z-index:6}
 .relationship-node:hover strong{border-color:color-mix(in srgb,var(--node-color,var(--ctp-lavender)) 65%,var(--border))}
