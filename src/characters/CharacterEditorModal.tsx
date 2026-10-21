@@ -109,7 +109,9 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose, portraitAdjustOpen, reciprocalPromptOpen]);
 
-  useEffect(() => { const openManager = () => setRelationshipTypeManagerOpen(true); window.addEventListener("brd:open-relationship-type-manager", openManager); return () => window.removeEventListener("brd:open-relationship-type-manager", openManager); }, []);\n\n  function addRelationship() {
+  useEffect(() => { const openManager = () => setRelationshipTypeManagerOpen(true); window.addEventListener("brd:open-relationship-type-manager", openManager); return () => window.removeEventListener("brd:open-relationship-type-manager", openManager); }, []);
+
+  function addRelationship() {
     const relationship: CharacterRelationship = { id: crypto.randomUUID(), kind: relationshipKinds.includes("Other") ? "Other" : relationshipKinds[0] ?? "Other", characterId: null, characterName: "", notes: "" };
     patch({ relationships: [...draft.relationships, relationship] });
   }
