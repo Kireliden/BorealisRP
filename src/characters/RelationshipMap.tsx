@@ -19,6 +19,7 @@ type RelationshipEdge = {
   notes: string[];
 };
 
+const defaultRelationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
 const relationshipPalette = ["#b4befe", "#89b4fa", "#94e2d5", "#fab387", "#f5c2e7", "#a6e3a1", "#f9e2af", "#cba6f7", "#74c7ec", "#f2cdcd"];
 
 function relationshipColor(kind: RelationshipKind): string {
@@ -37,6 +38,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   const [zoom, setZoom] = useState(100);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
+  const [customRelationshipKinds] = useState<RelationshipKind[]>(() => { try { const saved = JSON.parse(localStorage.getItem("brd.relationship-kinds.v1") ?? "[]"); return Array.isArray(saved) ? saved.filter((kind): kind is string => typeof kind === "string") : []; } catch { return []; } });
 
   const allEdges = useMemo(() => {
     const byPair = new Map<string, RelationshipEdge>();
@@ -70,7 +72,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     [characters, query],
   );
   const visibleIds = useMemo(() => new Set(visibleCharacters.map((character) => character.id)), [visibleCharacters]);
-  const relationshipFilters = useMemo(() => ["All connections", ...new Set(allEdges.flatMap((edge) => edge.kinds).sort((a, b) => a.localeCompare(b)))], [allEdges]);
+  const relationshipFilters = useMemo(() => ["All connections", ...new Set([...defaultRelationshipKinds, ...customRelationshipKinds, ...allEdges.flatMap((edge) => edge.kinds)].sort((a, b) => a.localeCompare(b)))], [allEdges, customRelationshipKinds]);
   const visibleEdges = useMemo(
     () => allEdges.filter((edge) => visibleIds.has(edge.from.id) && visibleIds.has(edge.to.id) && matchesFilter(edge, filter)),
     [allEdges, visibleIds, filter],
