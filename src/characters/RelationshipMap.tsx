@@ -57,6 +57,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
   const effectiveMapBackgroundImage = mapBackgroundResourceId ? portraitUrls[mapBackgroundResourceId] ?? "" : mapBackgroundImage;
   const backgroundImageInputRef = useRef<HTMLInputElement | null>(null);
   const [showBackgroundOptions, setShowBackgroundOptions] = useState(false);
+  const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [configuredRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
@@ -134,9 +135,23 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
     })),
     [visibleCharacters],
   );
-  const selectedCharacter = visibleCharacters.find((character) => character.id === selectedId) ?? visibleCharacters[0] ?? null;
+  const selectedCharacter = selectedId ? visibleCharacters.find((character) => character.id === selectedId) ?? null : null;
   const connectedCharacterIds = useMemo(() => new Set(visibleEdges.flatMap((edge) => [edge.from.id, edge.to.id])), [visibleEdges]);
 
+  function selectResourceBackground(resource: ResourceRecord) {
+    const url = portraitUrls[resource.id];
+    if (!url) return;
+    setMapBackgroundImage("");
+    setMapBackgroundResourceId(resource.id);
+    setMapBackground("custom");
+    try {
+      localStorage.removeItem("brd.relationship-map.background-image");
+      localStorage.setItem("brd.relationship-map.background-resource-id", resource.id);
+      localStorage.setItem("brd.relationship-map.background", "custom");
+    } catch { /* Keep the current selection for this session. */ }
+    setShowResourcePicker(false);
+    setShowBackgroundOptions(false);
+  }
   function handleMapBackgroundImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -250,9 +265,10 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
       </div>
       <div className="relationship-map-background-controls">
           <button type="button" className={showBackgroundOptions ? "active" : ""} onClick={() => setShowBackgroundOptions((open) => !open)} aria-expanded={showBackgroundOptions}><Palette size={14}/> Map background <span>{showBackgroundOptions ? "−" : "+"}</span></button>
-          {showBackgroundOptions && <div className="relationship-map-background-options" role="group" aria-label="Map background"><button type="button" className={mapBackground === "default" ? "active" : ""} onClick={() => changeMapBackground("default")}><i className="background-swatch background-swatch-default"/>Default</button><button type="button" className={mapBackground === "midnight" ? "active" : ""} onClick={() => changeMapBackground("midnight")}><i className="background-swatch background-swatch-midnight"/>Midnight</button><button type="button" className={mapBackground === "dusk" ? "active" : ""} onClick={() => changeMapBackground("dusk")}><i className="background-swatch background-swatch-dusk"/>Dusk</button><button type="button" className={mapBackground === "forest" ? "active" : ""} onClick={() => changeMapBackground("forest")}><i className="background-swatch background-swatch-forest"/>Forest</button><button type="button" className={mapBackground === "custom" ? "active" : ""} onClick={() => backgroundImageInputRef.current?.click()}><i className="background-swatch background-swatch-custom"/>Upload image</button>{imageResources.length > 0 && <div className="relationship-resource-background-picker"><span>FROM RESOURCES</span>{imageResources.map((resource) => <button type="button" key={resource.id} className={mapBackgroundResourceId === resource.id ? "active" : ""} disabled={!portraitUrls[resource.id]} onClick={() => { const url = portraitUrls[resource.id]; if (!url) return; setMapBackgroundImage(""); setMapBackgroundResourceId(resource.id); setMapBackground("custom"); try { localStorage.removeItem("brd.relationship-map.background-image"); localStorage.setItem("brd.relationship-map.background-resource-id", resource.id); localStorage.setItem("brd.relationship-map.background", "custom"); } catch { /* Keep the current selection for this session. */ } setShowBackgroundOptions(false); }}><span className="relationship-resource-background-thumb">{portraitUrls[resource.id] && <img src={portraitUrls[resource.id]} alt="" />}</span><span>{resource.name}</span></button>)}</div>}{mapBackgroundImage && <button type="button" onClick={removeMapBackgroundImage}>Remove image</button>}<input ref={backgroundImageInputRef} className="relationship-background-file-input" type="file" accept="image/*" onChange={handleMapBackgroundImageChange} aria-label="Choose map background image"/></div>}
+          {showBackgroundOptions && <div className="relationship-map-background-options" role="group" aria-label="Map background"><button type="button" className={mapBackground === "default" ? "active" : ""} onClick={() => changeMapBackground("default")}><i className="background-swatch background-swatch-default"/>Default</button><button type="button" className={mapBackground === "midnight" ? "active" : ""} onClick={() => changeMapBackground("midnight")}><i className="background-swatch background-swatch-midnight"/>Midnight</button><button type="button" className={mapBackground === "dusk" ? "active" : ""} onClick={() => changeMapBackground("dusk")}><i className="background-swatch background-swatch-dusk"/>Dusk</button><button type="button" className={mapBackground === "forest" ? "active" : ""} onClick={() => changeMapBackground("forest")}><i className="background-swatch background-swatch-forest"/>Forest</button><button type="button" className={mapBackground === "custom" ? "active" : ""} onClick={() => backgroundImageInputRef.current?.click()}><i className="background-swatch background-swatch-custom"/>Upload image</button>{imageResources.length > 0 && <button type="button" className="relationship-open-resource-picker" onClick={() => setShowResourcePicker(true)}><Users size={13}/>{mapBackgroundResourceId ? "Change image from Resources" : "Choose from Resources"}<ArrowUpRight size={13}/></button>}{mapBackgroundImage && <button type="button" onClick={removeMapBackgroundImage}>Remove image</button>}<input ref={backgroundImageInputRef} className="relationship-background-file-input" type="file" accept="image/*" onChange={handleMapBackgroundImageChange} aria-label="Choose map background image"/></div>}
       </div>
       </div>
+      {showResourcePicker && <div className="relationship-resource-modal-backdrop" onClick={() => setShowResourcePicker(false)}><section className="relationship-resource-modal" role="dialog" aria-modal="true" aria-label="Choose a map background from Resources" onClick={(event) => event.stopPropagation()}><header><div><span>RESOURCE LIBRARY</span><h2>Choose a background</h2><p>Select an image to use behind your relationship map.</p></div><button type="button" aria-label="Close resource picker" onClick={() => setShowResourcePicker(false)}>×</button></header><div className="relationship-resource-modal-grid">{imageResources.map((resource) => <button type="button" key={resource.id} className={mapBackgroundResourceId === resource.id ? "active" : ""} disabled={!portraitUrls[resource.id]} onClick={() => selectResourceBackground(resource)}><span className="relationship-resource-modal-image">{portraitUrls[resource.id] && <img src={portraitUrls[resource.id]} alt="" />}</span><strong>{resource.name}</strong></button>)}</div></section></div>}
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
         {selectedCharacter ? <>
@@ -271,7 +287,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
           }) : <div className="relationship-inspector-note">{hasRelationships ? "No connections match the current filter or search." : "This character has no linked relationships yet. Edit their profile and link them to another character to add a connection."}</div>}
           {selectedEdges.some((edge) => edge.notes.length > 0) && <><div className="relationship-inspector-label" style={{marginTop:16}}>RELATIONSHIP NOTES</div>{selectedEdges.flatMap((edge) => edge.notes.map((note) => <p className="relationship-guide-copy" key={edge.id + note}>{note}</p>))}</>}
           <button type="button" className="relationship-inspector-link" style={{marginTop:12}} onClick={() => onOpenCharacter(selectedCharacter)}><span><strong>Open character profile</strong><small>Edit details and relationships</small></span><ArrowUpRight size={14}/></button>
-        </> : <><div className="relationship-inspector-avatar node-lavender"><Users size={24}/></div><h2>No characters found</h2><p className="relationship-inspector-role">Try another search to explore your cast.</p><div className="relationship-inspector-rule"/><div className="relationship-guide-copy">Your map uses the character profiles saved in Borealis. Nothing is added to your library by the map itself.</div></>}
+        </> : <><div className="relationship-inspector-avatar node-lavender"><Users size={24}/></div><h2>{visibleCharacters.length === 0 ? "No characters found" : "No character selected"}</h2><p className="relationship-inspector-role">{visibleCharacters.length === 0 ? "Try another search to explore your cast." : "Select a character node to view its connections."}</p><div className="relationship-inspector-rule"/><div className="relationship-guide-copy">Your map uses the character profiles saved in Borealis. Nothing is added to your library by the map itself.</div></>}
       </aside>
     </div>
   </section>;
