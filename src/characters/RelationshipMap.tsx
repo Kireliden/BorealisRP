@@ -172,6 +172,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
       <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setPan({ x: 0, y: 0 }); setQuery(""); setFilter("All connections"); setSelectedId(null); setHoveredEdgeId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
     </div>
     <div className="relationship-workspace">
+      <div className="relationship-map-column">
       <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
         <div className="relationship-canvas-glow relationship-canvas-glow-a"/><div className="relationship-canvas-glow relationship-canvas-glow-b"/>
         <div className="relationship-canvas-grid"/>
@@ -202,10 +203,10 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
           </button>)}
         </div> : <div className="relationship-preview-note"><Users size={16}/><span>{characters.length === 0 ? <><strong>Your cast is empty.</strong> Create a character first, then link profiles to start building your map.</> : <>No characters match “{query}”. Try a different search.</>}</span></div>}
         <div className="relationship-canvas-caption"><Sparkles size={13}/>{hasRelationships ? "Live map · linked character profiles" : "Your map · based on saved character profiles"}</div>
-        <div className="relationship-map-background-controls">
+      </div>
+      <div className="relationship-map-background-controls">
           <button type="button" className={showBackgroundOptions ? "active" : ""} onClick={() => setShowBackgroundOptions((open) => !open)} aria-expanded={showBackgroundOptions}><Palette size={14}/> Map background <span>{showBackgroundOptions ? "−" : "+"}</span></button>
           {showBackgroundOptions && <div className="relationship-map-background-options" role="group" aria-label="Map background"><button type="button" className={mapBackground === "default" ? "active" : ""} onClick={() => changeMapBackground("default")}><i className="background-swatch background-swatch-default"/>Default</button><button type="button" className={mapBackground === "midnight" ? "active" : ""} onClick={() => changeMapBackground("midnight")}><i className="background-swatch background-swatch-midnight"/>Midnight</button><button type="button" className={mapBackground === "dusk" ? "active" : ""} onClick={() => changeMapBackground("dusk")}><i className="background-swatch background-swatch-dusk"/>Dusk</button><button type="button" className={mapBackground === "forest" ? "active" : ""} onClick={() => changeMapBackground("forest")}><i className="background-swatch background-swatch-forest"/>Forest</button></div>}
-        </div>
       </div>
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
