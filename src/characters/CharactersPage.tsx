@@ -122,6 +122,21 @@ export default function CharactersPage({ onClose }: Props) {
     if (isCreating) setSelectedId(sourceRecord.id);
     setIsCreating(false);
   }
+  function updateRelationshipKinds(nextKinds: string[], renames: { from: string; to: string }[]) {
+    localStorage.setItem("brd.relationship-kinds.v2", JSON.stringify(nextKinds));
+    if (!renames.length) return;
+    const renameMap = new Map(renames.map(({ from, to }) => [from, to]));
+    const next = characters.map((character) => {
+      const relationships = character.relationships.map((relationship) => ({
+        ...relationship,
+        kind: renameMap.get(relationship.kind) ?? relationship.kind,
+      }));
+      return relationships.some((relationship, index) => relationship.kind !== character.relationships[index]?.kind)
+        ? makeCharacterRecord({ ...character, relationships }, character)
+        : character;
+    });
+    persist(next);
+  }
   function removeSelected() {
     if (!selected) return;
     const next = characters.filter((character) => character.id !== selected.id);
