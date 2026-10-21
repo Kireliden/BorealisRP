@@ -270,6 +270,34 @@ fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, S
     Ok(destination.to_string_lossy().into_owned())
 }
 
+
+#[tauri::command]
+fn profile_sidebar_thumbnail_path(app: AppHandle) -> Result<String, String> {
+    let path = app.path().app_data_dir().map_err(|error| format!("Could not locate BRD application storage: {error}"))?.join("media").join("profile-sidebar-avatar.png");
+    Ok(path.to_string_lossy().into_owned())
+}
+#[tauri::command]
+fn save_profile_sidebar_thumbnail(app: AppHandle, bytes: Vec<u8>) -> Result<String, String> {
+    const MAX_THUMBNAIL_BYTES: usize = 2 * 1024 * 1024;
+    if bytes.len() < 8 || bytes.len() > MAX_THUMBNAIL_BYTES || bytes.get(0..8) != Some(&[137,80,78,71,13,10,26,10]) {
+        return Err("The sidebar thumbnail is not a valid-sized PNG image.".into());
+    }
+    let path = PathBuf::from(profile_sidebar_thumbnail_path(app)?);
+    let parent = path.parent().ok_or_else(|| "Could not locate sidebar thumbnail folder.".to_string())?;
+    fs::create_dir_all(parent).map_err(|error| format!("Could not create sidebar thumbnail folder: {error}"))?;
+    fs::write(&path, bytes).map_err(|error| format!("Could not save sidebar thumbnail: {error}"))?;
+    Ok(path.to_string_lossy().into_owned())
+}
+#[tauri::command]
+fn remove_profile_sidebar_thumbnail(app: AppHandle) -> Result<(), String> {
+    let path = PathBuf::from(profile_sidebar_thumbnail_path(app)?);
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("Could not remove sidebar thumbnail: {error}")),
+    }
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct DroppedResourceFile {
@@ -356,6 +384,9 @@ pub fn run() {
             load_workspace_content,
             save_workspace_content,
             import_profile_media,
+            profile_sidebar_thumbnail_path,
+            save_profile_sidebar_thumbnail,
+            remove_profile_sidebar_thumbnail,
             read_dropped_resource_files
         ])
         .run(tauri::generate_context!())
