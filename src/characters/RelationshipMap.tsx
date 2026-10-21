@@ -1,5 +1,5 @@
-import { useMemo, useState, type CSSProperties } from "react";
-import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import { characterAccentColor } from "./characters.types";
@@ -48,6 +48,31 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [configuredRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
+  const filterStripRef = useRef<HTMLDivElement | null>(null);
+  const [filterStripState, setFilterStripState] = useState({ canScrollLeft: false, canScrollRight: false });
+
+  function updateFilterStripState() {
+    const element = filterStripRef.current;
+    if (!element) return;
+    setFilterStripState({ canScrollLeft: element.scrollLeft > 2, canScrollRight: element.scrollLeft + element.clientWidth < element.scrollWidth - 2 });
+  }
+  function handleFilterStripMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+    const element = filterStripRef.current;
+    if (!element) return;
+    const bounds = element.getBoundingClientRect();
+    const localX = event.clientX - bounds.left;
+    if (localX < 34 && element.scrollLeft > 0) element.scrollLeft -= Math.max(4, (34 - localX) * 0.55);
+    else if (localX > bounds.width - 34 && element.scrollLeft + element.clientWidth < element.scrollWidth - 1) element.scrollLeft += Math.max(4, (localX - (bounds.width - 34)) * 0.55);
+    updateFilterStripState();
+  }
+  useEffect(() => {
+    updateFilterStripState();
+    const element = filterStripRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(updateFilterStripState);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [configuredRelationshipKinds]);
 
   const allEdges = useMemo(() => {
     const byPair = new Map<string, RelationshipEdge>();
@@ -81,7 +106,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     [characters, query],
   );
   const visibleIds = useMemo(() => new Set(visibleCharacters.map((character) => character.id)), [visibleCharacters]);
-  const relationshipFilters = useMemo(() => ["All connections", ...new Set([...configuredRelationshipKinds, ...allEdges.flatMap((edge) => edge.kinds)].sort((a, b) => a.localeCompare(b)))], [allEdges, configuredRelationshipKinds]);
+  const relationshipFilters = useMemo(() => ["All connections", ...configuredRelationshipKinds.slice().sort((a, b) => a.localeCompare(b))], [configuredRelationshipKinds]);
   const visibleEdges = useMemo(
     () => allEdges.filter((edge) => visibleIds.has(edge.from.id) && visibleIds.has(edge.to.id) && matchesFilter(edge, filter)),
     [allEdges, visibleIds, filter],
@@ -108,7 +133,11 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     </div>
     <div className="relationship-toolbar">
       <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label>
-      <div className="relationship-filters">{relationshipFilters.map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
+      <div className={`relationship-filter-strip ${filterStripState.canScrollLeft ? "can-scroll-left" : ""} ${filterStripState.canScrollRight ? "can-scroll-right" : ""}`} onMouseMove={handleFilterStripMouseMove}>
+        <button className="relationship-filter-scroll relationship-filter-scroll-left" type="button" aria-label="Scroll relationship types left" disabled={!filterStripState.canScrollLeft} onClick={() => { if (filterStripRef.current) filterStripRef.current.scrollBy({ left: -180, behavior: "smooth" }); }}><ChevronLeft size={15}/></button>
+        <div className="relationship-filters" ref={filterStripRef} onScroll={updateFilterStripState}>{relationshipFilters.map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
+        <button className="relationship-filter-scroll relationship-filter-scroll-right" type="button" aria-label="Scroll relationship types right" disabled={!filterStripState.canScrollRight} onClick={() => { if (filterStripRef.current) filterStripRef.current.scrollBy({ left: 180, behavior: "smooth" }); }}><ChevronRight size={15}/></button>
+      </div>
       <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setQuery(""); setFilter("All connections"); setSelectedId(null); setHoveredEdgeId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
     </div>
     <div className="relationship-workspace">
