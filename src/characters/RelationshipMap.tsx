@@ -112,9 +112,11 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
               if (!a || !b) return null;
               const midX = (a.x + b.x) / 2;
               const midY = (a.y + b.y) / 2 - 4;
-              return <g key={edge.id}>
-                <path d={`M ${a.x} ${a.y} Q ${midX} ${midY} ${b.x} ${b.y}`} className="relationship-line"/>
-                <text x={midX} y={midY} className="relationship-svg-label" aria-label={edge.labels.join(", ")}>{relationshipEmoji(edge)}</text>
+              const path = `M ${a.x} ${a.y} Q ${midX} ${midY} ${b.x} ${b.y}`;
+              const isHovered = hoveredEdgeId === edge.id;
+              return <g key={edge.id} onMouseEnter={() => setHoveredEdgeId(edge.id)} onMouseLeave={() => setHoveredEdgeId(null)}>
+                <path d={path} className={`relationship-line ${isHovered ? "is-hovered" : ""}`} style={{ stroke: relationshipColor(edge.kinds[0] ?? "Other") }} />
+                <path d={path} className="relationship-line-hit-area" />
               </g>;
             })}
           </svg>
