@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { usePreferences } from "./preferences/PreferencesContext";
 import ProfileModal from "./profile/ProfileModal";
@@ -1039,7 +1039,7 @@ function sanitiseHtml(html: string) {
         </div>
       </div>
 
-      <div className="app-content" style={{ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}>
+      <div className="app-content" style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
         <aside className="sidebar">
           <div className="brand"><div className="brand-mark" aria-label="Borealis moon"><svg className="borealis-moon-mark" viewBox="0 0 72 72" role="img" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/></svg></div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
           <div className="workspace-switcher-row"><div className="workspace-switcher-slot"><WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} /></div><button type="button" className="workspace-search-button" title="Search characters and resources" aria-label="Search global libraries" onClick={() => setIsGlobalSearchOpen(true)}><Search size={16} /></button></div>
