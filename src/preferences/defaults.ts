@@ -23,6 +23,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     avatarAssetPath: null,
     bannerAssetPath: null,
     title: "",
+    showSpecialTitle: false,
     motto: "",
     description: "",
     frameStyle: "none",
