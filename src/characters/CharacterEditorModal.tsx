@@ -199,7 +199,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
           </div>
           <div className="studio-relationships">
             <div className="studio-relationship-kind-manager"><label className="studio-field"><span>Create a relationship type</span><div className="studio-list-add"><input value={newRelationshipKind} onChange={(event) => setNewRelationshipKind(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addRelationshipKind(); } }} placeholder="e.g. Ex-partner, Best friend…" /><button type="button" onClick={addRelationshipKind} aria-label="Add relationship type" disabled={!newRelationshipKind.trim()}><Plus size={15} /></button></div></label><small>Custom types are available for every character and in the map.</small></div>
-            {draft.relationships.map((relationship) => <RelationshipEditor key={relationship.id} relationship={relationship} characters={characters} currentCharacterId={selected?.id ?? null} onChange={(changes) => updateRelationship(relationship.id, changes)} onRemove={() => removeRelationship(relationship.id)} />)}
+            {draft.relationships.map((relationship) => <RelationshipEditor key={relationship.id} relationship={relationship} relationshipKinds={relationshipKinds} characters={characters} currentCharacterId={selected?.id ?? null} onChange={(changes) => updateRelationship(relationship.id, changes)} onRemove={() => removeRelationship(relationship.id)} />)}
             <button type="button" className="studio-add-relationship" onClick={addRelationship}><Plus size={15} /> Add relationship</button>
           </div>
         </section>
@@ -241,7 +241,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   </div>, document.body);
 }
 
-function RelationshipEditor({ relationship, characters, currentCharacterId, onChange, onRemove }: { relationship: CharacterRelationship; characters: CharacterRecord[]; currentCharacterId: string | null; onChange: (changes: Partial<CharacterRelationship>) => void; onRemove: () => void }) {
+function RelationshipEditor({ relationship, relationshipKinds, characters, currentCharacterId, onChange, onRemove }: { relationship: CharacterRelationship; relationshipKinds: RelationshipKind[]; characters: CharacterRecord[]; currentCharacterId: string | null; onChange: (changes: Partial<CharacterRelationship>) => void; onRemove: () => void }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [query, setQuery] = useState("");
   const candidates = characters.filter((character) => character.id !== currentCharacterId && character.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())).slice(0, 6);
