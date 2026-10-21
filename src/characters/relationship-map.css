@@ -149,8 +149,6 @@
 @media(max-width:760px){.relationship-map-sort{order:4;flex:1}.relationship-map-sort select{flex:1;max-width:none}}
 
 
-/* Compact Character-library card inside the narrower Connection Details inspector. */
-.relationship-inspector-character-card.character-card{margin:10px 0 12px}
-.relationship-inspector-character-card .character-card-art{height:145px;aspect-ratio:auto}
-.relationship-inspector-character-card .character-card-copy{padding:10px 11px}
-.relationship-inspector-character-card .character-card-tags{margin-top:6px}
+/* Limit the card's vertical footprint in Connection Details without changing its portrait framing. */
+.relationship-inspector-character-card.character-card{max-height:360px;margin:10px 0 12px;overflow:hidden}
+.relationship-inspector-character-card .character-card-art{height:auto;aspect-ratio:4/4.4}
