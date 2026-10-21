@@ -22,12 +22,22 @@ type RelationshipEdge = {
 const familyKinds: RelationshipKind[] = ["Mother", "Father", "Sibling"];
 const romanceKinds: RelationshipKind[] = ["Partner"];
 const friendshipKinds: RelationshipKind[] = ["Close friend"];
+const enemyKinds: RelationshipKind[] = ["Enemy"];
+
+function relationshipEmoji(edge: RelationshipEdge): string {
+  if (edge.kinds.some((kind) => romanceKinds.includes(kind))) return "❤️";
+  if (edge.kinds.some((kind) => familyKinds.includes(kind))) return "🫂";
+  if (edge.kinds.some((kind) => friendshipKinds.includes(kind))) return "⭐";
+  if (edge.kinds.some((kind) => enemyKinds.includes(kind))) return "🗡️";
+  return "✦";
+}
 
 function matchesFilter(edge: RelationshipEdge, filter: string): boolean {
   if (filter === "All connections") return true;
   if (filter === "Family") return edge.kinds.some((kind) => familyKinds.includes(kind));
   if (filter === "Romance") return edge.kinds.some((kind) => romanceKinds.includes(kind));
   if (filter === "Friendship") return edge.kinds.some((kind) => friendshipKinds.includes(kind));
+  if (filter === "Enmity") return edge.kinds.some((kind) => enemyKinds.includes(kind));
   return true;
 }
 
@@ -95,7 +105,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
     </div>
     <div className="relationship-toolbar">
       <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label>
-      <div className="relationship-filters">{["All connections", "Family", "Romance", "Friendship"].map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
+      <div className="relationship-filters">{["All connections", "Family", "Romance", "Friendship", "Enmity"].map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
       <div className="relationship-zoom"><button type="button" onClick={() => setZoom(Math.max(70, zoom - 10))} aria-label="Zoom out"><ZoomOut size={15}/></button><span>{zoom}%</span><button type="button" onClick={() => setZoom(Math.min(130, zoom + 10))} aria-label="Zoom in"><ZoomIn size={15}/></button><button type="button" onClick={() => { setZoom(100); setQuery(""); setFilter("All connections"); setSelectedId(null); }} aria-label="Reset map"><Maximize2 size={14}/></button></div>
     </div>
     <div className="relationship-workspace">
@@ -112,7 +122,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
               const midY = (a.y + b.y) / 2 - 4;
               return <g key={edge.id}>
                 <path d={`M ${a.x} ${a.y} Q ${midX} ${midY} ${b.x} ${b.y}`} className="relationship-line"/>
-                <text x={midX} y={midY} className="relationship-svg-label">{edge.labels.join(" · ")}</text>
+                <text x={midX} y={midY} className="relationship-svg-label" aria-label={edge.labels.join(", ")}>{relationshipEmoji(edge)}</text>
               </g>;
             })}
           </svg>
