@@ -686,27 +686,33 @@
 .character-portrait:not(.avatar-blue){border-color:color-mix(in srgb,var(--character-accent,var(--ctp-lavender)) 65%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--character-accent,var(--ctp-lavender)) 30%,var(--ctp-base)),color-mix(in srgb,var(--character-accent,var(--ctp-lavender)) 10%,var(--ctp-mantle)));color:var(--character-accent,var(--ctp-lavender))}
 .message-avatar{border-color:color-mix(in srgb,var(--character-accent,var(--border)) 60%,var(--border));background:color-mix(in srgb,var(--character-accent,var(--ctp-lavender)) 16%,var(--ctp-mantle));color:var(--character-accent,var(--ctp-lavender))}
 
-/* Holographic card: use the character accent rather than the app theme. */
+/* Holographic card: dark neutral base with a restrained character-colour wash. */
 .avatar-preview-card {
   overflow: visible;
-  border-color: color-mix(in srgb, var(--character-accent, #b4befe) 72%, white);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--character-accent, #b4befe) 85%, white), color-mix(in srgb, var(--character-accent, #b4befe) 60%, #29283d) 48%, color-mix(in srgb, var(--character-accent, #b4befe) 82%, #f5f1ff));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--character-accent, #b4befe) 16%, transparent), 0 28px 90px rgb(0 0 0 / 55%), 0 0 34px color-mix(in srgb, var(--character-accent, #b4befe) 28%, transparent), 0 0 76px color-mix(in srgb, var(--character-accent, #b4befe) 18%, transparent);
+  border-color: color-mix(in srgb, var(--character-accent, #b4befe) 58%, #34363d);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--character-accent, #b4befe) 32%, #34363d), #292b31 52%, color-mix(in srgb, var(--character-accent, #b4befe) 28%, #34363d));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--character-accent, #b4befe) 12%, transparent), 0 28px 90px rgb(0 0 0 / 55%), 0 0 34px color-mix(in srgb, var(--character-accent, #b4befe) 20%, transparent), 0 0 76px color-mix(in srgb, var(--character-accent, #b4befe) 12%, transparent);
 }
 .avatar-preview-card-inner {
   background:
-    radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--character-accent, #b4befe) 35%, transparent), transparent 58%),
-    linear-gradient(160deg, color-mix(in srgb, var(--character-accent, #b4befe) 38%, #777980) 0%, color-mix(in srgb, var(--character-accent, #b4befe) 32%, #555860) 50%, color-mix(in srgb, var(--character-accent, #b4befe) 38%, #777980) 100%);
+    radial-gradient(ellipse at 50% 34%, color-mix(in srgb, var(--character-accent, #b4befe) 18%, transparent), transparent 58%),
+    linear-gradient(160deg, color-mix(in srgb, var(--character-accent, #b4befe) 20%, #303238) 0%, #292b31 50%, color-mix(in srgb, var(--character-accent, #b4befe) 18%, #303238) 100%);
 }
-.avatar-preview-footer { border-top-color: color-mix(in srgb, var(--character-accent, #b4befe) 38%, transparent); }
-.avatar-preview-image-layer-fade { mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 56%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 28%, #000 56%, transparent 100%); }
+.avatar-preview-footer { border-top-color: color-mix(in srgb, var(--character-accent, #b4befe) 30%, transparent); }
+/* Soften all four portrait edges instead of revealing a hard rectangular crop. */
+.avatar-preview-image-layer-fade {
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 66%, transparent 100%), radial-gradient(ellipse 82% 78% at 50% 48%, #000 48%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 66%, transparent 100%), radial-gradient(ellipse 82% 78% at 50% 48%, #000 48%, transparent 100%);
+  -webkit-mask-composite: source-in;
+}
 .avatar-preview-image-layer-fade .avatar-preview-image { mask-image: none; -webkit-mask-image: none; }
-.avatar-preview-art.has-portrait-image { background: color-mix(in srgb, var(--character-accent, #b4befe) 35%, #777980); }
-.avatar-preview-art.has-portrait-image .avatar-preview-image { mask-image: none; -webkit-mask-image: none; filter: drop-shadow(0 10px 26px color-mix(in srgb, var(--character-accent, #b4befe) 18%, transparent)); }
+.avatar-preview-art.has-portrait-image { background: color-mix(in srgb, var(--character-accent, #b4befe) 20%, #292b31); }
+.avatar-preview-art.has-portrait-image .avatar-preview-image { mask-image: none; -webkit-mask-image: none; filter: drop-shadow(0 10px 26px color-mix(in srgb, var(--character-accent, #b4befe) 12%, transparent)); }
 .avatar-preview-card > .avatar-preview-effect-layer {
   --effect-color: var(--character-accent, #b4befe);
   z-index: 4;
-  inset: -16%;
+  inset: -18%;
   overflow: visible;
 }
 .avatar-preview-card > .avatar-preview-effect-layer i {
@@ -722,4 +728,17 @@
 .avatar-preview-card > .avatar-preview-effect-layer i:nth-child(4) { --particle-x: 76%; --particle-bottom: 18%; --particle-size: 6px; --particle-duration: 12s; --particle-delay: .5s; --particle-rise: -86px; --particle-side: 38px; }
 .avatar-preview-card > .avatar-preview-effect-layer i:nth-child(5) { --particle-x: 108%; --particle-bottom: 58%; --particle-size: 7px; --particle-duration: 10s; --particle-delay: 1.8s; --particle-rise: -45px; --particle-side: 42px; }
 .avatar-preview-card > .avatar-preview-effect-layer i:nth-child(6) { --particle-x: 2%; --particle-bottom: 72%; --particle-size: 5px; --particle-duration: 11s; --particle-delay: 3.2s; --particle-rise: 48px; --particle-side: -38px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(n+7) { --particle-size: 4px; --particle-duration: 9s; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(7) { --particle-x: 15%; --particle-bottom: 22%; --particle-size: 6px; --particle-duration: 12s; --particle-delay: 2.7s; --particle-rise: -68px; --particle-side: 22px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(8) { --particle-x: 38%; --particle-bottom: 4%; --particle-size: 4px; --particle-duration: 10s; --particle-delay: 4.1s; --particle-rise: -110px; --particle-side: -20px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(9) { --particle-x: 61%; --particle-bottom: 16%; --particle-size: 6px; --particle-duration: 13s; --particle-delay: 3.5s; --particle-rise: -72px; --particle-side: 32px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(10) { --particle-x: 89%; --particle-bottom: -4%; --particle-size: 5px; --particle-duration: 11s; --particle-delay: 5s; --particle-rise: -98px; --particle-side: -26px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(11) { --particle-x: 4%; --particle-bottom: 48%; --particle-size: 4px; --particle-duration: 12s; --particle-delay: 5.6s; --particle-rise: -30px; --particle-side: -44px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(12) { --particle-x: 97%; --particle-bottom: 36%; --particle-size: 6px; --particle-duration: 10s; --particle-delay: 4.7s; --particle-rise: 42px; --particle-side: 38px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(13) { --particle-x: 32%; --particle-bottom: 102%; --particle-size: 5px; --particle-duration: 12s; --particle-delay: 6.2s; --particle-rise: 72px; --particle-side: -28px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(14) { --particle-x: 72%; --particle-bottom: 106%; --particle-size: 7px; --particle-duration: 11s; --particle-delay: 6.8s; --particle-rise: 54px; --particle-side: 26px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(15) { --particle-x: 50%; --particle-bottom: 2%; --particle-size: 4px; --particle-duration: 13s; --particle-delay: 7.1s; --particle-rise: -116px; --particle-side: 16px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(16) { --particle-x: 112%; --particle-bottom: 82%; --particle-size: 5px; --particle-duration: 12s; --particle-delay: 7.7s; --particle-rise: -24px; --particle-side: 36px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(17) { --particle-x: -10%; --particle-bottom: 88%; --particle-size: 6px; --particle-duration: 10s; --particle-delay: 8.3s; --particle-rise: -40px; --particle-side: -32px; }
+.avatar-preview-card > .avatar-preview-effect-layer i:nth-child(18) { --particle-x: 83%; --particle-bottom: 68%; --particle-size: 4px; --particle-duration: 14s; --particle-delay: 9s; --particle-rise: -62px; --particle-side: -34px; }
 .avatar-preview-card .avatar-preview-close { z-index: 6; }
