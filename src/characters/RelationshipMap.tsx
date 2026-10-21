@@ -131,14 +131,13 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
     const count = visibleCharacters.length;
     // Grow the ring as the cast grows so adjacent nodes have more breathing room.
     // Keep a little margin around the canvas so labels and portraits aren't pushed off-screen.
-    const radiusX = count <= 2 ? 20 : Math.min(41, Math.max(34, count * 2.7));
-    const radiusY = count <= 2 ? 20 : Math.min(39, Math.max(32, count * 2.55));
+    const radius = count <= 2 ? 20 : Math.min(39, Math.max(32, count * 2.55));
     return visibleCharacters.map((character, index) => {
       const angle = index / Math.max(count, 1) * Math.PI * 2 - Math.PI / 2;
       return {
         character,
-        x: 50 + Math.cos(angle) * radiusX,
-        y: 49 + Math.sin(angle) * radiusY,
+        x: 50 + Math.cos(angle) * radius,
+        y: 50 + Math.sin(angle) * radius,
       };
     });
   }, [visibleCharacters]);
@@ -235,7 +234,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
       <div className={`relationship-canvas relationship-background-${mapBackground} ${isDraggingCanvas ? "is-panning" : ""}`} style={mapBackground === "custom" && effectiveMapBackgroundImage ? { backgroundImage: `linear-gradient(color-mix(in srgb, var(--ctp-crust) 46%, transparent), color-mix(in srgb, var(--ctp-crust) 62%, transparent)), url("${effectiveMapBackgroundImage}")`, backgroundSize: "cover", backgroundPosition: "center" } : undefined} onClick={handleCanvasClick} onPointerDown={handleCanvasPointerDown} onPointerMove={handleCanvasPointerMove} onPointerUp={handleCanvasPointerUp} onPointerCancel={handleCanvasPointerUp} onWheel={handleCanvasWheel}>
         <div className="relationship-canvas-glow relationship-canvas-glow-a"/><div className="relationship-canvas-glow relationship-canvas-glow-b"/>
         <div className="relationship-canvas-grid"/>
-        {visibleCharacters.length > 0 ? <div className="relationship-graph relationship-real-graph" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})` }}>
+        {visibleCharacters.length > 0 ? <div className="relationship-graph relationship-real-graph" style={{ transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${zoom / 100})` }}>
           <svg className="relationship-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {visibleEdges.map((edge) => {
               const a = actualNodes.find((node) => node.character.id === edge.from.id);
