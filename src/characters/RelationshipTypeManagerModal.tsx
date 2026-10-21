@@ -16,6 +16,7 @@ export default function RelationshipTypeManagerModal({ relationshipKinds, usageC
   const [editingType, setEditingType] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [error, setError] = useState("");
+  const [renamedTypes, setRenamedTypes] = useState<Record<string, string>>({});
 
   function isDuplicate(value: string, except?: string) {
     return types.some((type) => type !== except && type.trim().toLocaleLowerCase() === value.trim().toLocaleLowerCase());
@@ -33,6 +34,8 @@ export default function RelationshipTypeManagerModal({ relationshipKinds, usageC
     const value = editValue.trim();
     if (!value) { setError("A relationship type cannot be empty."); return; }
     if (isDuplicate(value, type)) { setError("That relationship type already exists."); return; }
+    const original = Object.entries(renamedTypes).find(([, renamed]) => renamed === type)?.[0] ?? type;
+    if (originalTypes.includes(original)) setRenamedTypes((current) => ({ ...current, [original]: value }));
     setTypes((current) => current.map((item) => item === type ? value : item));
     setEditingType(null);
     setError("");
@@ -44,15 +47,12 @@ export default function RelationshipTypeManagerModal({ relationshipKinds, usageC
       : `Delete the relationship type “${type}”?`;
     if (!window.confirm(warning)) return;
     setTypes((current) => current.filter((item) => item !== type));
+    setRenamedTypes((current) => Object.fromEntries(Object.entries(current).filter(([from, to]) => from !== type && to !== type)));
     if (editingType === type) setEditingType(null);
     setError("");
   }
   function save() {
-    const renames = originalTypes.flatMap((from) => {
-      const index = originalTypes.indexOf(from);
-      const to = types[index];
-      return to && to !== from ? [{ from, to }] : [];
-    });
+    const renames = Object.entries(renamedTypes).filter(([from, to]) => types.includes(to) && from !== to).map(([from, to]) => ({ from, to }));
     onSave(types, renames);
   }
 
