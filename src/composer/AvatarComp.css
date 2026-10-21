@@ -742,3 +742,15 @@
 .avatar-preview-card > .avatar-preview-effect-layer i:nth-child(17) { --particle-x: -10%; --particle-bottom: 88%; --particle-size: 6px; --particle-duration: 10s; --particle-delay: 8.3s; --particle-rise: -40px; --particle-side: -32px; }
 .avatar-preview-card > .avatar-preview-effect-layer i:nth-child(18) { --particle-x: 83%; --particle-bottom: 68%; --particle-size: 4px; --particle-duration: 14s; --particle-delay: 9s; --particle-rise: -62px; --particle-side: -34px; }
 .avatar-preview-card .avatar-preview-close { z-index: 6; }
+
+/* Feather portrait edges directly on the image to remove the rectangular silhouette. */
+.avatar-preview-image-layer-fade { mask-image: none; -webkit-mask-image: none; }
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
+  mask-image: radial-gradient(ellipse 76% 78% at 50% 47%, #000 30%, rgb(0 0 0 / 0.94) 43%, rgb(0 0 0 / 0.68) 58%, rgb(0 0 0 / 0.28) 74%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 76% 78% at 50% 47%, #000 30%, rgb(0 0 0 / 0.94) 43%, rgb(0 0 0 / 0.68) 58%, rgb(0 0 0 / 0.28) 74%, transparent 100%);
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  -webkit-mask-size: 100% 100%;
+  filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--character-accent, #b4befe) 10%, transparent));
+}
