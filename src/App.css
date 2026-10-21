@@ -2517,3 +2517,7 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 *::-webkit-scrollbar-corner{background:transparent}
 .titlebar-easter-egg{display:inline-flex;align-items:center;margin-right:7px;flex:0 0 auto}
 .titlebar-brand{gap:0}
+
+/* Keep a clear, intentional gap between the easter-egg star and app name. */
+.custom-titlebar .titlebar-brand{display:flex;align-items:center;gap:9px}
+.custom-titlebar .titlebar-easter-egg{display:inline-flex;align-items:center;margin:0;flex:0 0 auto}
