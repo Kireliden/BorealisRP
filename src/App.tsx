@@ -31,18 +31,23 @@ import "./popup-motion.css";
 const appWindow = getCurrentWindow();
 
 type Role = "Narration" | "Dialogue";
-type Character = { name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null; portraitResourceId?: string | null };
+type Character = { id?: string; name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null; portraitResourceId?: string | null; portraitFit?: "cover" | "contain"; portraitPositionX?: number; portraitPositionY?: number; portraitZoom?: number };
 type AvatarPreviewCharacter = Character & { expression?: string };
 type Message = WorkspaceMessage;
 
 function charactersFromLibrary(): Character[] {
   const libraryCharacters = loadCharacters().map((item) => ({
+    id: item.id,
     name: item.name,
     initials: item.initials,
     avatar: characterAccentColor(item.accent),
     description: item.subtitle || item.description,
     avatarAssetPath: null,
     portraitResourceId: item.portraitResourceId,
+    portraitFit: item.portraitFit ?? "cover",
+    portraitPositionX: item.portraitPositionX ?? 50,
+    portraitPositionY: item.portraitPositionY ?? 50,
+    portraitZoom: item.portraitZoom ?? 100,
   }));
   return [...libraryCharacters, { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" }];
 }
@@ -301,25 +306,32 @@ function sanitiseHtml(html: string) {
 
   useEffect(() => { if (!characters.some((item) => item.name === selectedCharacter)) setSelectedCharacter(characters[0]?.name ?? "You"); }, [characters, selectedCharacter]);
   const selectedCharacterBase = characters.find((item) => item.name === selectedCharacter) ?? characters[0];
-  const selectedPortraitResourceId = selectedCharacter === "You" ? null : selectedCharacterBase?.portraitResourceId ?? null;
-  const [characterResourcePortraitUrl, setCharacterResourcePortraitUrl] = useState<string | null>(null);
+  const [characterPortraitUrls, setCharacterPortraitUrls] = useState<Record<string, string>>({});
   useEffect(() => {
     let cancelled = false;
-    let objectUrl: string | null = null;
-    if (!selectedPortraitResourceId) {
-      setCharacterResourcePortraitUrl(null);
-      return;
-    }
-    void getResourceBlob(selectedPortraitResourceId).then((blob) => {
-      if (cancelled) return;
-      objectUrl = blob ? URL.createObjectURL(blob) : null;
-      setCharacterResourcePortraitUrl(objectUrl);
-    }).catch(() => { if (!cancelled) setCharacterResourcePortraitUrl(null); });
+    const objectUrls: string[] = [];
+    const portraitIds = [...new Set(characters.map((item) => item.portraitResourceId).filter((id): id is string => Boolean(id)))];
+    void Promise.all(portraitIds.map(async (id) => {
+      try {
+        const blob = await getResourceBlob(id);
+        if (!blob || cancelled) return [id, ""] as const;
+        const url = URL.createObjectURL(blob);
+        objectUrls.push(url);
+        return [id, url] as const;
+      } catch {
+        return [id, ""] as const;
+      }
+    })).then((entries) => {
+      if (!cancelled) setCharacterPortraitUrls(Object.fromEntries(entries.filter(([, url]) => Boolean(url))));
+    });
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [selectedPortraitResourceId]);
+  }, [characters]);
+  const characterResourcePortraitUrl = selectedCharacter === "You" || !selectedCharacterBase?.portraitResourceId
+    ? null
+    : characterPortraitUrls[selectedCharacterBase.portraitResourceId] ?? null;
   // "You" always uses the saved user profile portrait (including animated GIFs).
   const character: Character = {
     ...selectedCharacterBase,
@@ -967,6 +979,7 @@ function sanitiseHtml(html: string) {
           avatar: character.avatar,
           expression: selectedCharacter === "You" ? "" : selectedExpression,
           avatarAssetPath: character.avatarAssetPath ?? null,
+          characterId: selectedCharacter === "You" ? undefined : character.id,
         },
       ];
     }
@@ -1106,7 +1119,7 @@ function sanitiseHtml(html: string) {
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => <article className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} style={{ "--character-accent": characterAccentColor(message.avatar) } as React.CSSProperties} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) && profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ? <img className={message.avatarAssetPath || message.author === "You" ? "message-avatar-profile-image" : undefined} src={profileMediaSource(message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null)) ?? undefined} alt="" /> : message.author === "Keira" ? <img src={avatarPlaceholder} alt="" /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
+            {messages.map((message) => { const messageCharacter = characters.find((item) => item.id && item.id === message.characterId) ?? characters.find((item) => item.name === message.author); const messagePortraitUrl = message.author === "You" ? profileMediaSource(preferences.profile.avatarAssetPath) : messageCharacter?.portraitResourceId ? characterPortraitUrls[messageCharacter.portraitResourceId] : null; return <article className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${message.avatar}`} style={{ "--character-accent": characterAccentColor(message.avatar) } as React.CSSProperties} aria-label={`View portrait of ${message.author}`} title={`View ${message.author} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: message.author, initials: message.initials, avatar: message.avatar, description: "", avatarAssetPath: message.avatarAssetPath ?? (message.author === "You" ? preferences.profile.avatarAssetPath : null), portraitResourceId: messageCharacter?.portraitResourceId, portraitFit: messageCharacter?.portraitFit, portraitPositionX: messageCharacter?.portraitPositionX, portraitPositionY: messageCharacter?.portraitPositionY, portraitZoom: messageCharacter?.portraitZoom, expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{messagePortraitUrl ? <img className={message.author === "You" ? "message-avatar-profile-image" : "message-avatar-character-image"} src={messagePortraitUrl} alt="" style={message.author === "You" ? undefined : { objectFit: messageCharacter?.portraitFit ?? "cover", objectPosition: `${messageCharacter?.portraitPositionX ?? 50}% ${messageCharacter?.portraitPositionY ?? 50}%`, transform: `scale(${(messageCharacter?.portraitZoom ?? 100) / 100})`, transformOrigin: `${messageCharacter?.portraitPositionX ?? 50}% ${messageCharacter?.portraitPositionY ?? 50}%` }} /> : message.initials}</button><div className="message-body"><div className="message-meta"><strong className={message.author === "You" ? "message-author-user" : undefined}>{message.author}</strong>{message.author !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
@@ -1127,7 +1140,7 @@ function sanitiseHtml(html: string) {
                   <button type="button" role="menuitem" onClick={() => void changeMessageRole(message)}><ArrowLeftRight size={14} /><span>Change to {message.role === "Narration" ? "dialogue" : "narration"}</span></button>
                   <button type="button" role="menuitem" className="message-delete-action" disabled={!canDeleteMessage(message)} title={!canDeleteMessage(message) ? "Messages can only be deleted within 24 hours of sending; older messages without a timestamp cannot be deleted." : "Delete message"} onClick={() => void deleteMessage(message)}><Trash2 size={14} /><span>Delete message</span>{!canDeleteMessage(message) && <small>24h limit</small>}</button>
                 </div>}
-              </div></article>)}
+              </div></article>; })}
             {hasNewMessages && <button className="scroll-to-latest" type="button" onClick={scrollToLatestMessage}>↓ New messages · Jump to latest</button>}
           </section>
 
@@ -1148,6 +1161,10 @@ function sanitiseHtml(html: string) {
                       imageSrc={character.avatarAssetPath ? profileMediaSource(character.avatarAssetPath) : characterResourcePortraitUrl}
                       expressionImage={selectedCharacter !== "You" ? expressions.find((expression) => expression.emoji === selectedExpression)?.image : null}
                       expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
+                      fit={character.portraitFit ?? "cover"}
+                      positionX={character.portraitPositionX ?? 50}
+                      positionY={character.portraitPositionY ?? 50}
+                      zoom={character.portraitZoom ?? 100}
                     />
                   </button>
                   <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}>👤</button>
@@ -1412,8 +1429,8 @@ function sanitiseHtml(html: string) {
                 <div className="avatar-preview-orbit avatar-preview-orbit-two" />
                 {previewCharacter.avatarAssetPath ? (
                   <img className="avatar-preview-image profile-media-image" src={profileMediaSource(previewCharacter.avatarAssetPath) ?? undefined} alt={previewCharacter.name} />
-                ) : previewCharacter.portraitResourceId && characterResourcePortraitUrl ? (
-                  <img className="avatar-preview-image" src={characterResourcePortraitUrl} alt={previewCharacter.name} />
+                ) : previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId] ? (
+                  <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: previewCharacter.portraitFit ?? "cover", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
                 ) : previewCharacter.name === "Keira" ? (
                   <img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" />
                 ) : (
