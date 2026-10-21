@@ -13,3 +13,8 @@
 .characters-view-switch button.active svg{color:var(--ctp-mauve)}
 .characters-layout:has(.relationship-page)>.relationship-page{flex:1;min-height:0;height:auto}
 @media(max-width:680px){.characters-view-switch{padding-left:14px;padding-right:14px}}
+
+/* Reuse the portrait editor's saved crop/zoom settings while keeping artwork clipped to each avatar frame. */
+.relationship-node-avatar,.relationship-inspector-avatar,.relationship-mini-avatar{position:relative;overflow:hidden;isolation:isolate}
+.relationship-node-avatar .character-portrait-image,.relationship-inspector-avatar .character-portrait-image,.relationship-mini-avatar .character-portrait-image{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none}
+.relationship-node-avatar .character-portrait-initials,.relationship-inspector-avatar .character-portrait-initials,.relationship-mini-avatar .character-portrait-initials{position:relative;z-index:1}
