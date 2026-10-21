@@ -1435,7 +1435,7 @@ function sanitiseHtml(html: string) {
                   </div>
                 ) : previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId] ? (
                   <div className="avatar-preview-image-layer">
-                    <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: "cover", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
+                    <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: previewCharacter.portraitFit ?? "contain", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
                   </div>
                 ) : previewCharacter.name === "Keira" ? (
                   <div className="avatar-preview-image-layer"><img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" /></div>
