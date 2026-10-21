@@ -222,8 +222,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
               const startY = a.y + (dy / distance) * inset;
               const endX = b.x - (dx / distance) * inset;
               const endY = b.y - (dy / distance) * inset;
-              const midX = (startX + endX) / 2;
-              const midY = (startY + endY) / 2;
+              
               const path = `M ${startX} ${startY} L ${endX} ${endY}`;
               const isHovered = hoveredEdgeId === edge.id;
               return <g key={edge.id} onMouseEnter={() => setHoveredEdgeId(edge.id)} onMouseLeave={() => setHoveredEdgeId(null)}>
