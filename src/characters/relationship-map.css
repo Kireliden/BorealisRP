@@ -44,7 +44,7 @@
 .relationship-edge-tooltip{padding:7px 11px;border-width:1.5px;box-shadow:0 8px 24px #0004}
 .relationship-inspector-character-card{overflow:hidden;margin:19px 0 16px;border:1px solid color-mix(in srgb,var(--character-accent) 42%,var(--border));border-radius:15px;background:linear-gradient(155deg,color-mix(in srgb,var(--character-accent) 10%,var(--sidebar-bg)),var(--sidebar-bg));box-shadow:0 9px 24px #0002;transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s;transform-origin:center}
 .relationship-inspector-character-card:hover{transform:translateY(-3px) rotate(-1deg);border-color:color-mix(in srgb,var(--character-accent) 70%,var(--border));box-shadow:0 15px 32px color-mix(in srgb,var(--character-accent) 13%,#0003)}
-.relationship-inspector-character-art{position:relative;display:grid;place-items:center;aspect-ratio:4/3.4;overflow:hidden;background:radial-gradient(ellipse at 50% 22%,color-mix(in srgb,var(--character-accent) 28%,var(--ctp-base)),var(--ctp-mantle) 74%)}
+.relationship-inspector-character-art{position:relative;display:grid;place-items:center;aspect-ratio:4/4.4;overflow:hidden;background:radial-gradient(ellipse at 50% 22%,color-mix(in srgb,var(--character-accent) 28%,var(--ctp-base)),var(--ctp-mantle) 74%)}
 .relationship-inspector-character-art:before{position:absolute;inset:9px;border:1px solid color-mix(in srgb,var(--character-accent) 24%,transparent);border-radius:8px;content:"";pointer-events:none}
 .relationship-inspector-character-art>.character-portrait-image,.relationship-inspector-character-art>.character-portrait-image-layer{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none}
 .relationship-inspector-character-copy{padding:12px 13px 13px}
@@ -57,4 +57,4 @@
 .studio-relationship-card .studio-relationship-top>button:last-child:hover{border-color:color-mix(in srgb,var(--ctp-red) 45%,var(--border));background:color-mix(in srgb,var(--ctp-red) 9%,var(--surface));color:var(--ctp-red)}
 .reciprocal-prompt-actions button{border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 5px #0001,inset 0 1px 0 #fff1;transition:transform .16s,border-color .16s,box-shadow .16s}
 .reciprocal-prompt-actions button:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--accent) 55%,var(--border));box-shadow:0 5px 13px #0002}
-@media(max-width:1100px){.relationship-inspector-character-art{aspect-ratio:4/3.2}}
+@media(max-width:1100px){.relationship-inspector-character-art{aspect-ratio:4/4.4}}
