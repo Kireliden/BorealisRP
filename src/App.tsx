@@ -922,6 +922,7 @@ function sanitiseHtml(html: string) {
   }
 
   function selectScene(scene: WorkspaceScene) {
+    setActiveLibraryPage(null);
     setActiveSceneId(scene.id);
     setMessages(scene.messages);
     setDraftHtml("");
