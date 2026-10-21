@@ -18,7 +18,7 @@ type Props = {
   onDelete: () => void;
 };
 
-const relationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Other"];
+const relationshipKinds: RelationshipKind[] = ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
 
 function TextField({ label, value, onChange, placeholder, type = "text", hint }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; type?: string; hint?: string }) {
   return <label className="studio-field"><span>{label}</span><input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />{hint && <small>{hint}</small>}</label>;
