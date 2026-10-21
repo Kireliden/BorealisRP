@@ -6,12 +6,14 @@ interface EffectLayerProps {
   effect: EffectName;
   intensity?: EffectIntensity;
   className?: string;
+  particleCount?: number;
 }
 
 export default function EffectLayer({
   effect,
   intensity = "subtle",
   className = "",
+  particleCount,
 }: EffectLayerProps) {
   const definition = getEffectDefinition(effect);
 
@@ -21,7 +23,7 @@ export default function EffectLayer({
       aria-hidden="true"
     >
       {definition.kind === "particles" &&
-        Array.from({ length: definition.particleCount }, (_, index) => (
+        Array.from({ length: particleCount ?? definition.particleCount }, (_, index) => (
           <i key={index} />
         ))}
     </span>
