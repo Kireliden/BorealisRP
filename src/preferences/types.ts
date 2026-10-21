@@ -70,6 +70,7 @@ export interface AppPreferences {
     avatarAssetPath: string | null;
     bannerAssetPath: string | null;
     title: string;
+    showSpecialTitle: boolean;
     motto: string;
     description: string;
     frameStyle: "none" | "lavender" | "ornate";
