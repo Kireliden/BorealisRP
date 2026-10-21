@@ -120,6 +120,12 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
               </g>;
             })}
           </svg>
+          {visibleEdges.filter((edge) => edge.id === hoveredEdgeId).map((edge) => {
+            const a = actualNodes.find((node) => node.character.id === edge.from.id);
+            const b = actualNodes.find((node) => node.character.id === edge.to.id);
+            if (!a || !b) return null;
+            return <div key={edge.id} className="relationship-edge-tooltip" style={{ left: `${(a.x + b.x) / 2}%`, top: `${(a.y + b.y) / 2 - 4}%`, borderColor: relationshipColor(edge.kinds[0] ?? "Other") }}>{edge.labels.join(" · ")}</div>;
+          })}
           {actualNodes.map(({character, x, y}) => <button type="button" key={character.id} className={`relationship-node node-lavender ${selectedCharacter?.id === character.id ? "is-focused" : ""}`} style={{left:`${x}%`,top:`${y}%`}} onClick={() => setSelectedId(character.id)}>
             <span className="relationship-node-orbit"/><span className="relationship-node-avatar" style={{overflow:"hidden",isolation:"isolate"}}><CharacterPortraitArt initials={character.initials || character.name.slice(0,2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "contain"} positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} /></span><strong>{character.name}</strong><small>{character.subtitle || "Character"}</small>
           </button>)}
