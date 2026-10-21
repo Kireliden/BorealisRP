@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
+import CharacterPortraitArt from "./CharacterPortraitArt";
 import "./relationship-map.css";
 
 type Props = {
@@ -116,7 +117,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
             })}
           </svg>
           {actualNodes.map(({character, x, y}) => <button type="button" key={character.id} className={`relationship-node node-lavender ${selectedCharacter?.id === character.id ? "is-focused" : ""}`} style={{left:`${x}%`,top:`${y}%`}} onClick={() => setSelectedId(character.id)}>
-            <span className="relationship-node-orbit"/><span className="relationship-node-avatar">{character.portraitResourceId && portraitUrls[character.portraitResourceId] ? <img src={portraitUrls[character.portraitResourceId]} alt=""/> : character.initials || character.name.slice(0,2).toUpperCase()}</span><strong>{character.name}</strong><small>{character.subtitle || "Character"}</small>
+            <span className="relationship-node-orbit"/><span className="relationship-node-avatar" style={{overflow:"hidden",isolation:"isolate"}}><CharacterPortraitArt initials={character.initials || character.name.slice(0,2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "contain"} positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} /></span><strong>{character.name}</strong><small>{character.subtitle || "Character"}</small>
           </button>)}
         </div> : <div className="relationship-preview-note"><Users size={16}/><span>{characters.length === 0 ? <><strong>Your cast is empty.</strong> Create a character first, then link profiles to start building your map.</> : <>No characters match “{query}”. Try a different search.</>}</span></div>}
         <div className="relationship-canvas-caption"><Sparkles size={13}/>{hasRelationships ? "Live map · linked character profiles" : "Your map · based on saved character profiles"}</div>
@@ -124,7 +125,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
         {selectedCharacter ? <>
-          <div className="relationship-inspector-avatar node-lavender">{selectedCharacter.portraitResourceId && portraitUrls[selectedCharacter.portraitResourceId] ? <img src={portraitUrls[selectedCharacter.portraitResourceId]} alt="" style={{width:"100%",height:"100%",objectFit:"contain",borderRadius:"inherit"}}/> : selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()}</div>
+          <div className="relationship-inspector-avatar node-lavender" style={{overflow:"hidden",isolation:"isolate"}}><CharacterPortraitArt initials={selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()} imageSrc={selectedCharacter.portraitResourceId ? portraitUrls[selectedCharacter.portraitResourceId] : null} alt={selectedCharacter.name} fit={selectedCharacter.portraitFit ?? "contain"} positionX={selectedCharacter.portraitPositionX ?? 50} positionY={selectedCharacter.portraitPositionY ?? 50} zoom={selectedCharacter.portraitZoom ?? 100} /></div>
           <h2>{selectedCharacter.name}</h2>
           <p className="relationship-inspector-role">{selectedCharacter.subtitle || "Character profile"}</p>
           <div className="relationship-inspector-rule"/>
@@ -132,7 +133,7 @@ export default function RelationshipMap({ characters, portraitUrls, onOpenCharac
           {selectedEdges.length > 0 ? selectedEdges.map((edge) => {
             const other = edge.from.id === selectedCharacter.id ? edge.to : edge.from;
             return <button type="button" className="relationship-inspector-link" key={edge.id} onClick={() => onOpenCharacter(other)}>
-              <span className="relationship-mini-avatar node-lavender">{other.initials || other.name.slice(0,2).toUpperCase()}</span>
+              <span className="relationship-mini-avatar node-lavender" style={{overflow:"hidden",position:"relative"}}>{other.portraitResourceId && portraitUrls[other.portraitResourceId] ? <CharacterPortraitArt initials={other.initials || other.name.slice(0,2).toUpperCase()} imageSrc={portraitUrls[other.portraitResourceId]} alt={other.name} fit={other.portraitFit ?? "contain"} positionX={other.portraitPositionX ?? 50} positionY={other.portraitPositionY ?? 50} zoom={other.portraitZoom ?? 100}/> : other.initials || other.name.slice(0,2).toUpperCase()}</span>
               <span><strong>{other.name}</strong><small>{edge.labels.join(" · ") || "Connected"}</small></span><ArrowUpRight size={14}/>
             </button>;
           }) : <div className="relationship-inspector-note">{hasRelationships ? "No connections match the current filter or search." : "This character has no linked relationships yet. Edit their profile and link them to another character to add a connection."}</div>}
