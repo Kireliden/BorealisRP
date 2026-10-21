@@ -45,6 +45,7 @@ function matchesFilter(edge: RelationshipEdge, filter: string): boolean {
 
 export default function RelationshipMap({ characters, portraitUrls, imageResources, onOpenCharacter }: Props) {
   const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name-asc" | "name-desc" | "updated">("newest");
   const [filter, setFilter] = useState("All connections");
   const [zoom, setZoom] = useState(100);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -112,10 +113,13 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
     return [...byPair.values()];
   }, [characters]);
 
-  const visibleCharacters = useMemo(
-    () => characters.filter((character) => character.name.toLowerCase().includes(query.trim().toLowerCase())),
-    [characters, query],
-  );
+  const visibleCharacters = useMemo(() => characters.filter((character) => character.name.toLowerCase().includes(query.trim().toLowerCase())).slice().sort((a, b) => {
+    if (sortOrder === "name-asc") return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    if (sortOrder === "name-desc") return b.name.localeCompare(a.name, undefined, { sensitivity: "base" });
+    if (sortOrder === "oldest") return Date.parse(a.createdAt || "") - Date.parse(b.createdAt || "");
+    if (sortOrder === "updated") return Date.parse(b.updatedAt || b.createdAt || "") - Date.parse(a.updatedAt || a.createdAt || "");
+    return Date.parse(b.createdAt || "") - Date.parse(a.createdAt || "");
+  }), [characters, query, sortOrder]);
   const visibleIds = useMemo(() => new Set(visibleCharacters.map((character) => character.id)), [visibleCharacters]);
   const relationshipFilters = useMemo(() => ["All connections", ...configuredRelationshipKinds.slice().sort((a, b) => a.localeCompare(b))], [configuredRelationshipKinds]);
   const visibleEdges = useMemo(
@@ -191,7 +195,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
       <div className="relationship-stats"><span><Users size={15}/><strong>{characters.length.toString().padStart(2, "0")}</strong> characters</span><span><GitFork size={15}/><strong>{connectionCount.toString().padStart(2, "0")}</strong> connections</span></div>
     </div>
     <div className="relationship-toolbar">
-      <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label>
+      <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label><label className="relationship-map-sort"><span>Sort</span><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}><option value="newest">Recently created</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="updated">Recently updated</option></select></label>
       <div className={`relationship-filter-strip ${filterStripState.canScrollLeft ? "can-scroll-left" : ""} ${filterStripState.canScrollRight ? "can-scroll-right" : ""}`} onMouseMove={handleFilterStripMouseMove}>
         <button className="relationship-filter-scroll relationship-filter-scroll-left" type="button" aria-label="Scroll relationship types left" disabled={!filterStripState.canScrollLeft} onClick={() => { if (filterStripRef.current) filterStripRef.current.scrollBy({ left: -180, behavior: "smooth" }); }}><ChevronLeft size={15}/></button>
         <div className="relationship-filters" ref={filterStripRef} onScroll={updateFilterStripState}>{relationshipFilters.map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
@@ -210,9 +214,17 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
               const a = actualNodes.find((node) => node.character.id === edge.from.id);
               const b = actualNodes.find((node) => node.character.id === edge.to.id);
               if (!a || !b) return null;
-              const midX = (a.x + b.x) / 2;
-              const midY = (a.y + b.y) / 2 - 4;
-              const path = `M ${a.x} ${a.y} Q ${midX} ${midY} ${b.x} ${b.y}`;
+              const dx = b.x - a.x;
+              const dy = b.y - a.y;
+              const distance = Math.hypot(dx, dy) || 1;
+              const inset = 6.2;
+              const startX = a.x + (dx / distance) * inset;
+              const startY = a.y + (dy / distance) * inset;
+              const endX = b.x - (dx / distance) * inset;
+              const endY = b.y - (dy / distance) * inset;
+              const midX = (startX + endX) / 2;
+              const midY = (startY + endY) / 2;
+              const path = `M ${startX} ${startY} L ${endX} ${endY}`;
               const isHovered = hoveredEdgeId === edge.id;
               return <g key={edge.id} onMouseEnter={() => setHoveredEdgeId(edge.id)} onMouseLeave={() => setHoveredEdgeId(null)}>
                 <path d={path} className={`relationship-line ${isHovered ? "is-hovered" : ""}`} style={{ stroke: relationshipColor(edge.kinds[0] ?? "Other") }} />
@@ -240,9 +252,9 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
       <aside className="relationship-inspector">
         <div className="relationship-inspector-top"><span>CONNECTION DETAILS</span><Heart size={16}/></div>
         {selectedCharacter ? <>
-          <div className="relationship-inspector-character-card" style={{ "--character-accent": characterAccentColor(selectedCharacter.accent) } as CSSProperties}>
-            <div className="relationship-inspector-character-art"><CharacterPortraitArt initials={selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()} imageSrc={selectedCharacter.portraitResourceId ? portraitUrls[selectedCharacter.portraitResourceId] : null} alt={selectedCharacter.name} fit={selectedCharacter.portraitFit ?? "contain"} positionX={selectedCharacter.portraitPositionX ?? 50} positionY={selectedCharacter.portraitPositionY ?? 50} zoom={selectedCharacter.portraitZoom ?? 100} fadeEdges /></div>
-            <div className="relationship-inspector-character-copy"><h2>{selectedCharacter.name}</h2><p className="relationship-inspector-role">{selectedCharacter.subtitle || "\u00a0"}</p><div className="relationship-inspector-character-tags">{selectedCharacter.tags.slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}</div></div>
+          <div className="relationship-inspector-character-card character-card" style={{ "--character-accent": characterAccentColor(selectedCharacter.accent), "--character-accent-color": characterAccentColor(selectedCharacter.accent) } as CSSProperties}>
+            <div className="relationship-inspector-character-art character-card-art"><CharacterPortraitArt initials={selectedCharacter.initials || selectedCharacter.name.slice(0,2).toUpperCase()} imageSrc={selectedCharacter.portraitResourceId ? portraitUrls[selectedCharacter.portraitResourceId] : null} alt={selectedCharacter.name} fit={selectedCharacter.portraitFit ?? "contain"} positionX={selectedCharacter.portraitPositionX ?? 50} positionY={selectedCharacter.portraitPositionY ?? 50} zoom={selectedCharacter.portraitZoom ?? 100} fadeEdges /></div>
+            <div className="relationship-inspector-character-copy character-card-copy"><strong>{selectedCharacter.name}</strong><span>{selectedCharacter.subtitle || "\u00a0"}</span><div className="relationship-inspector-character-tags character-card-tags">{selectedCharacter.tags.slice(0, 4).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </div>
           <div className="relationship-inspector-rule"/>
           <div className="relationship-inspector-label">CONNECTED TO · {selectedEdges.length.toString().padStart(2, "0")}</div>
