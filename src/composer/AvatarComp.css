@@ -789,3 +789,39 @@
   -webkit-mask-composite: source-over;
   filter: none;
 }
+
+
+/* Final fix for the holographic portrait bands:
+   keep the portrait layer unmasked and fade it with transparent overlays on the art area.
+   This avoids WebView mask compositing and the hard horizontal edges it can produce. */
+.avatar-preview-art.has-portrait-image {
+  background: color-mix(in srgb, var(--character-accent, #b4befe) 12%, #292b31);
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade,
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
+  mask: none !important;
+  -webkit-mask: none !important;
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade {
+  overflow: hidden;
+}
+.avatar-preview-art.has-portrait-image::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, #292b31 94%, transparent) 0%,
+    color-mix(in srgb, #292b31 68%, transparent) 7%,
+    transparent 22%,
+    transparent 72%,
+    color-mix(in srgb, #292b31 28%, transparent) 80%,
+    color-mix(in srgb, #292b31 76%, transparent) 91%,
+    #292b31 100%
+  );
+}
+.avatar-preview-art.has-portrait-image .avatar-preview-image-layer-fade .avatar-preview-image {
+  filter: none !important;
+}
