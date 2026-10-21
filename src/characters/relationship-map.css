@@ -38,7 +38,7 @@
 
 
 /* Higher-contrast links remain legible on both light and dark themes. */
-.relationship-line{stroke-width:1.8px;stroke-dasharray:none;opacity:.72;filter:drop-shadow(0 0 1px color-mix(in srgb,var(--ctp-text) 18%,transparent));transition:opacity .16s,stroke-width .16s,filter .16s}
+.relationship-line{stroke-width:2px;stroke-dasharray:none;opacity:.9;filter:drop-shadow(0 0 1px color-mix(in srgb,var(--ctp-text) 40%,transparent));transition:opacity .16s,stroke-width .16s,filter .16s}
 .relationship-line.is-hovered{opacity:1;stroke-width:3.4px;filter:drop-shadow(0 0 2px currentColor)}
 .relationship-line-hit-area{stroke-width:9px;pointer-events:stroke;cursor:help}
 .relationship-edge-tooltip{padding:7px 11px;border-width:1.5px;box-shadow:0 8px 24px #0004}
