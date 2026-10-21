@@ -958,3 +958,22 @@
 .avatar-preview-details h2 {
   z-index: 6;
 }
+
+
+/* Accent-tinted holographic edge fades, kept behind the character name. */
+.avatar-preview-art.has-portrait-image::after {
+  z-index: 3;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--character-accent, #b4befe) 78%, #292b31) 0%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 58%, #292b31) 7%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 34%, #292b31) 13%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 12%, transparent) 20%,
+    transparent 28%,
+    transparent 70%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 12%, transparent) 78%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 34%, #292b31) 85%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 60%, #292b31) 92%,
+    color-mix(in srgb, var(--character-accent, #b4befe) 80%, #292b31) 100%
+  );
+}
