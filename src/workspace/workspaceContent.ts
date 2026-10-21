@@ -10,6 +10,7 @@ export type WorkspaceMessage = {
   content: string;
   avatar: string;
   avatarAssetPath?: string | null;
+  characterId?: string;
   expression?: string;
   history?: string[];
   source?: string;
