@@ -2550,3 +2550,15 @@ html[data-animations="off"] .message.message-entering { animation: none !importa
 body.sidebar-resizing { cursor: col-resize !important; user-select: none !important; }
 body.sidebar-resizing * { cursor: col-resize !important; user-select: none !important; }
 @media (prefers-reduced-motion: reduce) { .sidebar-resize-handle { transition: none; } }
+
+
+/* Keep profile text and its title badge responsive to narrow sidebar widths. */
+.sidebar-profile-trigger,
+.sidebar-profile-trigger .profile-copy,
+.sidebar-profile-trigger .profile-name,
+.sidebar-profile-trigger .profile-status { min-width: 0; }
+.sidebar-profile-trigger .profile-name,
+.sidebar-profile-trigger .profile-status { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-profile-trigger .sidebar-special-title { display: inline-flex; max-width: 100%; min-width: 0; overflow: hidden; vertical-align: bottom; }
+.sidebar-profile-trigger .sidebar-special-title > span:not(.special-title-particles) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-profile-trigger .sidebar-special-title .special-title-symbol { flex: 0 0 auto; }
