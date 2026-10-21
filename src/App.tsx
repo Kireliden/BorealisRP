@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { usePreferences } from "./preferences/PreferencesContext";
 import ProfileModal from "./profile/ProfileModal";
-import { profileMediaSource } from "./profile/profileMedia";
+import { getSidebarAvatarThumbnailPath, profileMediaSource } from "./profile/profileMedia";
 import "./themes/themes.css";
 import "./App.css";
 import "./composer/Composer.css";
@@ -181,6 +182,15 @@ function sanitiseHtml(html: string) {
   });
   return output.innerHTML;
 }function App() {
+  const [sidebarAvatarThumbnailUrl, setSidebarAvatarThumbnailUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const applyThumbnail = (path: string) => setSidebarAvatarThumbnailUrl(path ? `${convertFileSrc(path)}?v=${Date.now()}` : null);
+    void getSidebarAvatarThumbnailPath().then((path) => { if (!cancelled) applyThumbnail(path); }).catch(() => { if (!cancelled) setSidebarAvatarThumbnailUrl(null); });
+    const handleThumbnailUpdate = (event: Event) => applyThumbnail((event as CustomEvent<string>).detail);
+    window.addEventListener("brd-sidebar-avatar-thumbnail-updated", handleThumbnailUpdate);
+    return () => { cancelled = true; window.removeEventListener("brd-sidebar-avatar-thumbnail-updated", handleThumbnailUpdate); };
+  }, []);
   const [scenes, setScenes] = useState<WorkspaceScene[]>([]);
   const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
   const [categories, setCategories] = useState<WorkspaceCategory[]>([]);
@@ -1106,7 +1116,7 @@ function sanitiseHtml(html: string) {
 <div className="sidebar-footer">
   <button className="sidebar-profile-trigger" type="button" onClick={() => setIsProfileOpen(true)} title="Open your profile" aria-label="Open your profile">
     <div className={`profile-avatar frame-border-${preferences.profile.frameStyle}`}>
-      {profileMediaSource(preferences.profile.avatarAssetPath) ? <img src={profileMediaSource(preferences.profile.avatarAssetPath) ?? undefined} alt="" /> : <span>{preferences.profile.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
+      {profileMediaSource(preferences.profile.avatarAssetPath) ? <img src={sidebarAvatarThumbnailUrl ?? profileMediaSource(preferences.profile.avatarAssetPath) ?? undefined} alt="" /> : <span>{preferences.profile.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
     </div>
     <div className="profile-copy">
       <span className="profile-name">{preferences.profile.displayName || "Your profile"}</span>
