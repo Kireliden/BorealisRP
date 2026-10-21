@@ -232,6 +232,7 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
         (value): value is string => isString(value) && value.length <= 80,
         defaults.profile.title,
       ),
+      showSpecialTitle: validOr(profile.showSpecialTitle, isBoolean, defaults.profile.showSpecialTitle),
       motto: validOr(
         profile.motto,
         (value): value is string => isString(value) && value.length <= 160,
