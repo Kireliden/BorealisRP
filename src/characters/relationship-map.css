@@ -171,3 +171,22 @@
 .relationship-resource-modal-image img{display:block;width:100%;height:100%;object-fit:cover}
 .relationship-resource-modal-grid>button strong{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
 @media(max-width:560px){.relationship-resource-modal-backdrop{padding:12px}.relationship-resource-modal{padding:14px}.relationship-resource-modal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Keep the map viewport and Connection Details equal in height, while drawing the
+   relationship graph inside a centred square so its ring stays truly circular. */
+.relationship-workspace{align-items:stretch}
+.relationship-map-column{position:relative;min-height:0;height:100%}
+.relationship-map-column .relationship-canvas{flex:1 1 auto;width:100%;height:100%;min-height:0}
+.relationship-graph.relationship-real-graph{inset:auto;top:50%;left:50%;width:min(100cqw,100cqh);height:min(100cqw,100cqh);transform-origin:center center}
+.relationship-lines{preserveAspectRatio:xMidYMid meet}
+.relationship-map-background-controls{position:absolute;left:14px;right:14px;bottom:12px;margin:0;pointer-events:none}
+.relationship-map-background-controls>button,.relationship-map-background-options{pointer-events:auto}
+.relationship-map-background-controls>button{box-shadow:0 4px 16px color-mix(in srgb,var(--ctp-crust) 24%,transparent)}
+.relationship-map-background-options{max-width:100%;box-shadow:0 8px 24px color-mix(in srgb,var(--ctp-crust) 28%,transparent)}
+@media(max-width:760px){
+  .relationship-map-column{height:auto}
+  .relationship-map-column .relationship-canvas{height:520px;min-height:520px;flex:none}
+  .relationship-graph.relationship-real-graph{width:min(100cqw,100cqh);height:min(100cqw,100cqh)}
+  .relationship-map-background-controls{left:10px;right:10px;bottom:10px;margin:0}
+}
