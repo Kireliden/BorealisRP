@@ -172,6 +172,7 @@ export default function CharactersPage({ onClose }: Props) {
         portraitUrls={portraitUrls}
         onClose={() => { setSelectedId(null); setIsCreating(false); }}
         onSave={save}
+        onRelationshipKindsChanged={updateRelationshipKinds}
         onDelete={removeSelected}
       />}
     </main>
