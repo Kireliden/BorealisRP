@@ -1424,15 +1424,21 @@ function sanitiseHtml(html: string) {
             >×</button>
             <div className="avatar-preview-card-inner">
               <div className="avatar-preview-topline">BOREALIS · CHARACTER FILE</div>
-              <div className="avatar-preview-art">
-                <div className="avatar-preview-orbit avatar-preview-orbit-one" />
-                <div className="avatar-preview-orbit avatar-preview-orbit-two" />
+              <div className={`avatar-preview-art ${(previewCharacter.avatarAssetPath || (previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId]) || previewCharacter.name === "Keira") ? "has-portrait-image" : "has-portrait-initials"}`}>
+                {!(previewCharacter.avatarAssetPath || (previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId]) || previewCharacter.name === "Keira") && <>
+                  <div className="avatar-preview-orbit avatar-preview-orbit-one" />
+                  <div className="avatar-preview-orbit avatar-preview-orbit-two" />
+                </>}
                 {previewCharacter.avatarAssetPath ? (
-                  <img className="avatar-preview-image profile-media-image" src={profileMediaSource(previewCharacter.avatarAssetPath) ?? undefined} alt={previewCharacter.name} />
+                  <div className="avatar-preview-image-layer">
+                    <img className="avatar-preview-image profile-media-image" src={profileMediaSource(previewCharacter.avatarAssetPath) ?? undefined} alt={previewCharacter.name} />
+                  </div>
                 ) : previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId] ? (
-                  <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: "cover", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
+                  <div className="avatar-preview-image-layer">
+                    <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: "cover", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
+                  </div>
                 ) : previewCharacter.name === "Keira" ? (
-                  <img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" />
+                  <div className="avatar-preview-image-layer"><img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" /></div>
                 ) : (
                   <span className="avatar-preview-initials">{previewCharacter.initials}</span>
                 )}
