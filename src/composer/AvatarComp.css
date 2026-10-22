@@ -1051,3 +1051,10 @@
   background: var(--ctp-base);
   border-color: var(--border);
 }
+
+
+/* Photo expressions can contain real alpha transparency. Unlike OpenMoji
+   mask spans, the image itself must not paint an accent-coloured backdrop. */
+.character-portrait .character-portrait-expression-photo {
+  background-color: transparent;
+}
