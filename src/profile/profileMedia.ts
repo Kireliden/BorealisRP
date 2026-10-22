@@ -23,6 +23,9 @@ export async function chooseProfileMedia(): Promise<string | null> {
 /** Create a high-quality sidebar-only thumbnail; the original and GIF animation stay untouched elsewhere. */
 export async function saveSidebarAvatarThumbnail(path: string, positionX: number, positionY: number, zoom: number): Promise<string> {
   const image = new Image();
+  // Tauri serves imported media through its asset protocol. Request CORS access
+  // before assigning src so drawing the image does not taint the export canvas.
+  image.crossOrigin = "anonymous";
   image.src = profileMediaSource(path) ?? "";
   await image.decode();
   const width = 168, height = 210;
