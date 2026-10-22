@@ -46,7 +46,10 @@ export default function ProfileSettings() {
     if (!draft.displayName.trim()) return;
     try {
       setError("");
-      if (draft.avatarAssetPath) {
+      // Canvas thumbnails capture only one GIF frame, so animated portraits use
+      // the original image in the sidebar instead of a static thumbnail.
+      const isAnimatedGif = draft.avatarAssetPath?.split(/[?#]/, 1)[0].toLocaleLowerCase().endsWith(".gif") ?? false;
+      if (draft.avatarAssetPath && !isAnimatedGif) {
         const thumbnailPath = await saveSidebarAvatarThumbnail(draft.avatarAssetPath, draft.avatarPositionX, draft.avatarPositionY, draft.avatarZoom);
         window.dispatchEvent(new CustomEvent("brd-sidebar-avatar-thumbnail-updated", { detail: thumbnailPath }));
       } else {
