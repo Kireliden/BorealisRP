@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Plus, Search, Tag, X, GitFork, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Plus, Search, Tag, X, GitFork, LayoutGrid, Sparkles } from "lucide-react";
 import { loadCharacters, saveCharacters } from "./characters.storage";
 import { characterAccentColor, createEmptyCharacterDraft, makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
 import CharacterEditorModal from "./CharacterEditorModal";
 import "./characters.css";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import RelationshipMap from "./RelationshipMap";
+import ExpressionManager from "./ExpressionManager";
 import { getResourceBlob, listResources } from "../resources/resources.storage";
 import type { ResourceRecord } from "../resources/resources.types";
 
@@ -20,7 +21,7 @@ export default function CharactersPage({ onClose }: Props) {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name-asc" | "name-desc" | "updated">("newest");
   const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
-  const [viewMode, setViewMode] = useState<"characters" | "map">("characters");
+  const [viewMode, setViewMode] = useState<"characters" | "expressions" | "map">("characters");
   useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
   useEffect(() => {
     let cancelled = false;
@@ -157,8 +158,8 @@ export default function CharactersPage({ onClose }: Props) {
       <button className="library-close" onClick={onClose} type="button" aria-label="Close Characters"><X size={18} /></button>
     </header>
     <main className="characters-layout">
-      <div className="characters-view-switch" role="tablist" aria-label="Character views"><button type="button" role="tab" aria-selected={viewMode === "characters"} className={viewMode === "characters" ? "active" : ""} onClick={() => setViewMode("characters")}><LayoutGrid size={15}/> Characters</button><button type="button" role="tab" aria-selected={viewMode === "map"} className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")}><GitFork size={15}/> Relationship Map</button></div>
-      {viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} imageResources={imageResources} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : <section className="characters-library">
+      <div className="characters-view-switch" role="tablist" aria-label="Character views"><button type="button" role="tab" aria-selected={viewMode === "characters"} className={viewMode === "characters" ? "active" : ""} onClick={() => setViewMode("characters")}><LayoutGrid size={15}/> Characters</button><button type="button" role="tab" aria-selected={viewMode === "expressions"} className={viewMode === "expressions" ? "active" : ""} onClick={() => setViewMode("expressions")}><Sparkles size={15}/> Character Expressions</button><button type="button" role="tab" aria-selected={viewMode === "map"} className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")}><GitFork size={15}/> Mental Map</button></div>
+      {viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} imageResources={imageResources} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : viewMode === "expressions" ? <div className="characters-expressions-view"><ExpressionManager onClose={() => setViewMode("characters")} /></div> : <section className="characters-library">
         <div className="library-eyebrow">GLOBAL ATELIER · {characters.length.toString().padStart(2, "0")} CHARACTERS</div>
         <div className="library-heading-row"><div><h1>Characters</h1><p>A cast of characters, ready for any story.</p></div><button className="library-primary" type="button" onClick={startCreate}><Plus size={16} /> New character</button></div>
         <div className="character-library-tools"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search names, descriptions and tags…" /></label><label className="character-sort-control"><span>Sort by</span><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}><option value="newest">Recently created</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="updated">Recently updated</option></select></label></div>
