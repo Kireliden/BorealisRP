@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X, Sparkles } from "lucide-react";
 import { deleteResource, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
 import ExpressionManager from "../characters/ExpressionManager";
 import type { ResourceRecord } from "./resources.types";
@@ -33,7 +33,7 @@ export default function ResourcesPage({ onClose }: Props) {
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
   const [bulkTagDraft, setBulkTagDraft] = useState("");
   const [error, setError] = useState("");
-  const [showExpressionManager, setShowExpressionManager] = useState(false);
+  const [activeTab, setActiveTab] = useState<"library" | "expressions">("library");
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function refresh() { setResources(await listResources()); }
@@ -143,8 +143,6 @@ export default function ResourcesPage({ onClose }: Props) {
     return <FileIcon size={20} />;
   }
 
-  if (showExpressionManager) return <ExpressionManager onClose={() => setShowExpressionManager(false)} />;
-
   return <div className="library-overlay">
     <header className="library-topbar">
       <button className="library-back" onClick={onClose} type="button"><ArrowLeft size={16} /> Back to Workspace</button>
@@ -152,9 +150,10 @@ export default function ResourcesPage({ onClose }: Props) {
       <button className="library-close" onClick={onClose} type="button" aria-label="Close Resources"><X size={18} /></button>
     </header>
     <main className="resources-layout">
-      <section className="resources-main">
+      <div className="characters-view-switch resources-view-switch" role="tablist" aria-label="Resource views"><button type="button" role="tab" aria-selected={activeTab === "library"} className={activeTab === "library" ? "active" : ""} onClick={() => setActiveTab("library")}><FileImage size={15}/> Resources</button><button type="button" role="tab" aria-selected={activeTab === "expressions"} className={activeTab === "expressions" ? "active" : ""} onClick={() => setActiveTab("expressions")}><Sparkles size={15}/> Character Expressions</button></div>
+      {activeTab === "expressions" ? <div className="resources-expression-tab"><ExpressionManager onClose={() => setActiveTab("library")} /></div> : <section className="resources-main">
         <div className="library-eyebrow">GLOBAL ATELIER · {resources.length.toString().padStart(2, "0")} ASSETS</div>
-        <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button type="button" onClick={() => setShowExpressionManager(true)}>Character Expressions</button><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
+        <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
         <div className={`resource-dropzone ${dragging ? "is-dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); if (event.dataTransfer.files.length) void addFiles(event.dataTransfer.files); }}><Upload size={19} /><div><strong>Drop anything you want to keep close</strong><span>Images, audio, video and other files · stored in this app's local library</span></div><button type="button" onClick={() => inputRef.current?.click()}>Browse files</button></div>
         {error && <p className="resource-error">{error}</p>}
