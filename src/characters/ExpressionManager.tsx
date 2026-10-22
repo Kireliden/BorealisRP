@@ -4,11 +4,12 @@ import { loadCharacters } from "./characters.storage";
 import { CHARACTER_EXPRESSION_SLOTS, saveReviewedCharacterExpressions, type CharacterExpressionKey } from "./characterExpressions.storage";
 import "./expressionManager.css";
 
+type Props = { onClose: () => void };
 type Slot = { key: CharacterExpressionKey; label: string; blob: Blob | null; url: string | null; fileName: string };
 type Step = "welcome" | "templates" | "character" | "individual" | "sheet" | "review";
 const blank = (): Slot[] => CHARACTER_EXPRESSION_SLOTS.map(s => ({ ...s, blob: null, url: null, fileName: "" }));
 
-export default function ExpressionManager() {
+export default function ExpressionManager({ onClose }: Props) {
  const characters = loadCharacters().filter(c => c.name.trim());
  const [step,setStep] = useState<Step>("welcome");
  const [characterId,setCharacterId] = useState("");
@@ -54,7 +55,7 @@ export default function ExpressionManager() {
   catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}
  }
  const back=(to:Step)=><button className="expression-back" onClick={()=>setStep(to)}><ArrowLeft size={15}/> Back</button>;
- return <div className="expression-manager"><nav className="expression-steps"><strong>✦ Expression Manager</strong><p>Character artwork tools</p>{(["welcome","templates","character","individual","sheet","review"] as Step[]).map((s,i)=><button className={step===s?"active":""} key={s} onClick={()=>setStep(s)}>{i+1}. {s==="welcome"?"Welcome":s==="templates"?"Templates":s==="character"?"Character":s==="individual"?"Individual files":s==="sheet"?"Expression sheet":"Review & save"}</button>)}</nav><main className="expression-main">
+ return <div className="expression-manager"><nav className="expression-steps"><button className="expression-back" onClick={onClose}><ArrowLeft size={15}/> Back to Resources</button><strong>✦ Expression Manager</strong><p>Character artwork tools</p>{(["welcome","templates","character","individual","sheet","review"] as Step[]).map((s,i)=><button className={step===s?"active":""} key={s} onClick={()=>setStep(s)}>{i+1}. {s==="welcome"?"Welcome":s==="templates"?"Templates":s==="character"?"Character":s==="individual"?"Individual files":s==="sheet"?"Expression sheet":"Review & save"}</button>)}</nav><main className="expression-main">
  {step==="welcome"&&<><small>BOREALIS · CHARACTER TOOLS</small><h1>Welcome to the Expression Manager</h1><p>What are you looking for?</p><div className="expression-choice-grid"><button onClick={()=>setStep("templates")}><FileImage/><b>Templates</b><span>Download guides for your artwork.</span></button><button onClick={()=>setStep("character")}><Upload/><b>Edit character expressions</b><span>Import, review and save six expressions.</span></button></div></>}
  {step==="templates"&&<>{back("welcome")}<h1>Expression templates</h1><p>Download a blank canvas for individual files or a six-cell sheet. Individual canvas: 512 × 640. Sheet: 1536 × 1280, 3 columns × 2 rows.</p><div className="expression-choice-grid"><button onClick={()=>downloadTemplate(false)}><FileImage/><b>Individual Template</b><span>Save a blank 512 × 640 canvas.</span></button><button onClick={()=>downloadTemplate(true)}><FileImage/><b>Sheet Template</b><span>Save a labelled 3 × 2 sheet.</span></button></div></>}
  {step==="character"&&<>{back("welcome")}<h1>Choose a character</h1><label className="expression-field">Character<select value={characterId} onChange={e=>setCharacterId(e.target.value)}><option value="">Select a character…</option>{characters.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><div className="expression-choice-grid"><button disabled={!characterId} onClick={()=>setStep("individual")}><Upload/><b>Individual files</b><span>Import images and assign them in review.</span></button><button disabled={!characterId} onClick={()=>setStep("sheet")}><FileImage/><b>Expression sheet</b><span>Automatically crop a 3 × 2 sheet.</span></button></div></>}
