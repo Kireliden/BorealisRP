@@ -151,3 +151,6 @@
     grid-template-columns: 1fr;
   }
 }
+
+.appearance-range-control{display:flex;align-items:center;gap:12px;min-width:180px}.appearance-range-control input{width:150px;accent-color:var(--accent);cursor:pointer}.appearance-range-control output{min-width:38px;color:var(--ctp-text);font-size:12px;font-variant-numeric:tabular-nums;text-align:right}.appearance-chat-font-size{padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+@media(max-width:520px){.appearance-range-control{width:100%}.appearance-range-control input{flex:1}}
