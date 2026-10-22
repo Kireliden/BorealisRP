@@ -143,7 +143,7 @@ export default function ResourcesPage({ onClose }: Props) {
     return <FileIcon size={20} />;
   }
 
-  if (showExpressionManager) return <ExpressionManager />;
+  if (showExpressionManager) return <ExpressionManager onClose={() => setShowExpressionManager(false)} />;
 
   return <div className="library-overlay">
     <header className="library-topbar">
