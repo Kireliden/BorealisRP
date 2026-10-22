@@ -15,5 +15,3 @@
 .resource-card-tags i:nth-child(5n+3){--tag-colour:var(--ctp-pink)}
 .resource-card-tags i:nth-child(5n+4){--tag-colour:var(--ctp-teal)}
 .resource-card-tags i:nth-child(5n){--tag-colour:var(--ctp-peach)}
-
-.resources-view-switch{flex:0 0 auto;margin:14px 0 0 20px;align-self:flex-start}.resources-layout{position:relative;flex-direction:column}.resources-main{min-height:0}.resources-expression-tab{flex:1;min-height:0;overflow:auto}.resources-expression-tab .expression-manager{min-height:100%;height:auto}
