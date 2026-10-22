@@ -151,7 +151,8 @@ export default function ResourcesPage({ onClose }: Props) {
     </header>
     <main className="resources-layout">
       <div className="characters-view-switch resources-view-switch" role="tablist" aria-label="Resource views"><button type="button" role="tab" aria-selected={activeTab === "library"} className={activeTab === "library" ? "active" : ""} onClick={() => setActiveTab("library")}><FileImage size={15}/> Resources</button><button type="button" role="tab" aria-selected={activeTab === "expressions"} className={activeTab === "expressions" ? "active" : ""} onClick={() => setActiveTab("expressions")}><Sparkles size={15}/> Character Expressions</button></div>
-      {activeTab === "expressions" ? <div className="resources-expression-tab"><ExpressionManager onClose={() => setActiveTab("library")} /></div> : <section className="resources-main">
+      {activeTab === "expressions" ? <div className="resources-expression-tab"><ExpressionManager onClose={() => setActiveTab("library")} /></div> : <>
+      <section className="resources-main">
         <div className="library-eyebrow">GLOBAL ATELIER · {resources.length.toString().padStart(2, "0")} ASSETS</div>
         <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
@@ -175,8 +176,7 @@ export default function ResourcesPage({ onClose }: Props) {
         <button className="library-primary resource-save-tags" type="button" onClick={() => void saveTags()}>Save tags</button>
         <button className="library-danger resource-delete" type="button" onClick={() => void remove(selected)}><Trash2 size={14} /> Delete resource</button>
       </aside>}
-      </section>
-      </section>}
+      </>}
     </main>
   </div>;
 }
