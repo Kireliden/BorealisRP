@@ -1043,3 +1043,11 @@
   -webkit-mask-size: contain;
   filter: drop-shadow(0 5px 16px color-mix(in srgb, var(--character-accent, var(--accent)) 24%, transparent));
 }
+
+
+/* Transparent expression PNGs must reveal a theme surface, not the
+   character-accent gradient used by the normal portrait. */
+.character-portrait:has(.character-portrait-expression-photo) {
+  background: var(--ctp-base);
+  border-color: var(--border);
+}
