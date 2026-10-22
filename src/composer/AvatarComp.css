@@ -1002,27 +1002,44 @@
 }
 
 
-/* Custom expressions are full-colour artwork, not monochrome masks. */
-.character-portrait-expression-photo{position:absolute;right:10px;bottom:10px;z-index:1;display:block;width:58px;height:72px;object-fit:contain;object-position:center;border-radius:8px;filter:drop-shadow(0 2px 5px rgb(0 0 0 / 28%));pointer-events:none}
+/* Custom expression templates are the portrait artwork itself.
+   Keep them independent from the character portrait's zoom/position settings. */
+.character-portrait-expression-photo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+  transform-origin: center;
+  border-radius: 0;
+  filter: drop-shadow(0 5px 16px color-mix(in srgb, var(--character-accent, var(--accent)) 24%, transparent));
+  pointer-events: none;
+}
 .message-avatar{position:relative;overflow:hidden}
 .message-avatar-expression-photo{position:absolute;right:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:center;z-index:2;pointer-events:none}
 
-
-/* The selected expression is the portrait itself, not a corner thumbnail. */
+/* A selected expression replaces the base portrait in Avatar Composer.
+   Expression artwork uses its own centred, untransformed 3:4 frame. */
 .character-portrait:has(.character-portrait-expression) .character-portrait-image,
 .character-portrait:has(.character-portrait-expression) .character-portrait-initials { opacity: 0; }
 .character-portrait .character-portrait-expression {
-  inset: 8px;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  width: auto;
-  height: auto;
-  right: 8px;
-  bottom: 8px;
+  display: block;
+  width: 100%;
+  height: 100%;
   background-color: var(--character-accent, var(--accent));
-  filter: drop-shadow(0 5px 16px color-mix(in srgb, var(--character-accent, var(--accent)) 24%, transparent));
-}
-.character-portrait .character-portrait-expression-photo {
-  object-fit: contain;
-  border-radius: 0;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
   filter: drop-shadow(0 5px 16px color-mix(in srgb, var(--character-accent, var(--accent)) 24%, transparent));
 }
