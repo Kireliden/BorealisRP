@@ -176,6 +176,7 @@ export default function ResourcesPage({ onClose }: Props) {
         <button className="library-primary resource-save-tags" type="button" onClick={() => void saveTags()}>Save tags</button>
         <button className="library-danger resource-delete" type="button" onClick={() => void remove(selected)}><Trash2 size={14} /> Delete resource</button>
       </aside>}
+      </section>
       </>}
     </main>
   </div>;
