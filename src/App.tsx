@@ -315,8 +315,9 @@ function sanitiseHtml(html: string) {
 
   useEffect(() => {
     let cancelled = false;
-    const urls: Record<string, string> = {};
+    let activeUrls: string[] = [];
     async function loadCustomExpressions() {
+      const urls: Record<string, string> = {};
       try {
         const libraryCharacters = loadCharacters();
         await Promise.all(libraryCharacters.map(async (item) => {
@@ -325,16 +326,25 @@ function sanitiseHtml(html: string) {
             if (blob) urls[`${item.id}:${expressions[index].emoji}`] = URL.createObjectURL(blob);
           }));
         }));
-        if (!cancelled) setCustomExpressionUrls(urls);
-        else Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+        if (cancelled) {
+          Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+          return;
+        }
+        activeUrls.forEach((url) => URL.revokeObjectURL(url));
+        activeUrls = Object.values(urls);
+        setCustomExpressionUrls(urls);
       } catch (reason) {
+        Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
         console.error("Could not load custom character expressions.", reason);
       }
     }
+    const refreshExpressions = () => { void loadCustomExpressions(); };
+    window.addEventListener("brd-character-expressions-updated", refreshExpressions);
     void loadCustomExpressions();
     return () => {
       cancelled = true;
-      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+      window.removeEventListener("brd-character-expressions-updated", refreshExpressions);
+      activeUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [characters]);
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
