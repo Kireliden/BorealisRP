@@ -42,3 +42,12 @@
 .expression-save-actions button:disabled { opacity:.45; }
 .expression-save-actions p { display:flex; align-items:center; gap:6px; color:var(--ctp-green); font-size:11px; }
 @media(max-width:620px) { .expression-manager { border-radius:10px; } .expression-steps { border-right:0; border-bottom:1px solid var(--border); } .expression-choice-grid button { min-height:120px; padding:12px; } }
+
+
+/* Custom native file picker buttons to match Borealis UI */
+.expression-manager input[type="file"] { display:block; width:100%; max-width:100%; min-width:0; padding:8px; border:1px solid var(--border); border-radius:9px; background:var(--app-bg); color:var(--muted); font-family:inherit; font-size:10px; cursor:pointer; }
+.expression-manager input[type="file"]::file-selector-button { margin:0 10px 0 0; padding:8px 12px; border:1px solid color-mix(in srgb,var(--accent) 55%,var(--border)); border-radius:7px; background:color-mix(in srgb,var(--accent) 16%,var(--surface)); color:var(--ctp-text); font:inherit; font-size:10px; font-weight:700; cursor:pointer; transition:background .16s,border-color .16s; }
+.expression-manager input[type="file"]::file-selector-button:hover { border-color:var(--accent); background:color-mix(in srgb,var(--accent) 27%,var(--surface)); }
+.expression-manager input[type="file"]:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.expression-upload { gap:10px; }
+.expression-upload input[type="file"] { text-align:left; }
