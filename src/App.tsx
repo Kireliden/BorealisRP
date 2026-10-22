@@ -349,7 +349,7 @@ function sanitiseHtml(html: string) {
     };
   }, [characters]);
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
-  const [activeLibraryPage, setActiveLibraryPage] = useState<"characters" | "resources" | null>(null);
+  const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | null>(null);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
@@ -1091,7 +1091,7 @@ function sanitiseHtml(html: string) {
         <aside className="sidebar">
           <div className="brand"><div className="brand-mark" aria-label="Borealis moon"><svg className="borealis-moon-mark" viewBox="0 0 72 72" role="img" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/></svg></div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
           <div className="workspace-switcher-row"><div className="workspace-switcher-slot"><WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} /></div><button type="button" className="workspace-search-button" title="Search characters and resources" aria-label="Search global libraries" onClick={() => setIsGlobalSearchOpen(true)}><Search size={16} /></button></div>
-          <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className="nav-item"><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button></div>
+          <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className={`nav-item ${activeLibraryPage === "projects" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("projects")}><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button></div>
           <div className={`sidebar-section scenes-section ${isScenesCollapsed ? "scenes-collapsed" : ""}`}>
             <div className="section-heading roleplay-space-heading">
               <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
@@ -1578,7 +1578,7 @@ function sanitiseHtml(html: string) {
           onSelect={(workspace: WorkspaceInfo) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
         />
       )}
-      {activeLibraryPage === "characters" && <CharactersPage onClose={() => { setActiveLibraryPage(null); const refreshed = charactersFromLibrary(); setCharacters(refreshed); if (!refreshed.some((item) => item.name === selectedCharacter)) setSelectedCharacter(refreshed[0]?.name ?? "You"); }} />}
+      {activeLibraryPage === "projects" && <section className="projects-coming-soon"><div className="projects-coming-soon-content"><span className="projects-coming-soon-eyebrow">BOREALIS · WORKSPACE</span><h1>Coming soon!</h1><p>Something lovely is taking shape.</p><svg className="projects-coming-soon-moon" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div></section>}{activeLibraryPage === "characters" && <CharactersPage onClose={() => { setActiveLibraryPage(null); const refreshed = charactersFromLibrary(); setCharacters(refreshed); if (!refreshed.some((item) => item.name === selectedCharacter)) setSelectedCharacter(refreshed[0]?.name ?? "You"); }} />}
       {activeLibraryPage === "resources" && <ResourcesPage onClose={() => setActiveLibraryPage(null)} />}
       {isGlobalSearchOpen && <GlobalSearch onClose={() => setIsGlobalSearchOpen(false)} onOpenCharacters={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("characters"); }} onOpenResources={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("resources"); }} />}
     </main>
