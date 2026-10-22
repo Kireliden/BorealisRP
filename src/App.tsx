@@ -1249,7 +1249,7 @@ function sanitiseHtml(html: string) {
                     <CharacterPortraitArt
                       initials={character.initials}
                       imageSrc={character.avatarAssetPath ? profileMediaSource(character.avatarAssetPath) : characterResourcePortraitUrl}
-                      expressionImage={selectedCharacter !== "You" ? (customExpressionUrls[`${character.id}:${selectedExpression}`] ?? expressions.find((expression) => expression.emoji === selectedExpression)?.image) : null}
+                      expressionImage={selectedCharacter !== "You" ? (customExpressionUrls[`${character.id}:${selectedExpression}`] ?? null) : null}
                       expressionIsPhoto={selectedCharacter !== "You" && Boolean(customExpressionUrls[`${character.id}:${selectedExpression}`])}
                       expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
                       fit="cover"
