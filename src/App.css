@@ -2568,7 +2568,7 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
 
 
 /* Projects placeholder workspace */
-.projects-coming-soon { position:absolute; inset:0; z-index:20; display:grid; place-items:center; overflow:auto; padding:32px; background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 52%),var(--app-bg); color:var(--ctp-text); }
+.projects-coming-soon { position:absolute; inset:100px 0 0 var(--sidebar-width,272px); z-index:20; display:grid; place-items:center; overflow:auto; padding:32px; background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 52%),var(--app-bg); color:var(--ctp-text); }
 .projects-coming-soon-content { display:flex; flex-direction:column; align-items:center; max-width:440px; text-align:center; animation:projects-arrive .45s ease both; }
 .projects-coming-soon-eyebrow { color:var(--accent); font-size:9px; font-weight:800; letter-spacing:2px; }
 .projects-coming-soon h1 { margin:14px 0 8px; font-size:clamp(28px,4vw,42px); letter-spacing:-1.5px; }
