@@ -66,6 +66,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   const [relationshipKinds, setRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
   const [relationshipTypeManagerOpen, setRelationshipTypeManagerOpen] = useState(false);
   const [reciprocalPromptOpen, setReciprocalPromptOpen] = useState(false);
+  const [deleteConfirmationStep, setDeleteConfirmationStep] = useState<0 | 1 | 2>(0);
   const [reciprocalIds, setReciprocalIds] = useState<string[]>([]);
   const patch = (changes: Partial<CharacterDraft>) => setDraft({ ...draft, ...changes });
   const portraitUrl = draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] ?? null : null;
@@ -231,7 +232,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
       <footer className="studio-footer">
         <div className="studio-save-hint">{!isEditing ? <><Check size={14} /> Character profile</> : draft.name.trim() ? <><Check size={14} /> {isCreating ? "Ready to create" : "Changes will be saved to this profile"}</> : "A character name is required"}</div>
         <div className="studio-footer-actions">
-          {isEditing && !isCreating && <button type="button" className="studio-delete-button" onClick={onDelete}><Trash2 size={14} /> Delete</button>}
+          {isEditing && !isCreating && (deleteConfirmationStep === 0 ? <button type="button" className="studio-delete-button" onClick={() => setDeleteConfirmationStep(1)}><Trash2 size={14} /> Delete</button> : deleteConfirmationStep === 1 ? <><span role="alert">Delete “{selected?.name}”? This cannot be undone.</span><button type="button" className="studio-delete-button" onClick={() => setDeleteConfirmationStep(2)}>Continue</button><button type="button" className="studio-cancel-button" onClick={() => setDeleteConfirmationStep(0)}>Cancel</button></> : <><span role="alert">Final confirmation: permanently delete “{selected?.name}” and its character profile?</span><button type="button" className="studio-delete-button" onClick={onDelete}>Yes, delete permanently</button><button type="button" className="studio-cancel-button" onClick={() => setDeleteConfirmationStep(0)}>Cancel</button></>)}
           {!isEditing ? <><button type="button" className="studio-cancel-button" onClick={onClose}>Close</button><button type="button" className="studio-save-button" onClick={() => { setOriginalDraft(draft); setIsEditing(true); }}><Pencil size={14} /> Edit character</button></> :
             <><button type="button" className="studio-cancel-button" onClick={() => { if (isCreating) onClose(); else { if (originalDraft) setDraft(originalDraft); setIsEditing(false); setOriginalDraft(null); } }}>Cancel</button><button type="button" className="studio-save-button" onClick={requestSave} disabled={!draft.name.trim() || draft.name.trim().toLocaleLowerCase() === "you"}>{isCreating ? "Create character" : "Save changes"}</button></>}
         </div>
