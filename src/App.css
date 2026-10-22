@@ -2565,3 +2565,18 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
 .sidebar-profile-trigger .sidebar-special-title { display: inline-flex; max-width: 100%; min-width: 0; overflow: hidden; vertical-align: bottom; }
 .sidebar-profile-trigger .sidebar-special-title > span:not(.special-title-particles) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-profile-trigger .sidebar-special-title .special-title-symbol { flex: 0 0 auto; }
+
+
+/* Projects placeholder workspace */
+.projects-coming-soon { position:absolute; inset:0; z-index:20; display:grid; place-items:center; overflow:auto; padding:32px; background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 52%),var(--app-bg); color:var(--ctp-text); }
+.projects-coming-soon-content { display:flex; flex-direction:column; align-items:center; max-width:440px; text-align:center; animation:projects-arrive .45s ease both; }
+.projects-coming-soon-eyebrow { color:var(--accent); font-size:9px; font-weight:800; letter-spacing:2px; }
+.projects-coming-soon h1 { margin:14px 0 8px; font-size:clamp(28px,4vw,42px); letter-spacing:-1.5px; }
+.projects-coming-soon p { margin:0; color:var(--muted); font-size:12px; line-height:1.6; }
+.projects-coming-soon-moon { width:54px; height:54px; margin-top:28px; color:var(--accent); filter:drop-shadow(0 0 18px color-mix(in srgb,var(--accent) 30%,transparent)); }
+@keyframes projects-arrive { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .projects-coming-soon-content { animation:none; } }
+
+/* Special title capsule visibility across light and dark themes */
+.sidebar-profile-trigger .sidebar-special-title { box-shadow:0 2px 7px color-mix(in srgb,var(--ctp-crust) 24%,transparent), inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent); }
+.sidebar-profile-trigger .special-title-particles { opacity:1; filter:drop-shadow(0 0 2px color-mix(in srgb,var(--accent) 75%,white)) drop-shadow(0 0 4px color-mix(in srgb,var(--accent) 45%,transparent)); }
