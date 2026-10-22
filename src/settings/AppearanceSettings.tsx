@@ -69,6 +69,27 @@ export default function AppearanceSettings() {
 
 
 
+      <label className="appearance-setting appearance-chat-font-size">
+        <span className="appearance-setting-copy">
+          <span className="appearance-setting-label">Chat Font Size</span>
+          <span className="appearance-setting-description">
+            Adjust the text size in roleplay messages.
+          </span>
+        </span>
+        <span className="appearance-range-control">
+          <input
+            type="range"
+            min={12}
+            max={24}
+            step={1}
+            value={preferences.appearance.chatFontSize}
+            onChange={(event) => updateAppearance({ chatFontSize: Number(event.target.value) })}
+            aria-label="Chat Font Size"
+          />
+          <output>{preferences.appearance.chatFontSize}px</output>
+        </span>
+      </label>
+
       <div className="appearance-section-heading">
         <h4>Interface Scale</h4>
         <p>Adjust the overall size of interface elements.</p>
