@@ -64,3 +64,8 @@
 .sidebar-special-title .special-title-particles.effect-layer--particles {
   inset: -15px -9px;
 }
+
+
+/* Increase particle definition against bright theme surfaces */
+.special-title-particles { opacity:1; }
+.special-title-particles * { filter:drop-shadow(0 0 2px currentColor); }
