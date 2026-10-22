@@ -362,3 +362,8 @@
 .character-sort-control select{max-width:175px;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--sidebar-bg);color:var(--ctp-text);font:inherit;font-size:11px;outline:0}
 .character-sort-control select:focus{border-color:var(--accent)}
 @media(max-width:600px){.character-library-tools{align-items:stretch;flex-direction:column}.character-sort-control{justify-content:space-between}.character-sort-control select{flex:1;max-width:none}}
+
+/* Keep the three character tools aligned in one compact navigation row. */
+.characters-view-switch{flex:0 0 auto;align-self:flex-start;margin:14px 0 0 20px}
+.characters-expressions-view{flex:1;min-width:0;min-height:0;overflow:auto}
+.characters-expressions-view .expression-manager{min-height:100%;height:auto}
