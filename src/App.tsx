@@ -14,6 +14,7 @@ import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
+import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
@@ -1257,7 +1258,7 @@ function sanitiseHtml(html: string) {
                       zoom={character.portraitZoom ?? 100}
                     />
                   </button>
-                  <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}>👤</button>
+                  <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}><span className="expression-image character-picker-image" style={{ maskImage: `url("${personSilhouette}")`, WebkitMaskImage: `url("${personSilhouette}")` }} aria-hidden="true" /></button>
                   {selectedCharacter !== "You" && <button
                     className="portrait-picker-button expression-picker-button"
                     type="button"
