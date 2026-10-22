@@ -1073,7 +1073,7 @@ function sanitiseHtml(html: string) {
     if (editor) editor.innerHTML = "";
   }
   return (
-    <main className="app-shell">
+    <main className="app-shell" style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
       <div className="custom-titlebar" data-tauri-drag-region>
         <div className="titlebar-brand" data-tauri-drag-region>
         <span className="titlebar-easter-egg"><PotatoEgg /></span>
