@@ -21,6 +21,7 @@ import CharactersPage from "./characters/CharactersPage";
 import { loadCharacters } from "./characters/characters.storage";
 import { characterAccentColor } from "./characters/characters.types";
 import { getResourceBlob } from "./resources/resources.storage";
+import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import CharacterPortraitArt from "./characters/CharacterPortraitArt";
 import EffectLayer from "./effects/components/EffectLayer";
 import ResourcesPage from "./resources/ResourcesPage";
@@ -290,6 +291,7 @@ function sanitiseHtml(html: string) {
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
+  const [customExpressionUrls, setCustomExpressionUrls] = useState<Record<string, string>>({});
   const [showExpressions, setShowExpressions] = useState(false);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
@@ -310,6 +312,31 @@ function sanitiseHtml(html: string) {
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { preferences } = usePreferences();
+
+  useEffect(() => {
+    let cancelled = false;
+    const urls: Record<string, string> = {};
+    async function loadCustomExpressions() {
+      try {
+        const libraryCharacters = loadCharacters();
+        await Promise.all(libraryCharacters.map(async (item) => {
+          await Promise.all(CHARACTER_EXPRESSION_SLOTS.map(async (slot, index) => {
+            const blob = await getCharacterExpressionBlob(item.id, slot.key).catch(() => null);
+            if (blob) urls[`${item.id}:${expressions[index].emoji}`] = URL.createObjectURL(blob);
+          }));
+        }));
+        if (!cancelled) setCustomExpressionUrls(urls);
+        else Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+      } catch (reason) {
+        console.error("Could not load custom character expressions.", reason);
+      }
+    }
+    void loadCustomExpressions();
+    return () => {
+      cancelled = true;
+      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [characters]);
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
   const [activeLibraryPage, setActiveLibraryPage] = useState<"characters" | "resources" | null>(null);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
@@ -1181,12 +1208,8 @@ function sanitiseHtml(html: string) {
                         title="Character expression"
                         aria-label="Character expression"
                         style={{
-                          maskImage: `url("${expressions.find(
-                            (expression) => expression.emoji === message.expression
-                          )?.image ?? ""}")`,
-                          WebkitMaskImage: `url("${expressions.find(
-                            (expression) => expression.emoji === message.expression
-                          )?.image ?? ""}")`,
+                          maskImage: `url("${(message.characterId ? customExpressionUrls[`${message.characterId}:${message.expression}`] : undefined) ?? expressions.find((expression) => expression.emoji === message.expression)?.image ?? ""}")`,
+                          WebkitMaskImage: `url("${(message.characterId ? customExpressionUrls[`${message.characterId}:${message.expression}`] : undefined) ?? expressions.find((expression) => expression.emoji === message.expression)?.image ?? ""}")`,
                         }}
                       />
                     )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}</div><div className="message-actions">
@@ -1215,7 +1238,7 @@ function sanitiseHtml(html: string) {
                     <CharacterPortraitArt
                       initials={character.initials}
                       imageSrc={character.avatarAssetPath ? profileMediaSource(character.avatarAssetPath) : characterResourcePortraitUrl}
-                      expressionImage={selectedCharacter !== "You" ? expressions.find((expression) => expression.emoji === selectedExpression)?.image : null}
+                      expressionImage={selectedCharacter !== "You" ? (customExpressionUrls[`${character.id}:${selectedExpression}`] ?? expressions.find((expression) => expression.emoji === selectedExpression)?.image) : null}
                       expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
                       fit="cover"
                       positionX={character.portraitPositionX ?? 50}
@@ -1274,8 +1297,8 @@ function sanitiseHtml(html: string) {
                         <span
                           className="expression-image"
                           style={{
-                            maskImage: `url("${expression.image}")`,
-                            WebkitMaskImage: `url("${expression.image}")`,
+                            maskImage: `url("${customExpressionUrls[`${characters.find((item) => item.name === selectedCharacter)?.id ?? ""}:${expression.emoji}`] ?? expression.image}")`,
+                            WebkitMaskImage: `url("${customExpressionUrls[`${characters.find((item) => item.name === selectedCharacter)?.id ?? ""}:${expression.emoji}`] ?? expression.image}")`,
                           }}
                           aria-hidden="true"
                         />
