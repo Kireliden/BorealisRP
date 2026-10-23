@@ -428,6 +428,9 @@ function sanitiseHtml(html: string) {
           if (!cancelled && !workspaceSelectionMadeRef.current) {
             setActiveWorkspace(workspace);
           }
+        } else if (!cancelled && !workspaceSelectionMadeRef.current) {
+          // A clean installation must begin by creating or selecting a workspace.
+          setIsWorkspaceManagerOpen(true);
         }
       } catch (reason) {
         if (savedPath) {
@@ -1573,7 +1576,7 @@ function sanitiseHtml(html: string) {
       )}
       {isWorkspaceManagerOpen && (
         <WorkspaceManagerModal
-          onClose={() => setIsWorkspaceManagerOpen(false)}
+          onClose={() => { if (activeWorkspace) setIsWorkspaceManagerOpen(false); }}
           activeWorkspace={activeWorkspace}
           onSelect={(workspace: WorkspaceInfo) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
         />
