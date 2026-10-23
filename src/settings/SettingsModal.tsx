@@ -6,7 +6,6 @@ import {
   MessageCircle,
   Palette,
   Settings2,
-  Shield,
   Sparkles,
   UserRound,
   UsersRound,
