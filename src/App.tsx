@@ -289,7 +289,7 @@ function sanitiseHtml(html: string) {
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
   const [cleanConfirmationStep, setCleanConfirmationStep] = useState<1 | 2 | null>(null);
   const [characters, setCharacters] = useState<Character[]>(charactersFromLibrary);
-  const [selectedCharacter, setSelectedCharacter] = useState("Keira");
+  const [selectedCharacter, setSelectedCharacter] = useState("You");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
   const [customExpressionUrls, setCustomExpressionUrls] = useState<Record<string, string>>({});
