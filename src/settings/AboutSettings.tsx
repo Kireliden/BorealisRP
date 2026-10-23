@@ -47,6 +47,10 @@ export default function AboutSettings() {
           <span>StrandedStars team</span>
         </div>
         <div className="about-credit-row">
+          <span>Catppuccin Themes</span>
+          <span>Catppuccin Community</span>
+        </div>
+        <div className="about-credit-row">
           <span>Emoji artwork</span>
           <span>OpenMoji</span>
         </div>
