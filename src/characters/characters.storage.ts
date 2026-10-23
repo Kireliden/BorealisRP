@@ -1,36 +1,16 @@
-import { CHARACTER_LIBRARY_KEY, createEmptyCharacterDraft, type CharacterRecord } from "./characters.types";
-
-const starterCharacters: CharacterRecord[] = [
-  {
-    ...createEmptyCharacterDraft(),
-    id: "brd-keira",
-    name: "Keira",
-    subtitle: "Neon Requiem · Main character",
-    description: "",
-    initials: "KR",
-    accent: "lavender",
-    portraitResourceId: null,
-    portraitFit: "contain",
-    portraitPositionX: 50,
-    portraitPositionY: 50,
-    portraitZoom: 100,
-    tags: ["Neon Requiem", "Main character"],
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: "2026-01-01T00:00:00.000Z",
-  },
-];
+import { CHARACTER_LIBRARY_KEY, type CharacterRecord } from "./characters.types";
 
 export function loadCharacters(): CharacterRecord[] {
   try {
     const raw = localStorage.getItem(CHARACTER_LIBRARY_KEY);
     if (!raw) {
-      localStorage.setItem(CHARACTER_LIBRARY_KEY, JSON.stringify(starterCharacters));
-      return starterCharacters;
+      localStorage.setItem(CHARACTER_LIBRARY_KEY, "[]");
+      return [];
     }
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(isCharacterRecord) : starterCharacters;
+    return Array.isArray(parsed) ? parsed.filter(isCharacterRecord) : [];
   } catch {
-    return starterCharacters;
+    return [];
   }
 }
 
