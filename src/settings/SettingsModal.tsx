@@ -38,9 +38,9 @@ interface SettingsModalProps {
 }
 
 const applicationCategories = [
+  { id: "profile", label: "Profile", icon: UserRound },
   { id: "appearance", label: "Appearance", icon: Brush },
   { id: "themes", label: "Themes", icon: Palette },
-  { id: "profile", label: "Profile", icon: UserRound },
   { id: "data", label: "Data and Storage", icon: Database },
   { id: "accessibility", label: "Accessibility", icon: Accessibility },
 ] as const;
