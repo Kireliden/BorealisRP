@@ -44,7 +44,7 @@ export default function AboutSettings() {
         </div>
         <div className="about-credit-row">
           <span>Development & design</span>
-          <span>Borealis team</span>
+          <span>StrandedStars team</span>
         </div>
         <div className="about-credit-row">
           <span>Emoji artwork</span>
