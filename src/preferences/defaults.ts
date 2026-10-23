@@ -18,7 +18,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   },
 
   profile: {
-    displayName: "Usuario",
+    displayName: "",
     avatarAssetId: null,
     avatarAssetPath: null,
     bannerAssetPath: null,
