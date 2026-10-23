@@ -5,17 +5,19 @@ import ThemesSettings from "./ThemesSettings";
 import ProfileSettings from "./ProfileSettings";
 import ChatSettings from "./ChatSettings";
 import AccessibilitySettings from "./AccessibilitySettings";
+import AboutSettings from "./AboutSettings";
 
 type SettingsCategory =
   | "appearance"
-  | "accessibility"
   | "themes"
   | "profile"
   | "chat"
   | "characters"
   | "roleplay"
   | "editor"
-  | "data";
+  | "data"
+  | "accessibility"
+  | "about";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -24,7 +26,6 @@ interface SettingsModalProps {
 
 const categories: { id: SettingsCategory; label: string }[] = [
   { id: "appearance", label: "Appearance" },
-  { id: "accessibility", label: "Accessibility" },
   { id: "themes", label: "Themes" },
   { id: "profile", label: "Profile" },
   { id: "chat", label: "Chat" },
@@ -32,6 +33,8 @@ const categories: { id: SettingsCategory; label: string }[] = [
   { id: "roleplay", label: "Roleplay" },
   { id: "editor", label: "Editor" },
   { id: "data", label: "Data and Storage" },
+  { id: "accessibility", label: "Accessibility" },
+  { id: "about", label: "About" },
 ];
 
 export default function SettingsModal({ onClose, initialCategory = "appearance" }: SettingsModalProps) {
@@ -46,23 +49,18 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
     }
 
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   const activeLabel =
     categories.find((category) => category.id === activeCategory)?.label ??
-    "Ajustes";
+    "Settings";
 
   return (
     <div
       className="settings-backdrop"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onClose();
-        }
+        if (event.target === event.currentTarget) onClose();
       }}
     >
       <section
@@ -77,20 +75,13 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
             <h2 id="settings-title">settings</h2>
           </div>
 
-          <nav
-            className="settings-navigation"
-            aria-label="Settings categories"
-          >
+          <nav className="settings-navigation" aria-label="Settings categories">
             {categories.map((category) => (
               <button
                 key={category.id}
                 type="button"
-                className={`settings-nav-item ${
-                  activeCategory === category.id ? "active" : ""
-                }`}
-                aria-current={
-                  activeCategory === category.id ? "page" : undefined
-                }
+                className={`settings-nav-item ${activeCategory === category.id ? "active" : ""}`}
+                aria-current={activeCategory === category.id ? "page" : undefined}
                 onClick={() => setActiveCategory(category.id)}
               >
                 {category.label}
@@ -98,24 +89,21 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
             ))}
           </nav>
 
-          <div className="settings-sidebar-footer">
-            Local Configuration
-          </div>
+          <div className="settings-sidebar-footer">Local Configuration</div>
         </aside>
 
         <main className="settings-content">
           <header className="settings-content-header">
             <div>
-              <span className="settings-eyebrow">PREFERENCES</span>
+              <span className="settings-eyebrow">{activeCategory === "about" ? "BOREALIS ROLEPLAY DEN" : "PREFERENCES"}</span>
               <h3>{activeLabel}</h3>
             </div>
-
             <button
               className="settings-close-button"
               type="button"
               onClick={onClose}
-              aria-label="Cerrar ajustes"
-              title="Cerrar ajustes"
+              aria-label="Close settings"
+              title="Close settings"
             >
               ×
             </button>
@@ -132,21 +120,28 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
               <ProfileSettings />
             ) : activeCategory === "chat" ? (
               <ChatSettings />
+            ) : activeCategory === "about" ? (
+              <AboutSettings />
             ) : (
-  <div className="settings-placeholder">
-    <div className="settings-placeholder-symbol">✦</div>
-    <h4>{activeLabel}</h4>
-    <p>
-      This section is ready. Here we will be incorporating your
-      configuration options.
-    </p>
-  </div>
-)}
-
+              <div className="settings-placeholder">
+                <div className="settings-placeholder-symbol">✦</div>
+                <h4>{activeLabel}</h4>
+                <p>
+                  This section is ready. Here we will be incorporating your
+                  configuration options.
+                </p>
+              </div>
+            )}
           </div>
 
           <footer className="settings-content-footer">
-            <span>{activeCategory === "profile" ? "Profile changes apply when you save" : "Changes will be saved automatically"}</span>
+            <span>
+              {activeCategory === "profile"
+                ? "Profile changes apply when you save"
+                : activeCategory === "about"
+                  ? "Borealis Roleplay Den · Version 0.1.0"
+                  : "Changes will be saved automatically"}
+            </span>
           </footer>
         </main>
       </section>
