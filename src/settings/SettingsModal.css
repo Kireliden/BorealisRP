@@ -279,3 +279,13 @@
     transition: none;
   }
 }
+
+/* About section */
+.settings-navigation {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.settings-nav-item {
+  flex-shrink: 0;
+}
