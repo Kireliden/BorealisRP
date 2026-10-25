@@ -151,7 +151,7 @@ export default function EmojiPicker({ editorRef }: Props) {
           <div className="emoji-picker-grid" aria-label="Available emojis">
             {filteredItems.map((item) => (
               <button key={item.name} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name} onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
-                {source === "openmoji" ? <img src={item.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <span aria-hidden="true">{item.emoji}</span>}
+                {source === "openmoji" ? <><img src={item.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.style.display = "inline"; }} /><span className="emoji-picker-fallback" aria-hidden="true">{item.emoji}</span></> : <span aria-hidden="true">{item.emoji}</span>}
               </button>
             ))}
             {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
