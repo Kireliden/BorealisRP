@@ -9,7 +9,7 @@ export default function AboutSettings() {
       <section className="about-hero">
         <div className="about-app-mark" aria-hidden="true">☾</div>
         <span className="settings-eyebrow">YOUR ROLEPLAY SPACE</span>
-        <h4>Borealis Roleplay Den</h4>
+        <h4>Borealis Roleplay Studio</h4>
         <p>A little space for the stories, characters, and worlds you create.</p>
         <span className="about-version">Version {APP_VERSION}</span>
       </section>
