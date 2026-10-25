@@ -102,7 +102,10 @@ function markdownSourceFromHtml(html: string) {
 
     if (tag === "SPAN" && source.classList.contains("message-openmoji-linework")) {
       const linework = document.createElement("span");
-      linework.setAttribute("data-openmoji-src", source.getAttribute("data-openmoji-src") ?? "");
+      const src = source.getAttribute("data-openmoji-src") ?? "";
+      linework.setAttribute("data-openmoji-src", src);
+      linework.style.maskImage = `url("${src}")`;
+      linework.style.webkitMaskImage = `url("${src}")`;
       linework.setAttribute("aria-label", source.getAttribute("aria-label") ?? "");
       linework.title = source.title;
       linework.className = "message-openmoji-linework";
@@ -204,6 +207,8 @@ function sanitiseHtml(html: string) {
       if (!/^(?:\\.\\/|\\/)?assets\\/[\\w.-]+\\.svg(?:\\?.*)?$/.test(src)) return [];
       const linework = document.createElement("span");
       linework.setAttribute("data-openmoji-src", src);
+      linework.style.maskImage = `url("${src}")`;
+      linework.style.webkitMaskImage = `url("${src}")`;
       linework.setAttribute("aria-label", source.getAttribute("aria-label") ?? "");
       linework.title = source.title;
       linework.className = "message-openmoji-linework";
