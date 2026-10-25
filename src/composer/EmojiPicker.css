@@ -155,3 +155,14 @@
 }
 
 .emoji-picker-fallback { display: none; font-size: 24px; line-height: 1; }
+
+/* Let the picker escape the rounded composer shell while it is open. */
+.composer:has(.emoji-picker-popover) {
+  position: relative;
+  z-index: 1000;
+  overflow: visible;
+}
+
+.composer:has(.emoji-picker-popover) .emoji-picker-popover {
+  z-index: 1001;
+}
