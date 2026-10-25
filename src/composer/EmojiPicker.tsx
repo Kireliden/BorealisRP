@@ -1,58 +1,82 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Smile } from "lucide-react";
 import openMoji0 from "openmoji/black/svg/1F600.svg?url";
+import openMojiColor0 from "openmoji/color/svg/1F600.svg?url";
 import openMoji1 from "openmoji/black/svg/1F602.svg?url";
+import openMojiColor1 from "openmoji/color/svg/1F602.svg?url";
 import openMoji2 from "openmoji/black/svg/1F979.svg?url";
+import openMojiColor2 from "openmoji/color/svg/1F979.svg?url";
 import openMoji3 from "openmoji/black/svg/1F60D.svg?url";
+import openMojiColor3 from "openmoji/color/svg/1F60D.svg?url";
 import openMoji4 from "openmoji/black/svg/1F970.svg?url";
+import openMojiColor4 from "openmoji/color/svg/1F970.svg?url";
 import openMoji5 from "openmoji/black/svg/1F62D.svg?url";
+import openMojiColor5 from "openmoji/color/svg/1F62D.svg?url";
 import openMoji6 from "openmoji/black/svg/1F633.svg?url";
+import openMojiColor6 from "openmoji/color/svg/1F633.svg?url";
 import openMoji7 from "openmoji/black/svg/1F60E.svg?url";
+import openMojiColor7 from "openmoji/color/svg/1F60E.svg?url";
 import openMoji8 from "openmoji/black/svg/1F914.svg?url";
+import openMojiColor8 from "openmoji/color/svg/1F914.svg?url";
 import openMoji9 from "openmoji/black/svg/1F440.svg?url";
+import openMojiColor9 from "openmoji/color/svg/1F440.svg?url";
 import openMoji10 from "openmoji/black/svg/1F49C.svg?url";
+import openMojiColor10 from "openmoji/color/svg/1F49C.svg?url";
 import openMoji11 from "openmoji/black/svg/2764.svg?url";
+import openMojiColor11 from "openmoji/color/svg/2764.svg?url";
 import openMoji12 from "openmoji/black/svg/2728.svg?url";
+import openMojiColor12 from "openmoji/color/svg/2728.svg?url";
 import openMoji13 from "openmoji/black/svg/1F319.svg?url";
+import openMojiColor13 from "openmoji/color/svg/1F319.svg?url";
 import openMoji14 from "openmoji/black/svg/2B50.svg?url";
+import openMojiColor14 from "openmoji/color/svg/2B50.svg?url";
 import openMoji15 from "openmoji/black/svg/1F408.svg?url";
+import openMojiColor15 from "openmoji/color/svg/1F408.svg?url";
 import openMoji16 from "openmoji/black/svg/1F408-200D-2B1B.svg?url";
+import openMojiColor16 from "openmoji/color/svg/1F408-200D-2B1B.svg?url";
 import openMoji17 from "openmoji/black/svg/1FAC2.svg?url";
+import openMojiColor17 from "openmoji/color/svg/1FAC2.svg?url";
 import openMoji18 from "openmoji/black/svg/1F3AE.svg?url";
+import openMojiColor18 from "openmoji/color/svg/1F3AE.svg?url";
 import openMoji19 from "openmoji/black/svg/1F3A8.svg?url";
+import openMojiColor19 from "openmoji/color/svg/1F3A8.svg?url";
 import openMoji20 from "openmoji/black/svg/2615.svg?url";
+import openMojiColor20 from "openmoji/color/svg/2615.svg?url";
 import openMoji21 from "openmoji/black/svg/1F338.svg?url";
+import openMojiColor21 from "openmoji/color/svg/1F338.svg?url";
 import openMoji22 from "openmoji/black/svg/1F525.svg?url";
+import openMojiColor22 from "openmoji/color/svg/1F525.svg?url";
 import openMoji23 from "openmoji/black/svg/1F44D.svg?url";
+import openMojiColor23 from "openmoji/color/svg/1F44D.svg?url";
 import "./EmojiPicker.css";
 
-type EmojiItem = { emoji: string; name: string; image: string };
+type EmojiItem = { emoji: string; name: string; image: string; colorImage: string };
 
 const openMojiItems: EmojiItem[] = [
-  { emoji: "😀", name: "Grinning face", image: openMoji0 },
-  { emoji: "😂", name: "Face with tears of joy", image: openMoji1 },
-  { emoji: "🥹", name: "Face holding back tears", image: openMoji2 },
-  { emoji: "😍", name: "Heart eyes", image: openMoji3 },
-  { emoji: "🥰", name: "Smiling with hearts", image: openMoji4 },
-  { emoji: "😭", name: "Loudly crying", image: openMoji5 },
-  { emoji: "😳", name: "Flushed face", image: openMoji6 },
-  { emoji: "😎", name: "Smiling with sunglasses", image: openMoji7 },
-  { emoji: "🤔", name: "Thinking face", image: openMoji8 },
-  { emoji: "👀", name: "Eyes", image: openMoji9 },
-  { emoji: "💜", name: "Purple heart", image: openMoji10 },
-  { emoji: "❤️", name: "Red heart", image: openMoji11 },
-  { emoji: "✨", name: "Sparkles", image: openMoji12 },
-  { emoji: "🌙", name: "Crescent moon", image: openMoji13 },
-  { emoji: "⭐", name: "Star", image: openMoji14 },
-  { emoji: "🐈", name: "Cat", image: openMoji15 },
-  { emoji: "🐈‍⬛", name: "Black cat", image: openMoji16 },
-  { emoji: "🫂", name: "People hugging", image: openMoji17 },
-  { emoji: "🎮", name: "Video game", image: openMoji18 },
-  { emoji: "🎨", name: "Artist palette", image: openMoji19 },
-  { emoji: "☕", name: "Hot beverage", image: openMoji20 },
-  { emoji: "🌸", name: "Cherry blossom", image: openMoji21 },
-  { emoji: "🔥", name: "Fire", image: openMoji22 },
-  { emoji: "👍", name: "Thumbs up", image: openMoji23 },
+  { emoji: "😀", name: "Grinning face", image: openMoji0, colorImage: openMojiColor0 },
+  { emoji: "😂", name: "Face with tears of joy", image: openMoji1, colorImage: openMojiColor1 },
+  { emoji: "🥹", name: "Face holding back tears", image: openMoji2, colorImage: openMojiColor2 },
+  { emoji: "😍", name: "Heart eyes", image: openMoji3, colorImage: openMojiColor3 },
+  { emoji: "🥰", name: "Smiling with hearts", image: openMoji4, colorImage: openMojiColor4 },
+  { emoji: "😭", name: "Loudly crying", image: openMoji5, colorImage: openMojiColor5 },
+  { emoji: "😳", name: "Flushed face", image: openMoji6, colorImage: openMojiColor6 },
+  { emoji: "😎", name: "Smiling with sunglasses", image: openMoji7, colorImage: openMojiColor7 },
+  { emoji: "🤔", name: "Thinking face", image: openMoji8, colorImage: openMojiColor8 },
+  { emoji: "👀", name: "Eyes", image: openMoji9, colorImage: openMojiColor9 },
+  { emoji: "💜", name: "Purple heart", image: openMoji10, colorImage: openMojiColor10 },
+  { emoji: "❤️", name: "Red heart", image: openMoji11, colorImage: openMojiColor11 },
+  { emoji: "✨", name: "Sparkles", image: openMoji12, colorImage: openMojiColor12 },
+  { emoji: "🌙", name: "Crescent moon", image: openMoji13, colorImage: openMojiColor13 },
+  { emoji: "⭐", name: "Star", image: openMoji14, colorImage: openMojiColor14 },
+  { emoji: "🐈", name: "Cat", image: openMoji15, colorImage: openMojiColor15 },
+  { emoji: "🐈‍⬛", name: "Black cat", image: openMoji16, colorImage: openMojiColor16 },
+  { emoji: "🫂", name: "People hugging", image: openMoji17, colorImage: openMojiColor17 },
+  { emoji: "🎮", name: "Video game", image: openMoji18, colorImage: openMojiColor18 },
+  { emoji: "🎨", name: "Artist palette", image: openMoji19, colorImage: openMojiColor19 },
+  { emoji: "☕", name: "Hot beverage", image: openMoji20, colorImage: openMojiColor20 },
+  { emoji: "🌸", name: "Cherry blossom", image: openMoji21, colorImage: openMojiColor21 },
+  { emoji: "🔥", name: "Fire", image: openMoji22, colorImage: openMojiColor22 },
+  { emoji: "👍", name: "Thumbs up", image: openMoji23, colorImage: openMojiColor23 },
 ];
 
 type Props = { editorRef: RefObject<HTMLDivElement | null> };
