@@ -11,7 +11,7 @@ import openMoji7 from "openmoji/color/svg/1F60E.svg?url";
 import openMoji8 from "openmoji/color/svg/1F914.svg?url";
 import openMoji9 from "openmoji/color/svg/1F440.svg?url";
 import openMoji10 from "openmoji/color/svg/1F49C.svg?url";
-import openMoji11 from "openmoji/color/svg/2764-FE0F.svg?url";
+import openMoji11 from "openmoji/color/svg/2764.svg?url";
 import openMoji12 from "openmoji/color/svg/2728.svg?url";
 import openMoji13 from "openmoji/color/svg/1F319.svg?url";
 import openMoji14 from "openmoji/color/svg/2B50.svg?url";
