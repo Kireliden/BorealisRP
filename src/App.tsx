@@ -100,6 +100,16 @@ function markdownSourceFromHtml(html: string) {
       return [image];
     }
 
+    if (tag === "SPAN" && source.classList.contains("message-openmoji-linework")) {
+      const linework = document.createElement("span");
+      linework.setAttribute("data-openmoji-src", source.getAttribute("data-openmoji-src") ?? "");
+      linework.setAttribute("aria-label", source.getAttribute("aria-label") ?? "");
+      linework.title = source.title;
+      linework.className = "message-openmoji-linework";
+      linework.setAttribute("contenteditable", "false");
+      return [linework];
+    }
+
     if (tag === "BR") return [document.createElement("br")];
     if (tag === "DIV" || tag === "P") {
       const block = document.createElement(tag.toLowerCase());
@@ -187,6 +197,18 @@ function sanitiseHtml(html: string) {
       image.className = "message-openmoji-emoji";
       image.setAttribute("contenteditable", "false");
       return [image];
+    }
+
+    if (source.tagName === "SPAN" && source.classList.contains("message-openmoji-linework")) {
+      const src = source.getAttribute("data-openmoji-src") ?? "";
+      if (!/^(?:\\.\\/|\\/)?assets\\/[\\w.-]+\\.svg(?:\\?.*)?$/.test(src)) return [];
+      const linework = document.createElement("span");
+      linework.setAttribute("data-openmoji-src", src);
+      linework.setAttribute("aria-label", source.getAttribute("aria-label") ?? "");
+      linework.title = source.title;
+      linework.className = "message-openmoji-linework";
+      linework.setAttribute("contenteditable", "false");
+      return [linework];
     }
 
     const clean = document.createElement(source.tagName.toLowerCase());
