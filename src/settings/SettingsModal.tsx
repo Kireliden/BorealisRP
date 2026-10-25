@@ -105,7 +105,7 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
       <section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
         <aside className="settings-sidebar">
           <div className="settings-sidebar-heading">
-            <span className="settings-eyebrow">BOREALIS ROLEPLAY DEN</span>
+            <span className="settings-eyebrow">BOREALIS ROLEPLAY STUDIO</span>
             <h2 id="settings-title">settings</h2>
           </div>
 
@@ -137,7 +137,7 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
         <main className="settings-content">
           <header className="settings-content-header">
             <div>
-              <span className="settings-eyebrow">{activeCategory === "about" ? "BOREALIS ROLEPLAY DEN" : "PREFERENCES"}</span>
+              <span className="settings-eyebrow">{activeCategory === "about" ? "BOREALIS ROLEPLAY STUDIO" : "PREFERENCES"}</span>
               <h3>{activeLabel}</h3>
             </div>
             <button className="settings-close-button" type="button" onClick={onClose} aria-label="Close settings" title="Close settings">×</button>
@@ -159,7 +159,7 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
           </div>
 
           <footer className="settings-content-footer">
-            <span>{activeCategory === "profile" ? "Profile changes apply when you save" : activeCategory === "about" ? "Borealis Roleplay Den · Version 0.1.0" : "Changes will be saved automatically"}</span>
+            <span>{activeCategory === "profile" ? "Profile changes apply when you save" : activeCategory === "about" ? "Borealis Roleplay Studio · Version 0.1.0" : "Changes will be saved automatically"}</span>
           </footer>
         </main>
       </section>
