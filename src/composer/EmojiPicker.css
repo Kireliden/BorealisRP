@@ -187,18 +187,6 @@
   vertical-align: -0.28em;
 }
 
-/* Only linework uses the accent as a mask; colour artwork stays transparent. */
-.rich-editor .message-openmoji-linework,
-.message-rich-content .message-openmoji-linework {
-  background-color: var(--accent);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-}
-
 .rich-editor .message-system-emoji,
 .message-rich-content .message-system-emoji {
   display: inline;
@@ -207,7 +195,6 @@
 
 /* Let the picker escape the rounded composer shell while it is open. */
 .composer:has(.emoji-picker-popover) {
-  position: relative;
   z-index: 1000;
   overflow: visible;
 }
