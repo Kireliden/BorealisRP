@@ -25,6 +25,7 @@ import { getResourceBlob } from "./resources/resources.storage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import CharacterPortraitArt from "./characters/CharacterPortraitArt";
 import EffectLayer from "./effects/components/EffectLayer";
+import EmojiPicker from "./composer/EmojiPicker";
 import ResourcesPage from "./resources/ResourcesPage";
 import GlobalSearch from "./GlobalSearch";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
@@ -1369,6 +1370,7 @@ function sanitiseHtml(html: string) {
                   </button>
 
 <NudgeEgg />
+                  <EmojiPicker editorRef={editorRef} />
 
 <span className="toolbar-spacer" />
 <span className="toolbar-spacer" />
