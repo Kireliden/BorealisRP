@@ -140,6 +140,8 @@ export default function EmojiPicker({ editorRef }: Props) {
       node.setAttribute("contenteditable", "false");
     } else if (source === "linework") {
       node.setAttribute("data-openmoji-src", item.image);
+      (node as HTMLElement).style.maskImage = `url("${item.image}")`;
+      (node as HTMLElement).style.webkitMaskImage = `url("${item.image}")`;
       node.setAttribute("aria-label", item.emoji);
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-linework";
