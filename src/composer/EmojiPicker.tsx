@@ -138,11 +138,7 @@ export default function EmojiPicker({ editorRef }: Props) {
       node.setAttribute("title", item.name);
       node.className = source === "color" ? "message-openmoji-emoji message-openmoji-color" : "message-openmoji-emoji message-openmoji-linework";
       node.setAttribute("contenteditable", "false");
-      if (source === "linework") {
-        (node as HTMLImageElement).style.backgroundColor = "var(--accent)";
-        (node as HTMLImageElement).style.maskImage = `url("${item.image}")`;
-        (node as HTMLImageElement).style.webkitMaskImage = `url("${item.image}")`;
-      }
+
     } else {
       node.textContent = item.emoji;
       node.className = "message-system-emoji";
