@@ -83,7 +83,7 @@ type Props = { editorRef: RefObject<HTMLDivElement | null> };
 
 export default function EmojiPicker({ editorRef }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const [source, setSource] = useState<"openmoji" | "system">("openmoji");
+  const [source, setSource] = useState<"color" | "linework" | "system">("color");
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
@@ -133,7 +133,7 @@ export default function EmojiPicker({ editorRef }: Props) {
     activeRange.deleteContents();
     const node = document.createElement(source === "system" ? "span" : "img");
     if (source !== "system") {
-      node.setAttribute("src", source === "color" ? item.colorImage : item.image);
+      node.setAttribute("src", source === "linework" ? item.image : item.colorImage);
       node.setAttribute("alt", item.emoji);
       node.setAttribute("title", item.name);
       node.className = source === "color" ? "message-openmoji-emoji message-openmoji-color" : "message-openmoji-emoji message-openmoji-linework";
