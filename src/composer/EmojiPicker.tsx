@@ -131,14 +131,19 @@ export default function EmojiPicker({ editorRef }: Props) {
     const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
     if (!activeRange) return;
     activeRange.deleteContents();
-    const node = document.createElement(source === "system" ? "span" : "img");
-    if (source !== "system") {
-      node.setAttribute("src", source === "linework" ? item.image : item.colorImage);
+    const node = document.createElement(source === "system" || source === "linework" ? "span" : "img");
+    if (source === "color") {
+      node.setAttribute("src", item.colorImage);
       node.setAttribute("alt", item.emoji);
       node.setAttribute("title", item.name);
-      node.className = source === "color" ? "message-openmoji-emoji message-openmoji-color" : "message-openmoji-emoji message-openmoji-linework";
+      node.className = "message-openmoji-emoji message-openmoji-color";
       node.setAttribute("contenteditable", "false");
-
+    } else if (source === "linework") {
+      node.setAttribute("data-openmoji-src", item.image);
+      node.setAttribute("aria-label", item.emoji);
+      node.setAttribute("title", item.name);
+      node.className = "message-openmoji-linework";
+      node.setAttribute("contenteditable", "false");
     } else {
       node.textContent = item.emoji;
       node.className = "message-system-emoji";
