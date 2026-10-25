@@ -204,7 +204,7 @@ function sanitiseHtml(html: string) {
 
     if (source.tagName === "SPAN" && source.classList.contains("message-openmoji-linework")) {
       const src = source.getAttribute("data-openmoji-src") ?? "";
-      if (!/^(?:\\.\\/|\\/)?assets\\/[\\w.-]+\\.svg(?:\\?.*)?$/.test(src)) return [];
+      if (!/^(?:\.\/|\/)?assets\/[\w.-]+\.svg(?:\?.*)?$/.test(src)) return [];
       const linework = document.createElement("span");
       linework.setAttribute("data-openmoji-src", src);
       linework.style.maskImage = `url("${src}")`;
