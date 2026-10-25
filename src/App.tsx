@@ -1078,7 +1078,7 @@ function sanitiseHtml(html: string) {
         <div className="titlebar-brand" data-tauri-drag-region>
         <span className="titlebar-easter-egg"><PotatoEgg /></span>
         
-        <span data-tauri-drag-region>Borealis Roleplay Den</span>
+        <span data-tauri-drag-region>Borealis Roleplay Studio</span>
     </div>
         <div className="titlebar-controls">
           <button className="titlebar-control" type="button" title="Minimize" aria-label="Minimize" onClick={() => void appWindow.minimize()}><span className="minimize-icon" /></button>
