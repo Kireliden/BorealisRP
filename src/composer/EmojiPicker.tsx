@@ -114,6 +114,9 @@ export default function EmojiPicker({ editorRef }: Props) {
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-emoji";
       node.setAttribute("contenteditable", "false");
+      (node as HTMLImageElement).style.backgroundColor = "var(--accent)";
+      (node as HTMLImageElement).style.maskImage = `url("${item.image}")`;
+      (node as HTMLImageElement).style.webkitMaskImage = `url("${item.image}")`;
     } else {
       node.textContent = item.emoji;
       node.className = "message-system-emoji";
@@ -161,7 +164,7 @@ export default function EmojiPicker({ editorRef }: Props) {
           <div className="emoji-picker-grid" aria-label="Available emojis">
             {filteredItems.map((item) => (
               <button key={item.name} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name} onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
-                {source === "openmoji" ? <><img src={item.image} alt="" loading="lazy" onError={(event) => { event.currentTarget.style.display = "none"; const fallback = event.currentTarget.nextElementSibling as HTMLElement | null; if (fallback) fallback.style.display = "inline"; }} /><span className="emoji-picker-fallback" aria-hidden="true">{item.emoji}</span></> : <span aria-hidden="true">{item.emoji}</span>}
+                {source === "openmoji" ? <><span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} /><span className="emoji-picker-fallback" aria-hidden="true">{item.emoji}</span></> : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
               </button>
             ))}
             {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
