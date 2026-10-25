@@ -157,19 +157,20 @@ export default function EmojiPicker({ editorRef }: Props) {
             <span>Choose a style</span>
           </div>
           <div className="emoji-picker-source" role="group" aria-label="Emoji style">
-            <button type="button" className={source === "openmoji" ? "active" : ""} aria-pressed={source === "openmoji"} onClick={() => setSource("openmoji")}>OpenMoji</button>
+            <button type="button" className={source === "color" ? "active" : ""} aria-pressed={source === "color"} onClick={() => setSource("color")}>Color</button>
+            <button type="button" className={source === "linework" ? "active" : ""} aria-pressed={source === "linework"} onClick={() => setSource("linework")}>Linework</button>
             <button type="button" className={source === "system" ? "active" : ""} aria-pressed={source === "system"} onClick={() => setSource("system")}>System</button>
           </div>
           <input className="emoji-picker-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search emojis…" aria-label="Search emojis" autoFocus />
           <div className="emoji-picker-grid" aria-label="Available emojis">
             {filteredItems.map((item) => (
               <button key={item.name} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name} onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
-                {source === "openmoji" ? <><span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} /><span className="emoji-picker-fallback" aria-hidden="true">{item.emoji}</span></> : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
+                {source === "color" ? <img className="emoji-picker-color" src={item.colorImage} alt="" loading="lazy" /> : source === "linework" ? <><span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} /><span className="emoji-picker-fallback" aria-hidden="true">{item.emoji}</span></> : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
               </button>
             ))}
             {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
           </div>
-          <p className="emoji-picker-footnote">{source === "openmoji" ? "OpenMoji illustrations" : "Your system's emoji style"}</p>
+          <p className="emoji-picker-footnote">{source === "color" ? "Full-colour OpenMoji illustrations" : source === "linework" ? "Accent-tinted OpenMoji linework" : "System emoji style"}</p>
         </section>
       )}
     </div>
