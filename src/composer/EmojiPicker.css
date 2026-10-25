@@ -116,13 +116,13 @@
   display: grid;
   width: 100%;
   aspect-ratio: 1;
-  min-height: 42px;
+  min-height: 52px;
   place-items: center;
   border: 1px solid transparent;
   border-radius: 7px;
   background: transparent;
   color: var(--ctp-text);
-  font-size: 34px;
+  font-size: 46px;
   transition: background 100ms ease, border-color 100ms ease;
 }
 
@@ -132,11 +132,23 @@
   background: var(--surface);
 }
 
-.emoji-picker-item img {
+.emoji-picker-openmoji {
   display: block;
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
+  width: 40px;
+  height: 40px;
+  background-color: var(--accent);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.emoji-picker-system {
+  display: block;
+  font-size: 46px;
+  line-height: 1;
 }
 
 .emoji-picker-item span {
@@ -155,7 +167,7 @@
   margin: -2px 0 0;
 }
 
-.emoji-picker-fallback { display: none; font-size: 34px; line-height: 1; }
+.emoji-picker-fallback { display: none; font-size: 42px; line-height: 1; }
 
 .rich-editor .message-openmoji-emoji,
 .message-rich-content .message-openmoji-emoji {
@@ -164,6 +176,13 @@
   height: 1.45em;
   margin: 0 0.06em;
   object-fit: contain;
+  background-color: var(--accent);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
   vertical-align: -0.28em;
 }
 
