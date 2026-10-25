@@ -90,6 +90,16 @@ function markdownSourceFromHtml(html: string) {
       return [span];
     }
 
+    if (tag === "IMG" && source.classList.contains("message-openmoji-emoji")) {
+      const image = document.createElement("img");
+      image.src = source.getAttribute("src") ?? "";
+      image.alt = source.getAttribute("alt") ?? "";
+      image.title = source.getAttribute("title") ?? "";
+      image.className = "message-openmoji-emoji";
+      image.setAttribute("contenteditable", "false");
+      return [image];
+    }
+
     if (tag === "BR") return [document.createElement("br")];
     if (tag === "DIV" || tag === "P") {
       const block = document.createElement(tag.toLowerCase());
@@ -142,7 +152,7 @@ function applyMarkdownToTextNodes(root: HTMLElement) {
 
 function sanitiseHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
-  const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "S", "DEL", "CODE", "SPAN", "BR", "DIV", "P"]);
+  const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "S", "DEL", "CODE", "SPAN", "BR", "DIV", "P", "IMG"]);
   const validColour = /^(#[0-9a-f]{3,8}|rgb\([\d\s,%]+\)|rgba\([\d\s,.%]+\)|[a-z]+)$/i;
 
   function cleanNode(node: Node): Node[] {
@@ -165,6 +175,18 @@ function sanitiseHtml(html: string) {
 
     if (!allowedTags.has(source.tagName)) {
       return [...source.childNodes].flatMap(cleanNode);
+    }
+
+    if (source.tagName === "IMG" && source.classList.contains("message-openmoji-emoji")) {
+      const src = source.getAttribute("src") ?? "";
+      if (!/^(\.\/)?assets\/[\w.-]+\.svg(?:\?.*)?$/.test(src)) return [];
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = source.getAttribute("alt") ?? "";
+      image.title = source.getAttribute("title") ?? "";
+      image.className = "message-openmoji-emoji";
+      image.setAttribute("contenteditable", "false");
+      return [image];
     }
 
     const clean = document.createElement(source.tagName.toLowerCase());
