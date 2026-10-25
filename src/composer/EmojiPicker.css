@@ -184,6 +184,12 @@
   height: 1.45em;
   margin: 0 0.06em;
   object-fit: contain;
+  vertical-align: -0.28em;
+}
+
+/* Only linework uses the accent as a mask; colour artwork stays transparent. */
+.rich-editor .message-openmoji-linework,
+.message-rich-content .message-openmoji-linework {
   background-color: var(--accent);
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
@@ -191,7 +197,6 @@
   mask-position: center;
   -webkit-mask-size: contain;
   mask-size: contain;
-  vertical-align: -0.28em;
 }
 
 .rich-editor .message-system-emoji,
