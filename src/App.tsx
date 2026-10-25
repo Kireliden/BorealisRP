@@ -179,7 +179,7 @@ function sanitiseHtml(html: string) {
 
     if (source.tagName === "IMG" && source.classList.contains("message-openmoji-emoji")) {
       const src = source.getAttribute("src") ?? "";
-      if (!/^(\.\/)?assets\/[\w.-]+\.svg(?:\?.*)?$/.test(src)) return [];
+      if (!/^(?:\.\/|\/)?assets\/[\w.-]+\.svg(?:\?.*)?$/.test(src)) return [];
       const image = document.createElement("img");
       image.src = src;
       image.alt = source.getAttribute("alt") ?? "";
