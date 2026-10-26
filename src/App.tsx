@@ -828,7 +828,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.map((scene) =>
       scene.id === activeSceneId ? { ...scene, messages: nextMessages } : scene,
     );
-    const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes, folders };
+    const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes, folders, categories };
     setScenes(nextScenes);
     setMessages(nextMessages);
     try {
