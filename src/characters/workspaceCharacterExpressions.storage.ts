@@ -108,7 +108,7 @@ export async function getWorkspaceCharacterExpressionBlob(
   if (!entry) return null;
   try {
     const bytes = await readWorkspaceFile(workspacePath, entry.path);
-    return new Blob([bytes], { type: entry.mimeType });
+    return new Blob([bytes.buffer as ArrayBuffer], { type: entry.mimeType });
   } catch (error) {
     if (isMissingFile(error)) return null;
     throw error;
