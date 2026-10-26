@@ -17,6 +17,8 @@ type Props = {
   onClose: () => void;
   onSave: (reciprocalRelationshipIds: string[]) => void;
   onRelationshipKindsChanged: (nextKinds: RelationshipKind[], renames: { from: string; to: string }[]) => void;
+  relationshipKinds?: RelationshipKind[];
+  workspaceScoped?: boolean;
   onDelete: () => void;
 };
 
@@ -59,11 +61,11 @@ function SectionHeading({ icon, title, description }: { icon: ReactNode; title: 
   return <div className="studio-section-heading"><div className="studio-section-icon">{icon}</div><div><h2>{title}</h2><p>{description}</p></div></div>;
 }
 
-export default function CharacterEditorModal({ draft, setDraft, characters, selected, isCreating, imageResources, portraitUrls, onClose, onSave, onRelationshipKindsChanged, onDelete }: Props) {
+export default function CharacterEditorModal({ draft, setDraft, characters, selected, isCreating, imageResources, portraitUrls, onClose, onSave, onRelationshipKindsChanged, relationshipKinds: suppliedRelationshipKinds, workspaceScoped = false, onDelete }: Props) {
   const [portraitAdjustOpen, setPortraitAdjustOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(isCreating);
   const [originalDraft, setOriginalDraft] = useState<CharacterDraft | null>(null);
-  const [relationshipKinds, setRelationshipKinds] = useState<RelationshipKind[]>(loadRelationshipKinds);
+  const [relationshipKinds, setRelationshipKinds] = useState<RelationshipKind[]>(suppliedRelationshipKinds ?? loadRelationshipKinds);
   const [relationshipTypeManagerOpen, setRelationshipTypeManagerOpen] = useState(false);
   const [reciprocalPromptOpen, setReciprocalPromptOpen] = useState(false);
   const [deleteConfirmationStep, setDeleteConfirmationStep] = useState<0 | 1 | 2>(0);
@@ -72,7 +74,13 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
   const portraitUrl = draft.portraitResourceId ? portraitUrls[draft.portraitResourceId] ?? null : null;
   const pendingReciprocalRelationships = draft.relationships.filter((relationship) => relationship.characterId && !selected?.relationships.some((existing) => existing.id === relationship.id && existing.characterId === relationship.characterId) && characters.some((character) => character.id === relationship.characterId && character.id !== selected?.id));
 
-  useEffect(() => { localStorage.setItem(RELATIONSHIP_KINDS_KEY, JSON.stringify(relationshipKinds)); }, [relationshipKinds]);
+  useEffect(() => {
+    if (suppliedRelationshipKinds) setRelationshipKinds(suppliedRelationshipKinds);
+  }, [suppliedRelationshipKinds]);
+
+  useEffect(() => {
+    if (!workspaceScoped) localStorage.setItem(RELATIONSHIP_KINDS_KEY, JSON.stringify(relationshipKinds));
+  }, [relationshipKinds, workspaceScoped]);
 
   function saveRelationshipKinds(nextKinds: RelationshipKind[], renames: { from: string; to: string }[]) {
     setRelationshipKinds(nextKinds);
