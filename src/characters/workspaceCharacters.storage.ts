@@ -4,6 +4,7 @@ import type { CharacterRecord } from "./characters.types";
 
 const CHARACTERS_PATH = "Characters/characters.json";
 const RELATIONSHIP_KINDS_PATH = "Characters/relationship-kinds.json";
+const LEGACY_CHARACTER_MIGRATION_KEY = "brd.workspace-character-migration.v1";
 
 function isCharacterRecord(value: unknown): value is CharacterRecord {
   if (!value || typeof value !== "object") return false;
@@ -28,8 +29,9 @@ async function writeJson(workspacePath: string, relativePath: string, value: unk
 }
 
 /**
- * Loads a workspace's character cast. On first use, legacy global characters are
- * copied into the workspace; the original browser copy is deliberately preserved.
+ * Loads a workspace's character cast. Legacy global characters are migrated into
+ * the first workspace that needs them, then the original browser copy is preserved.
+ * Later workspaces start independently instead of inheriting another workspace's cast.
  */
 export async function loadWorkspaceCharacters(workspacePath: string): Promise<CharacterRecord[]> {
   const stored = await readJson<unknown>(workspacePath, CHARACTERS_PATH);
@@ -40,8 +42,14 @@ export async function loadWorkspaceCharacters(workspacePath: string): Promise<Ch
     return stored;
   }
 
-  const legacy = loadCharacters();
+  const hasMigratedLegacyCharacters = localStorage.getItem(LEGACY_CHARACTER_MIGRATION_KEY) === "completed";
+  const legacy = hasMigratedLegacyCharacters ? [] : loadCharacters();
   await saveWorkspaceCharacters(workspacePath, legacy);
+
+  // Mark migration only after the workspace write succeeds, so a failed write can be retried.
+  if (!hasMigratedLegacyCharacters) {
+    localStorage.setItem(LEGACY_CHARACTER_MIGRATION_KEY, "completed");
+  }
   return legacy;
 }
 
