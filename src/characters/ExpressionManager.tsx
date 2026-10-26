@@ -10,8 +10,8 @@ type Slot = { key: CharacterExpressionKey; label: string; blob: Blob | null; url
 type Step = "welcome" | "templates" | "character" | "individual" | "sheet" | "review";
 const blank = (): Slot[] => CHARACTER_EXPRESSION_SLOTS.map(s => ({ ...s, blob: null, url: null, fileName: "" }));
 
-export default function ExpressionManager({ onClose }: Props) {
- const characters = loadCharacters().filter(c => c.name.trim());
+export default function ExpressionManager({ onClose, characters: workspaceCharacters }: Props) {
+ const characters = (workspaceCharacters ?? loadCharacters()).filter(c => c.name.trim());
  const [step,setStep] = useState<Step>("welcome");
  const [characterId,setCharacterId] = useState("");
  const [slots,setSlots] = useState<Slot[]>(blank);
