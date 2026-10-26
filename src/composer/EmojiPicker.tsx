@@ -31,23 +31,22 @@ const RECENT_KEY: Record<EmojiStyle, string> = {
   system: "borealis.emoji-recent.system",
 };
 
-// Vite resolves these assets at build time, keeping the picker fully offline.
+// Keep SVGs as lazy URL imports: eagerly processing thousands of illustrations can
+// exhaust Windows file handles during production builds.
 const blackAssets = import.meta.glob("../../node_modules/openmoji/black/svg/*.svg", {
-  eager: true,
   query: "?url",
   import: "default",
-}) as Record<string, string>;
+}) as Record<string, () => Promise<string>>;
 const colorAssets = import.meta.glob("../../node_modules/openmoji/color/svg/*.svg", {
-  eager: true,
   query: "?url",
   import: "default",
-}) as Record<string, string>;
+}) as Record<string, () => Promise<string>>;
 
-const assetByHex = (assets: Record<string, string>) => {
-  const map = new Map<string, string>();
-  for (const [path, url] of Object.entries(assets)) {
-    const match = path.match(/\/([\w-]+)\.svg$/);
-    if (match) map.set(match[1].toUpperCase(), url);
+const assetByHex = (assets: Record<string, () => Promise<string>>) => {
+  const map = new Map<string, () => Promise<string>>();
+  for (const [path, loader] of Object.entries(assets)) {
+    const match = path.match(/\\/([\\w-]+)\\.svg$/);
+    if (match) map.set(match[1].toUpperCase(), loader);
   }
   return map;
 };
@@ -247,6 +246,18 @@ export default function EmojiPicker({ editorRef }: Props) {
       )}
     </div>
   );
+}
+
+
+function LazyOpenMoji({ loader, className, masked = false }: { loader: () => Promise<string>; className: string; masked?: boolean }) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    let active = true;
+    loader().then((value) => { if (active) setUrl(value); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [loader]);
+  if (masked) return <span className={className} aria-hidden="true" style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined} />;
+  return <img className={className} src={url || undefined} alt="" loading="lazy" />;
 }
 
 
