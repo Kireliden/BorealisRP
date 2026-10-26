@@ -259,15 +259,3 @@ function LazyOpenMoji({ loader, className, masked = false }: { loader: () => Pro
   if (masked) return <span className={className} aria-hidden="true" style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined} />;
   return <img className={className} src={url || undefined} alt="" loading="lazy" />;
 }
-
-
-function LazyOpenMoji({ loader, className, masked = false }: { loader: () => Promise<string>; className: string; masked?: boolean }) {
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    let active = true;
-    loader().then((value) => { if (active) setUrl(value); }).catch(() => undefined);
-    return () => { active = false; };
-  }, [loader]);
-  if (masked) return <span className={className} aria-hidden="true" style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined} />;
-  return <img className={className} src={url || undefined} alt="" loading="lazy" />;
-}
