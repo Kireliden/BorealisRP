@@ -267,12 +267,10 @@ fn write_workspace_file(path: String, relative_path: String, bytes: Vec<u8>) -> 
     let file_path = workspace_file_path(&path, &relative_path)?;
     let parent = file_path.parent().ok_or_else(|| "Could not locate workspace file folder.".to_string())?;
     fs::create_dir_all(parent).map_err(|error| format!("Could not create workspace file folder: {error}"))?;
-    let temporary_path = file_path.with_extension(format!("brd-tmp-{}", Uuid::new_v4()));
-    fs::write(&temporary_path, bytes).map_err(|error| format!("Could not write temporary workspace file: {error}"))?;
-    if let Err(error) = fs::rename(&temporary_path, &file_path) {
-        let _ = fs::remove_file(&temporary_path);
-        return Err(format!("Could not finish saving workspace file '{relative_path}': {error}"));
-    }
+    // Write directly for cross-platform replacement semantics (Windows rename does
+    // not replace an existing destination consistently across supported filesystems).
+    fs::write(&file_path, bytes)
+        .map_err(|error| format!("Could not save workspace file '{relative_path}': {error}"))?;
     Ok(())
 }
 
