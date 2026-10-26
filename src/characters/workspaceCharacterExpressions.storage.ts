@@ -74,27 +74,45 @@ function expressionPath(characterId: string, key: CharacterExpressionKey, mimeTy
   return `${ROOT}/${safeCharacterFolder(characterId)}/${key}.${extensionForMime(mimeType)}`;
 }
 
-/** Copy legacy IndexedDB expressions into this workspace once per character. Legacy data is never deleted. */
+const LEGACY_EXPRESSION_MIGRATION_KEY = "brd.workspace-character-expressions-migration.v1";
+
+/**
+ * Import legacy IndexedDB expressions into the first workspace that needs migration.
+ * Later workspaces start independently; legacy records are never deleted.
+ */
 export async function ensureWorkspaceCharacterExpressions(
   workspacePath: string,
   characterIds: string[],
 ): Promise<void> {
   let manifest = await readManifest(workspacePath);
-  for (const characterId of [...new Set(characterIds.filter(Boolean))]) {
+  const uniqueCharacterIds = [...new Set(characterIds.filter(Boolean))];
+  const mayImportLegacy = localStorage.getItem(LEGACY_EXPRESSION_MIGRATION_KEY) !== "completed";
+
+  for (const characterId of uniqueCharacterIds) {
     if (manifest.migratedCharacterIds.includes(characterId)) continue;
-    const legacy = await listCharacterExpressions(characterId);
-    for (const metadata of legacy) {
-      const image = await getCharacterExpressionBlob(characterId, metadata.key);
-      if (!image) continue;
-      const path = expressionPath(characterId, metadata.key, image.type || metadata.mimeType);
-      await writeBlob(workspacePath, path, image);
-      manifest.expressions = [
-        ...manifest.expressions.filter((entry) => !(entry.characterId === characterId && entry.key === metadata.key)),
-        { ...metadata, path, mimeType: image.type || metadata.mimeType },
-      ];
+
+    if (mayImportLegacy) {
+      const legacy = await listCharacterExpressions(characterId);
+      for (const metadata of legacy) {
+        const image = await getCharacterExpressionBlob(characterId, metadata.key);
+        if (!image) continue;
+        const path = expressionPath(characterId, metadata.key, image.type || metadata.mimeType);
+        await writeBlob(workspacePath, path, image);
+        manifest.expressions = [
+          ...manifest.expressions.filter((entry) => !(entry.characterId === characterId && entry.key === metadata.key)),
+          { ...metadata, path, mimeType: image.type || metadata.mimeType },
+        ];
+      }
     }
+
     manifest.migratedCharacterIds = [...manifest.migratedCharacterIds, characterId];
     await writeWorkspaceJson(workspacePath, MANIFEST_PATH, manifest);
+  }
+
+  // Do not consume the one-time migration opportunity until a workspace actually
+  // contains characters and every migration write above has succeeded.
+  if (mayImportLegacy && uniqueCharacterIds.length > 0) {
+    localStorage.setItem(LEGACY_EXPRESSION_MIGRATION_KEY, "completed");
   }
 }
 
