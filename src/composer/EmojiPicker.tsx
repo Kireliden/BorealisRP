@@ -1,90 +1,92 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Smile } from "lucide-react";
-import openMoji0 from "openmoji/black/svg/1F600.svg?url";
-import openMojiColor0 from "openmoji/color/svg/1F600.svg?url";
-import openMoji1 from "openmoji/black/svg/1F602.svg?url";
-import openMojiColor1 from "openmoji/color/svg/1F602.svg?url";
-import openMoji2 from "openmoji/black/svg/1F979.svg?url";
-import openMojiColor2 from "openmoji/color/svg/1F979.svg?url";
-import openMoji3 from "openmoji/black/svg/1F60D.svg?url";
-import openMojiColor3 from "openmoji/color/svg/1F60D.svg?url";
-import openMoji4 from "openmoji/black/svg/1F970.svg?url";
-import openMojiColor4 from "openmoji/color/svg/1F970.svg?url";
-import openMoji5 from "openmoji/black/svg/1F62D.svg?url";
-import openMojiColor5 from "openmoji/color/svg/1F62D.svg?url";
-import openMoji6 from "openmoji/black/svg/1F633.svg?url";
-import openMojiColor6 from "openmoji/color/svg/1F633.svg?url";
-import openMoji7 from "openmoji/black/svg/1F60E.svg?url";
-import openMojiColor7 from "openmoji/color/svg/1F60E.svg?url";
-import openMoji8 from "openmoji/black/svg/1F914.svg?url";
-import openMojiColor8 from "openmoji/color/svg/1F914.svg?url";
-import openMoji9 from "openmoji/black/svg/1F440.svg?url";
-import openMojiColor9 from "openmoji/color/svg/1F440.svg?url";
-import openMoji10 from "openmoji/black/svg/1F49C.svg?url";
-import openMojiColor10 from "openmoji/color/svg/1F49C.svg?url";
-import openMoji11 from "openmoji/black/svg/2764.svg?url";
-import openMojiColor11 from "openmoji/color/svg/2764.svg?url";
-import openMoji12 from "openmoji/black/svg/2728.svg?url";
-import openMojiColor12 from "openmoji/color/svg/2728.svg?url";
-import openMoji13 from "openmoji/black/svg/1F319.svg?url";
-import openMojiColor13 from "openmoji/color/svg/1F319.svg?url";
-import openMoji14 from "openmoji/black/svg/2B50.svg?url";
-import openMojiColor14 from "openmoji/color/svg/2B50.svg?url";
-import openMoji15 from "openmoji/black/svg/1F408.svg?url";
-import openMojiColor15 from "openmoji/color/svg/1F408.svg?url";
-import openMoji16 from "openmoji/black/svg/1F408-200D-2B1B.svg?url";
-import openMojiColor16 from "openmoji/color/svg/1F408-200D-2B1B.svg?url";
-import openMoji17 from "openmoji/black/svg/1FAC2.svg?url";
-import openMojiColor17 from "openmoji/color/svg/1FAC2.svg?url";
-import openMoji18 from "openmoji/black/svg/1F3AE.svg?url";
-import openMojiColor18 from "openmoji/color/svg/1F3AE.svg?url";
-import openMoji19 from "openmoji/black/svg/1F3A8.svg?url";
-import openMojiColor19 from "openmoji/color/svg/1F3A8.svg?url";
-import openMoji20 from "openmoji/black/svg/2615.svg?url";
-import openMojiColor20 from "openmoji/color/svg/2615.svg?url";
-import openMoji21 from "openmoji/black/svg/1F338.svg?url";
-import openMojiColor21 from "openmoji/color/svg/1F338.svg?url";
-import openMoji22 from "openmoji/black/svg/1F525.svg?url";
-import openMojiColor22 from "openmoji/color/svg/1F525.svg?url";
-import openMoji23 from "openmoji/black/svg/1F44D.svg?url";
-import openMojiColor23 from "openmoji/color/svg/1F44D.svg?url";
+import openMojiData from "openmoji/data/openmoji.json";
 import "./EmojiPicker.css";
 
-type EmojiItem = { emoji: string; name: string; image: string; colorImage: string };
+type OpenMojiRecord = {
+  hexcode: string;
+  emoji: string;
+  annotation: string;
+  tags?: string;
+  group?: string;
+  subgroup?: string;
+};
 
-const openMojiItems: EmojiItem[] = [
-  { emoji: "😀", name: "Grinning face", image: openMoji0, colorImage: openMojiColor0 },
-  { emoji: "😂", name: "Face with tears of joy", image: openMoji1, colorImage: openMojiColor1 },
-  { emoji: "🥹", name: "Face holding back tears", image: openMoji2, colorImage: openMojiColor2 },
-  { emoji: "😍", name: "Heart eyes", image: openMoji3, colorImage: openMojiColor3 },
-  { emoji: "🥰", name: "Smiling with hearts", image: openMoji4, colorImage: openMojiColor4 },
-  { emoji: "😭", name: "Loudly crying", image: openMoji5, colorImage: openMojiColor5 },
-  { emoji: "😳", name: "Flushed face", image: openMoji6, colorImage: openMojiColor6 },
-  { emoji: "😎", name: "Smiling with sunglasses", image: openMoji7, colorImage: openMojiColor7 },
-  { emoji: "🤔", name: "Thinking face", image: openMoji8, colorImage: openMojiColor8 },
-  { emoji: "👀", name: "Eyes", image: openMoji9, colorImage: openMojiColor9 },
-  { emoji: "💜", name: "Purple heart", image: openMoji10, colorImage: openMojiColor10 },
-  { emoji: "❤️", name: "Red heart", image: openMoji11, colorImage: openMojiColor11 },
-  { emoji: "✨", name: "Sparkles", image: openMoji12, colorImage: openMojiColor12 },
-  { emoji: "🌙", name: "Crescent moon", image: openMoji13, colorImage: openMojiColor13 },
-  { emoji: "⭐", name: "Star", image: openMoji14, colorImage: openMojiColor14 },
-  { emoji: "🐈", name: "Cat", image: openMoji15, colorImage: openMojiColor15 },
-  { emoji: "🐈‍⬛", name: "Black cat", image: openMoji16, colorImage: openMojiColor16 },
-  { emoji: "🫂", name: "People hugging", image: openMoji17, colorImage: openMojiColor17 },
-  { emoji: "🎮", name: "Video game", image: openMoji18, colorImage: openMojiColor18 },
-  { emoji: "🎨", name: "Artist palette", image: openMoji19, colorImage: openMojiColor19 },
-  { emoji: "☕", name: "Hot beverage", image: openMoji20, colorImage: openMojiColor20 },
-  { emoji: "🌸", name: "Cherry blossom", image: openMoji21, colorImage: openMojiColor21 },
-  { emoji: "🔥", name: "Fire", image: openMoji22, colorImage: openMojiColor22 },
-  { emoji: "👍", name: "Thumbs up", image: openMoji23, colorImage: openMojiColor23 },
-];
+type EmojiItem = {
+  emoji: string;
+  name: string;
+  hexcode: string;
+  group: string;
+  image: string;
+  colorImage: string;
+  searchText: string;
+};
 
+type EmojiStyle = "color" | "linework" | "system";
 type Props = { editorRef: RefObject<HTMLDivElement | null> };
+const RECENT_LIMIT = 32;
+const RECENT_KEY: Record<EmojiStyle, string> = {
+  color: "borealis.emoji-recent.color",
+  linework: "borealis.emoji-recent.linework",
+  system: "borealis.emoji-recent.system",
+};
+
+// Vite resolves these assets at build time, keeping the picker fully offline.
+const blackAssets = import.meta.glob("/node_modules/openmoji/black/svg/*.svg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+const colorAssets = import.meta.glob("/node_modules/openmoji/color/svg/*.svg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+const assetByHex = (assets: Record<string, string>) => {
+  const map = new Map<string, string>();
+  for (const [path, url] of Object.entries(assets)) {
+    const match = path.match(/\/([\w-]+)\.svg$/);
+    if (match) map.set(match[1].toUpperCase(), url);
+  }
+  return map;
+};
+const blackByHex = assetByHex(blackAssets);
+const colorByHex = assetByHex(colorAssets);
+
+const openMojiItems: EmojiItem[] = (openMojiData as OpenMojiRecord[])
+  .filter((entry) => entry.emoji && entry.hexcode && blackByHex.has(entry.hexcode.toUpperCase()) && colorByHex.has(entry.hexcode.toUpperCase()))
+  .map((entry) => ({
+    emoji: entry.emoji,
+    name: entry.annotation || entry.hexcode,
+    hexcode: entry.hexcode.toUpperCase(),
+    group: entry.group || "Other",
+    image: blackByHex.get(entry.hexcode.toUpperCase())!,
+    colorImage: colorByHex.get(entry.hexcode.toUpperCase())!,
+    searchText: `${entry.annotation} ${entry.tags ?? ""} ${entry.hexcode} ${entry.emoji}`.toLocaleLowerCase(),
+  }));
+
+const groups = [...new Set(openMojiItems.map((item) => item.group))].sort((a, b) => a.localeCompare(b));
+
+function readRecent(style: EmojiStyle): string[] {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(RECENT_KEY[style]) ?? "[]");
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, RECENT_LIMIT) : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function EmojiPicker({ editorRef }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const [source, setSource] = useState<"color" | "linework" | "system">("color");
+  const [source, setSource] = useState<EmojiStyle>("color");
   const [query, setQuery] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("All");
+  const [recent, setRecent] = useState<Record<EmojiStyle, string[]>>(() => ({
+    color: readRecent("color"),
+    linework: readRecent("linework"),
+    system: readRecent("system"),
+  }));
   const rootRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
 
@@ -110,6 +112,19 @@ export default function EmojiPicker({ editorRef }: Props) {
     if (!editor || !selection?.rangeCount) return;
     const range = selection.getRangeAt(0);
     if (editor.contains(range.commonAncestorContainer)) savedRangeRef.current = range.cloneRange();
+  }
+
+  function trackRecent(item: EmojiItem) {
+    setRecent((current) => {
+      const nextForStyle = [item.hexcode, ...current[source].filter((hex) => hex !== item.hexcode)].slice(0, RECENT_LIMIT);
+      const next = { ...current, [source]: nextForStyle };
+      try {
+        localStorage.setItem(RECENT_KEY[source], JSON.stringify(nextForStyle));
+      } catch {
+        // Recent emojis remain usable if browser storage is unavailable.
+      }
+      return next;
+    });
   }
 
   function insertEmoji(item: EmojiItem) {
@@ -157,47 +172,74 @@ export default function EmojiPicker({ editorRef }: Props) {
     selection?.addRange(activeRange);
     savedRangeRef.current = activeRange.cloneRange();
     editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: item.emoji }));
+    trackRecent(item);
     setIsOpen(false);
     setQuery("");
   }
 
-  const filteredItems = openMojiItems.filter((item) =>
-    item.name.toLowerCase().includes(query.trim().toLowerCase()) || item.emoji.includes(query.trim())
-  );
+  const filteredItems = useMemo(() => openMojiItems.filter((item) => {
+    const matchesQuery = !query.trim() || item.searchText.includes(query.trim().toLocaleLowerCase());
+    const matchesGroup = selectedGroup === "All" || item.group === selectedGroup;
+    return matchesQuery && matchesGroup;
+  }), [query, selectedGroup]);
+
+  const recentItems = recent[source]
+    .map((hex) => openMojiItems.find((item) => item.hexcode === hex))
+    .filter((item): item is EmojiItem => Boolean(item));
+  const visibleRecent = recentItems.filter((item) => {
+    const matchesQuery = !query.trim() || item.searchText.includes(query.trim().toLocaleLowerCase());
+    const matchesGroup = selectedGroup === "All" || item.group === selectedGroup;
+    return matchesQuery && matchesGroup;
+  });
+
+  function renderEmoji(item: EmojiItem) {
+    return (
+      <button key={item.hexcode} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name}
+        onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
+        {source === "color"
+          ? <img className="emoji-picker-color" src={item.colorImage} alt="" loading="lazy" />
+          : source === "linework"
+            ? <span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} />
+            : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
+      </button>
+    );
+  }
 
   return (
     <div className="emoji-picker-anchor" ref={rootRef}>
-      <button
-        className={`emoji-picker-trigger ${isOpen ? "active" : ""}`}
-        type="button"
-        title="Insert emoji"
-        aria-label="Insert emoji"
-        aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        onMouseDown={rememberSelection}
-        onClick={() => { rememberSelection(); setIsOpen((open) => !open); }}
-      >
+      <button className={`emoji-picker-trigger ${isOpen ? "active" : ""}`} type="button" title="Insert emoji"
+        aria-label="Insert emoji" aria-haspopup="dialog" aria-expanded={isOpen}
+        onMouseDown={rememberSelection} onClick={() => { rememberSelection(); setIsOpen((open) => !open); }}>
         <Smile size={16} />
       </button>
       {isOpen && (
         <section className="emoji-picker-popover" role="dialog" aria-label="Emoji picker">
-          <div className="emoji-picker-heading">
-            <strong>Emojis</strong>
-            <span>Choose a style</span>
-          </div>
+          <div className="emoji-picker-heading"><strong>Emojis</strong><span>{openMojiItems.length.toLocaleString()} available</span></div>
           <div className="emoji-picker-source" role="group" aria-label="Emoji style">
             <button type="button" className={source === "color" ? "active" : ""} aria-pressed={source === "color"} onClick={() => setSource("color")}>Color</button>
             <button type="button" className={source === "linework" ? "active" : ""} aria-pressed={source === "linework"} onClick={() => setSource("linework")}>Linework</button>
             <button type="button" className={source === "system" ? "active" : ""} aria-pressed={source === "system"} onClick={() => setSource("system")}>System</button>
           </div>
           <input className="emoji-picker-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search emojis…" aria-label="Search emojis" autoFocus />
-          <div className="emoji-picker-grid" aria-label="Available emojis">
-            {filteredItems.map((item) => (
-              <button key={item.name} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name} onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
-                {source === "color" ? <img className="emoji-picker-color" src={item.colorImage} alt="" loading="lazy" /> : source === "linework" ? <><span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} /><span className="emoji-picker-fallback" aria-hidden="true">{item.emoji}</span></> : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
-              </button>
-            ))}
-            {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
+          <label className="emoji-picker-category-label" htmlFor="emoji-picker-category">Category</label>
+          <select id="emoji-picker-category" className="emoji-picker-category" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
+            <option value="All">All categories</option>
+            {groups.map((group) => <option key={group} value={group}>{group}</option>)}
+          </select>
+          <div className="emoji-picker-grid-wrap">
+            {visibleRecent.length > 0 && (
+              <div className="emoji-picker-section">
+                <h3>Recently used</h3>
+                <div className="emoji-picker-grid">{visibleRecent.map(renderEmoji)}</div>
+              </div>
+            )}
+            <div className="emoji-picker-section">
+              <h3>{selectedGroup === "All" ? "All emojis" : selectedGroup}</h3>
+              <div className="emoji-picker-grid">
+                {filteredItems.filter((item) => !visibleRecent.some((recentItem) => recentItem.hexcode === item.hexcode)).map(renderEmoji)}
+                {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
+              </div>
+            </div>
           </div>
           <p className="emoji-picker-footnote">{source === "color" ? "Full-colour OpenMoji illustrations" : source === "linework" ? "Accent-tinted OpenMoji linework" : "System emoji style"}</p>
         </section>
