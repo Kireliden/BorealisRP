@@ -44,10 +44,13 @@ export default function ProfileSettings() {
 
   async function save() {
     if (!draft.displayName.trim()) return;
+    setError("");
+
+    // Saving the profile must not depend on the optional sidebar thumbnail.
+    // In particular, a GIF or a file served by Tauri's asset protocol can fail
+    // canvas export even though the original image is perfectly usable.
+    let thumbnailWarning = "";
     try {
-      setError("");
-      // Canvas thumbnails capture only one GIF frame, so animated portraits use
-      // the original image in the sidebar instead of a static thumbnail.
       const isAnimatedGif = draft.avatarAssetPath?.split(/[?#]/, 1)[0].toLocaleLowerCase().endsWith(".gif") ?? false;
       if (draft.avatarAssetPath && !isAnimatedGif) {
         const thumbnailPath = await saveSidebarAvatarThumbnail(draft.avatarAssetPath, draft.avatarPositionX, draft.avatarPositionY, draft.avatarZoom);
@@ -56,8 +59,18 @@ export default function ProfileSettings() {
         await removeSidebarAvatarThumbnail();
         window.dispatchEvent(new CustomEvent("brd-sidebar-avatar-thumbnail-updated", { detail: "" }));
       }
-      updatePreferences((current) => ({ ...current, profile: { ...draft, displayName: draft.displayName.trim() } }));
+    } catch (reason) {
+      thumbnailWarning = reason instanceof Error ? reason.message : String(reason);
+      // Keep the previous thumbnail if generation failed; never block saving
+      // profile fields or the original portrait/banner because of this cache.
+    }
+
+    try {
+      await updatePreferences((current) => ({ ...current, profile: { ...draft, displayName: draft.displayName.trim() } }));
       setSaved(true);
+      if (thumbnailWarning) {
+        setError(`Profile saved, but the sidebar thumbnail could not be updated: ${thumbnailWarning}`);
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
     }
