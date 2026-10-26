@@ -32,12 +32,12 @@ const RECENT_KEY: Record<EmojiStyle, string> = {
 };
 
 // Vite resolves these assets at build time, keeping the picker fully offline.
-const blackAssets = import.meta.glob("/node_modules/openmoji/black/svg/*.svg", {
+const blackAssets = import.meta.glob("../../node_modules/openmoji/black/svg/*.svg", {
   eager: true,
   query: "?url",
   import: "default",
 }) as Record<string, string>;
-const colorAssets = import.meta.glob("/node_modules/openmoji/color/svg/*.svg", {
+const colorAssets = import.meta.glob("../../node_modules/openmoji/color/svg/*.svg", {
   eager: true,
   query: "?url",
   import: "default",
