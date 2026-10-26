@@ -1119,7 +1119,6 @@ function sanitiseHtml(html: string) {
 
   async function selectScene(scene: WorkspaceScene) {
     setActiveLibraryPage(null);
-    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
     const requestId = ++draftLoadRequestRef.current;
     setActiveSceneId(scene.id);
     setMessages(scene.messages);
@@ -1196,6 +1195,14 @@ function sanitiseHtml(html: string) {
     const enteringId = editingMessageId === null ? nextMessages[nextMessages.length - 1]?.id : null;
     if (typeof enteringId === "number") setEnteringMessageId(null);
     await persistSceneMessages(nextMessages);
+    if (editingMessageId === null) {
+      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+      try {
+        await saveWorkspaceDraft(activeWorkspace.path, activeSceneId, "");
+      } catch (reason) {
+        setWorkspaceError(`Could not clear saved draft: ${reason instanceof Error ? reason.message : String(reason)}`);
+      }
+    }
     if (typeof enteringId === "number") {
       // Let React mount the message first, then apply the animation class on a later frame.
       // This reliably restarts the keyframes instead of mounting the element already animated.
