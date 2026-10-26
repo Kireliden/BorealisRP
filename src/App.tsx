@@ -341,39 +341,7 @@ function sanitiseHtml(html: string) {
   const [cleanConfirmationStep, setCleanConfirmationStep] = useState<1 | 2 | null>(null);
   const [characters, setCharacters] = useState<Character[]>(charactersFromLibrary);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadCast = async () => {
-      const library = activeWorkspace
-        ? await loadWorkspaceCharacters(activeWorkspace.path)
-        : loadCharacters();
-      if (cancelled) return;
-      const refreshed: Character[] = [
-        ...library.map((item) => ({
-          id: item.id,
-          name: item.name,
-          initials: item.initials,
-          avatar: characterAccentColor(item.accent),
-          description: item.subtitle || item.description,
-          avatarAssetPath: null,
-          portraitResourceId: item.portraitResourceId,
-          portraitFit: item.portraitFit ?? "cover" as const,
-          portraitPositionX: item.portraitPositionX ?? 50,
-          portraitPositionY: item.portraitPositionY ?? 50,
-          portraitZoom: item.portraitZoom ?? 100,
-        })),
-        { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" },
-      ];
-      setCharacters(refreshed);
-      if (!refreshed.some((item) => item.name === selectedCharacter)) {
-        setSelectedCharacter(refreshed[0]?.name ?? "You");
-      }
-    };
-    void loadCast().catch((reason) => {
-      if (!cancelled) console.error("Could not load workspace characters:", reason);
-    });
-    return () => { cancelled = true; };
-  }, [activeWorkspace?.path]);
+
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
@@ -439,6 +407,40 @@ function sanitiseHtml(html: string) {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadCast = async () => {
+      const library = activeWorkspace
+        ? await loadWorkspaceCharacters(activeWorkspace.path)
+        : loadCharacters();
+      if (cancelled) return;
+      const refreshed: Character[] = [
+        ...library.map((item) => ({
+          id: item.id,
+          name: item.name,
+          initials: item.initials,
+          avatar: characterAccentColor(item.accent),
+          description: item.subtitle || item.description,
+          avatarAssetPath: null,
+          portraitResourceId: item.portraitResourceId,
+          portraitFit: item.portraitFit ?? "cover" as const,
+          portraitPositionX: item.portraitPositionX ?? 50,
+          portraitPositionY: item.portraitPositionY ?? 50,
+          portraitZoom: item.portraitZoom ?? 100,
+        })),
+        { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" },
+      ];
+      setCharacters(refreshed);
+      if (!refreshed.some((item) => item.name === selectedCharacter)) {
+        setSelectedCharacter(refreshed[0]?.name ?? "You");
+      }
+    };
+    void loadCast().catch((reason) => {
+      if (!cancelled) console.error("Could not load workspace characters:", reason);
+    });
+    return () => { cancelled = true; };
+  }, [activeWorkspace?.path]);
 
   useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
