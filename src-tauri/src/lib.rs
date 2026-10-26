@@ -230,6 +230,52 @@ fn save_workspace_content(path: String, content: serde_json::Value) -> Result<()
 }
 
 #[tauri::command]
+/// Resolve a workspace-relative file path without allowing traversal outside the workspace.
+fn workspace_file_path(workspace_path: &str, relative_path: &str) -> Result<PathBuf, String> {
+    let workspace = read_workspace(Path::new(workspace_path))?;
+    let relative = Path::new(relative_path);
+    if relative.as_os_str().is_empty() || relative.is_absolute()
+        || relative.components().any(|component| !matches!(component, std::path::Component::Normal(_)))
+    {
+        return Err("The workspace file path must be a safe relative path.".into());
+    }
+    Ok(Path::new(&workspace.path).join(relative))
+}
+
+/// Reads bytes from a file stored inside the selected workspace.
+#[tauri::command]
+fn read_workspace_file(path: String, relative_path: String) -> Result<Vec<u8>, String> {
+    let file_path = workspace_file_path(&path, &relative_path)?;
+    let metadata = fs::metadata(&file_path)
+        .map_err(|error| format!("Could not inspect workspace file '{relative_path}': {error}"))?;
+    if !metadata.is_file() {
+        return Err("The requested workspace path is not a file.".into());
+    }
+    if metadata.len() > 100 * 1024 * 1024 {
+        return Err("Workspace files cannot exceed 100 MiB.".into());
+    }
+    fs::read(&file_path).map_err(|error| format!("Could not read workspace file '{relative_path}': {error}"))
+}
+
+/// Writes bytes atomically to a workspace-relative file, creating its parent directories.
+#[tauri::command]
+fn write_workspace_file(path: String, relative_path: String, bytes: Vec<u8>) -> Result<(), String> {
+    const MAX_WORKSPACE_FILE_BYTES: usize = 100 * 1024 * 1024;
+    if bytes.len() > MAX_WORKSPACE_FILE_BYTES {
+        return Err("Workspace files cannot exceed 100 MiB.".into());
+    }
+    let file_path = workspace_file_path(&path, &relative_path)?;
+    let parent = file_path.parent().ok_or_else(|| "Could not locate workspace file folder.".to_string())?;
+    fs::create_dir_all(parent).map_err(|error| format!("Could not create workspace file folder: {error}"))?;
+    let temporary_path = file_path.with_extension(format!("brd-tmp-{}", Uuid::new_v4()));
+    fs::write(&temporary_path, bytes).map_err(|error| format!("Could not write temporary workspace file: {error}"))?;
+    if let Err(error) = fs::rename(&temporary_path, &file_path) {
+        let _ = fs::remove_file(&temporary_path);
+        return Err(format!("Could not finish saving workspace file '{relative_path}': {error}"));
+    }
+    Ok(())
+}
+
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
@@ -393,6 +439,8 @@ pub fn run() {
             inspect_workspace,
             load_workspace_content,
             save_workspace_content,
+            read_workspace_file,
+            write_workspace_file,
             import_profile_media,
             profile_sidebar_thumbnail_path,
             save_profile_sidebar_thumbnail,
