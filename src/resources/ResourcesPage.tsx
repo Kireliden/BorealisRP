@@ -132,10 +132,17 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }
   async function remove(resource: ResourceRecord) {
     if (!window.confirm(`Delete “${resource.fileName}” from the resource library?`)) return;
-    await deleteFile(resource.id);
-    if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
-    setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
-    await refresh();
+    setError("");
+    try {
+      await deleteFile(resource.id);
+      if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
+      setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      // The manifest may already have been updated if only physical-file cleanup failed.
+      await refresh().catch(() => undefined);
+    }
   }
   function toggleResourceSelection(id: string) {
     setSelectedResourceIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
