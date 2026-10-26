@@ -25,6 +25,7 @@ type EmojiItem = {
 type EmojiStyle = "color" | "linework" | "system";
 type Props = { editorRef: RefObject<HTMLDivElement | null> };
 const RECENT_LIMIT = 32;
+const EMOJI_PAGE_SIZE = 140;
 const RECENT_KEY: Record<EmojiStyle, string> = {
   color: "borealis.emoji-recent.color",
   linework: "borealis.emoji-recent.linework",
@@ -71,6 +72,7 @@ export default function EmojiPicker({ editorRef }: Props) {
   const [source, setSource] = useState<EmojiStyle>("color");
   const [query, setQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("All");
+  const [visibleLimit, setVisibleLimit] = useState(EMOJI_PAGE_SIZE);
   const [recent, setRecent] = useState<Record<EmojiStyle, string[]>>(() => ({
     color: readRecent("color"),
     linework: readRecent("linework"),
@@ -172,6 +174,10 @@ export default function EmojiPicker({ editorRef }: Props) {
     return matchesQuery && matchesGroup;
   }), [query, selectedGroup]);
 
+  useEffect(() => {
+    setVisibleLimit(EMOJI_PAGE_SIZE);
+  }, [isOpen, source, query, selectedGroup]);
+
   const recentItems = recent[source]
     .map((hex) => openMojiItems.find((item) => item.hexcode === hex))
     .filter((item): item is EmojiItem => Boolean(item));
@@ -180,6 +186,9 @@ export default function EmojiPicker({ editorRef }: Props) {
     const matchesGroup = selectedGroup === "All" || item.group === selectedGroup;
     return matchesQuery && matchesGroup;
   });
+
+  const nonRecentItems = filteredItems.filter((item) => !visibleRecent.some((recentItem) => recentItem.hexcode === item.hexcode));
+  const displayedItems = nonRecentItems.slice(0, visibleLimit);
 
   function renderEmoji(item: EmojiItem) {
     return (
@@ -225,8 +234,13 @@ export default function EmojiPicker({ editorRef }: Props) {
             <div className="emoji-picker-section">
               <h3>{selectedGroup === "All" ? "All emojis" : selectedGroup}</h3>
               <div className="emoji-picker-grid">
-                {filteredItems.filter((item) => !visibleRecent.some((recentItem) => recentItem.hexcode === item.hexcode)).map(renderEmoji)}
+                {displayedItems.map(renderEmoji)}
                 {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
+                {nonRecentItems.length > displayedItems.length && (
+                  <button type="button" className="emoji-picker-load-more" onClick={() => setVisibleLimit((limit) => limit + EMOJI_PAGE_SIZE)}>
+                    Load more ({(nonRecentItems.length - displayedItems.length).toLocaleString()} remaining)
+                  </button>
+                )}
               </div>
             </div>
           </div>
