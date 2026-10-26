@@ -45,8 +45,8 @@ const colorAssets = import.meta.glob("../../node_modules/openmoji/color/svg/*.sv
 const assetByHex = (assets: Record<string, () => Promise<string>>) => {
   const map = new Map<string, () => Promise<string>>();
   for (const [path, loader] of Object.entries(assets)) {
-    const match = path.match(/\\/([\\w-]+)\\.svg$/);
-    if (match) map.set(match[1].toUpperCase(), loader);
+    const filename = path.split("/").pop()?.replace(/\.svg$/, "");
+    if (filename) map.set(filename.toUpperCase(), loader);
   }
   return map;
 };
