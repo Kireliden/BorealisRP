@@ -7,8 +7,8 @@ import "./characters.css";
 import CharacterPortraitArt from "./CharacterPortraitArt";
 import RelationshipMap from "./RelationshipMap";
 import ExpressionManager from "./ExpressionManager";
-import { getResourceBlob, listResources } from "../resources/resources.storage";
-import { getWorkspaceResourceBlob, listWorkspaceResources } from "../resources/workspaceResources.storage";
+import { getResourceBlob, listResources, exportResourcesForMigration } from "../resources/resources.storage";
+import { getWorkspaceResourceBlob, listWorkspaceResources, migrateLegacyResources } from "../resources/workspaceResources.storage";
 import { loadWorkspaceCharacters, loadWorkspaceRelationshipKinds, saveWorkspaceCharacters, saveWorkspaceRelationshipKinds } from "./workspaceCharacters.storage";
 import type { ResourceRecord } from "../resources/resources.types";
 
@@ -39,7 +39,11 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
     }
     void Promise.all([
       loadWorkspaceCharacters(workspacePath),
-      listWorkspaceResources(workspacePath),
+      (async () => {
+        const legacyResources = await exportResourcesForMigration();
+        await migrateLegacyResources(workspacePath, legacyResources);
+        return listWorkspaceResources(workspacePath);
+      })(),
       loadWorkspaceRelationshipKinds(workspacePath),
     ]).then(async ([loadedCharacters, resources, kinds]) => {
       if (cancelled) return;
