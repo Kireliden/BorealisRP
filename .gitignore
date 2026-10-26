@@ -30,3 +30,6 @@ target/
 .env
 .env.*
 !.env.example
+
+# Generated OpenMoji assets (copied from node_modules before dev/build)
+public/openmoji/
