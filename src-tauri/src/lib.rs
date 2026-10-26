@@ -293,7 +293,14 @@ fn save_profile_sidebar_thumbnail(app: AppHandle, bytes: Vec<u8>) -> Result<Stri
 }
 #[tauri::command]
 fn remove_profile_sidebar_thumbnail(app: AppHandle) -> Result<(), String> {
-    let path = PathBuf::from(profile_sidebar_thumbnail_path(app)?);
+    // Removing an optional cache must be safe before the first thumbnail exists.
+    // Do not call profile_sidebar_thumbnail_path here: that command deliberately
+    // returns an error when the file is absent.
+    let path = app.path()
+        .app_data_dir()
+        .map_err(|error| format!("Could not locate BRD application storage: {error}"))?
+        .join("media")
+        .join("profile-sidebar-avatar.png");
     match fs::remove_file(path) {
         Ok(()) => Ok(()),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
