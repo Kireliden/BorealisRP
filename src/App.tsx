@@ -1630,7 +1630,7 @@ function sanitiseHtml(html: string) {
         />
       )}
       {activeLibraryPage === "projects" && <section className="projects-coming-soon"><div className="projects-coming-soon-content"><span className="projects-coming-soon-eyebrow">BOREALIS · WORKSPACE</span><h1>Coming soon!</h1><p>Something lovely is taking shape.</p><svg className="projects-coming-soon-moon" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div></section>}{activeLibraryPage === "characters" && <CharactersPage onClose={() => { setActiveLibraryPage(null); const refreshed = charactersFromLibrary(); setCharacters(refreshed); if (!refreshed.some((item) => item.name === selectedCharacter)) setSelectedCharacter(refreshed[0]?.name ?? "You"); }} />}
-      {activeLibraryPage === "resources" && <ResourcesPage onClose={() => setActiveLibraryPage(null)} />}
+      {activeLibraryPage === "resources" && <ResourcesPage onClose={() => setActiveLibraryPage(null)} workspacePath={activeWorkspace?.path} />}
       {isGlobalSearchOpen && <GlobalSearch onClose={() => setIsGlobalSearchOpen(false)} onOpenCharacters={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("characters"); }} onOpenResources={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("resources"); }} />}
     </main>
   );
