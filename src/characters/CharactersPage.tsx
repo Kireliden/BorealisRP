@@ -18,6 +18,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
   const [characters, setCharacters] = useState<CharacterRecord[]>(loadCharacters);
   const [storageError, setStorageError] = useState("");
   const [storageLoading, setStorageLoading] = useState(Boolean(workspacePath));
+  const [relationshipKinds, setRelationshipKinds] = useState<string[]>(["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"]);
   const [imageResources, setImageResources] = useState<ResourceRecord[]>([]);
   const [portraitUrls, setPortraitUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -44,12 +45,15 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
       if (cancelled) return;
       setCharacters(loadedCharacters);
       setImageResources(resources.filter((item) => item.kind === "image"));
+      if (kinds !== null) setRelationshipKinds(kinds);
       if (kinds === null) {
         let legacyKinds: string[] = [];
         try {
           const parsed: unknown = JSON.parse(localStorage.getItem("brd.relationship-kinds.v2") ?? "[]");
           if (Array.isArray(parsed)) legacyKinds = parsed.filter((item): item is string => typeof item === "string");
         } catch { /* Ignore malformed legacy preferences; the workspace starts with no custom types. */ }
+        const initialKinds = legacyKinds.length ? legacyKinds : ["Mother", "Father", "Sibling", "Partner", "Close friend", "Enemy", "Other"];
+        setRelationshipKinds(initialKinds);
         if (legacyKinds.length) await saveWorkspaceRelationshipKinds(workspacePath, legacyKinds);
       }
     }).catch((reason) => { if (!cancelled) setStorageError(reason instanceof Error ? reason.message : String(reason)); })
@@ -227,6 +231,8 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
         onClose={() => { setSelectedId(null); setIsCreating(false); }}
         onSave={save}
         onRelationshipKindsChanged={updateRelationshipKinds}
+        relationshipKinds={relationshipKinds}
+        workspaceScoped={Boolean(workspacePath)}
         onDelete={removeSelected}
       />}
     </main>
