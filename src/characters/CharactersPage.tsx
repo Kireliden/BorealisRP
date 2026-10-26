@@ -8,12 +8,16 @@ import CharacterPortraitArt from "./CharacterPortraitArt";
 import RelationshipMap from "./RelationshipMap";
 import ExpressionManager from "./ExpressionManager";
 import { getResourceBlob, listResources } from "../resources/resources.storage";
+import { getWorkspaceResourceBlob, listWorkspaceResources } from "../resources/workspaceResources.storage";
+import { loadWorkspaceCharacters, loadWorkspaceRelationshipKinds, saveWorkspaceCharacters, saveWorkspaceRelationshipKinds } from "./workspaceCharacters.storage";
 import type { ResourceRecord } from "../resources/resources.types";
 
-type Props = { onClose: () => void };
+type Props = { onClose: () => void; workspacePath?: string | null };
 
-export default function CharactersPage({ onClose }: Props) {
+export default function CharactersPage({ onClose, workspacePath }: Props) {
   const [characters, setCharacters] = useState<CharacterRecord[]>(loadCharacters);
+  const [storageError, setStorageError] = useState("");
+  const [storageLoading, setStorageLoading] = useState(Boolean(workspacePath));
   const [imageResources, setImageResources] = useState<ResourceRecord[]>([]);
   const [portraitUrls, setPortraitUrls] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -22,16 +26,45 @@ export default function CharactersPage({ onClose }: Props) {
   const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"characters" | "expressions" | "map">("characters");
-  useEffect(() => { void listResources().then((items) => setImageResources(items.filter((item) => item.kind === "image"))).catch(() => setImageResources([])); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    setStorageLoading(Boolean(workspacePath));
+    setStorageError("");
+    if (!workspacePath) {
+      setCharacters(loadCharacters());
+      setStorageLoading(false);
+      void listResources().then((items) => { if (!cancelled) setImageResources(items.filter((item) => item.kind === "image")); }).catch(() => { if (!cancelled) setImageResources([]); });
+      return () => { cancelled = true; };
+    }
+    void Promise.all([
+      loadWorkspaceCharacters(workspacePath),
+      listWorkspaceResources(workspacePath),
+      loadWorkspaceRelationshipKinds(workspacePath),
+    ]).then(async ([loadedCharacters, resources, kinds]) => {
+      if (cancelled) return;
+      setCharacters(loadedCharacters);
+      setImageResources(resources.filter((item) => item.kind === "image"));
+      if (kinds === null) {
+        let legacyKinds: string[] = [];
+        try {
+          const parsed: unknown = JSON.parse(localStorage.getItem("brd.relationship-kinds.v2") ?? "[]");
+          if (Array.isArray(parsed)) legacyKinds = parsed.filter((item): item is string => typeof item === "string");
+        } catch { /* Ignore malformed legacy preferences; the workspace starts with no custom types. */ }
+        if (legacyKinds.length) await saveWorkspaceRelationshipKinds(workspacePath, legacyKinds);
+      }
+    }).catch((reason) => { if (!cancelled) setStorageError(reason instanceof Error ? reason.message : String(reason)); })
+      .finally(() => { if (!cancelled) setStorageLoading(false); });
+    return () => { cancelled = true; };
+  }, [workspacePath]);
   useEffect(() => {
     let cancelled = false;
     const urls: Record<string, string> = {};
     void Promise.all(imageResources.map(async (resource) => {
-      const blob = await getResourceBlob(resource.id).catch(() => null);
+      const blob = (workspacePath ? await getWorkspaceResourceBlob(workspacePath, resource.id) : await getResourceBlob(resource.id)).catch(() => null);
       if (blob) urls[resource.id] = URL.createObjectURL(blob);
     })).then(() => { if (cancelled) Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); else setPortraitUrls(urls); });
     return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
-  }, [imageResources]);
+  }, [imageResources, workspacePath]);
   const selected = characters.find((character) => character.id === selectedId) ?? null;
   const allTags = useMemo(() => [...new Set(characters.flatMap((character) => character.tags))].sort(), [characters]);
   const filtered = characters.filter((character) => [character.name, character.subtitle, character.description, ...character.tags].join(" ").toLowerCase().includes(query.toLowerCase())).slice().sort((a, b) => {
@@ -42,7 +75,14 @@ export default function CharactersPage({ onClose }: Props) {
     return Date.parse(b.createdAt || "") - Date.parse(a.createdAt || "");
   });
 
-  function persist(next: CharacterRecord[]) { setCharacters(next); saveCharacters(next); }
+  function persist(next: CharacterRecord[]) {
+    setCharacters(next);
+    if (workspacePath) {
+      void saveWorkspaceCharacters(workspacePath, next).then(() => setStorageError("")).catch((reason) => setStorageError(reason instanceof Error ? reason.message : String(reason)));
+    } else {
+      saveCharacters(next);
+    }
+  }
   function openCharacter(character: CharacterRecord) {
     setSelectedId(character.id);
     setDraft({
@@ -131,7 +171,11 @@ export default function CharactersPage({ onClose }: Props) {
     setIsCreating(false);
   }
   function updateRelationshipKinds(nextKinds: string[], renames: { from: string; to: string }[]) {
-    localStorage.setItem("brd.relationship-kinds.v2", JSON.stringify(nextKinds));
+    if (workspacePath) {
+      void saveWorkspaceRelationshipKinds(workspacePath, nextKinds).then(() => setStorageError("")).catch((reason) => setStorageError(reason instanceof Error ? reason.message : String(reason)));
+    } else {
+      localStorage.setItem("brd.relationship-kinds.v2", JSON.stringify(nextKinds));
+    }
     if (!renames.length) return;
     const renameMap = new Map(renames.map(({ from, to }) => [from, to]));
     const next = characters.map((character) => {
@@ -159,8 +203,10 @@ export default function CharactersPage({ onClose }: Props) {
     </header>
     <main className="characters-layout">
       <div className="characters-view-switch" role="tablist" aria-label="Character views"><button type="button" role="tab" aria-selected={viewMode === "characters"} className={viewMode === "characters" ? "active" : ""} onClick={() => setViewMode("characters")}><LayoutGrid size={15}/> Characters</button><button type="button" role="tab" aria-selected={viewMode === "expressions"} className={viewMode === "expressions" ? "active" : ""} onClick={() => setViewMode("expressions")}><Sparkles size={15}/> Character Expressions</button><button type="button" role="tab" aria-selected={viewMode === "map"} className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")}><GitFork size={15}/> Mental Map</button></div>
-      {viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} imageResources={imageResources} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : viewMode === "expressions" ? <div className="characters-expressions-view"><ExpressionManager onClose={() => setViewMode("characters")} /></div> : <section className="characters-library">
-        <div className="library-eyebrow">GLOBAL ATELIER · {characters.length.toString().padStart(2, "0")} CHARACTERS</div>
+      {storageLoading ? <section className="characters-library"><div className="library-empty"><h2>Loading characters…</h2><p>Reading this workspace’s character library.</p></div></section> : viewMode === "map" ? <RelationshipMap characters={characters} portraitUrls={portraitUrls} imageResources={imageResources} onOpenCharacter={(character) => { setViewMode("characters"); openCharacter(character); }} /> : viewMode === "expressions" ? <div className="characters-expressions-view"><ExpressionManager onClose={() => setViewMode("characters")} /></div> : <section className="characters-library">
+        <div className="library-eyebrow">{workspacePath ? "WORKSPACE CAST" : "GLOBAL ATELIER"} · {characters.length.toString().padStart(2, "0")} CHARACTERS</div>
+        {storageLoading && <p role="status">Loading workspace characters…</p>}
+        {storageError && <p className="resource-error" role="alert">{storageError}</p>}
         <div className="library-heading-row"><div><h1>Characters</h1><p>A cast of characters, ready for any story.</p></div><button className="library-primary" type="button" onClick={startCreate}><Plus size={16} /> New character</button></div>
         <div className="character-library-tools"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search names, descriptions and tags…" /></label><label className="character-sort-control"><span>Sort by</span><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}><option value="newest">Recently created</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="updated">Recently updated</option></select></label></div>
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
