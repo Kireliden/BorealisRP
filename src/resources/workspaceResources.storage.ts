@@ -87,3 +87,30 @@ export async function deleteWorkspaceResource(workspacePath: string, id: string)
   manifest.resources = manifest.resources.filter((item) => item.id !== id);
   await saveManifest(workspacePath, manifest);
 }
+
+/**
+ * Copies the legacy IndexedDB library into this workspace without deleting or changing
+ * the original records. Existing workspace IDs win, making repeat runs safe.
+ */
+export async function migrateLegacyResources(
+  workspacePath: string,
+  legacy: Array<{ record: ResourceRecord; blob: Blob }>,
+): Promise<number> {
+  if (!legacy.length) return 0;
+  const manifest = await loadManifest(workspacePath);
+  const knownIds = new Set(manifest.resources.map((item) => item.id));
+  let copied = 0;
+
+  for (const item of legacy) {
+    if (knownIds.has(item.record.id)) continue;
+    const relativePath = resourcePath(item.record);
+    const bytes = new Uint8Array(await item.blob.arrayBuffer());
+    await writeWorkspaceFile(workspacePath, relativePath, bytes);
+    manifest.resources.push({ ...item.record, relativePath });
+    knownIds.add(item.record.id);
+    copied += 1;
+  }
+
+  if (copied) await saveManifest(workspacePath, manifest);
+  return copied;
+}
