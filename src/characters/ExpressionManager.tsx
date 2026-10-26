@@ -53,7 +53,13 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
  async function save() {
   if(!characterId){setError("Choose a character before saving.");return;}
   setBusy(true);setError("");
-  try {await saveReviewedCharacterExpressions(characterId,slots.filter((s):s is Slot&{blob:Blob}=>Boolean(s.blob)).map(s=>({key:s.key,image:s.blob,fileName:s.fileName})));setSaved(true);window.dispatchEvent(new Event("brd-character-expressions-updated"));}
+  try {
+   const reviewed = slots.filter((s): s is Slot&{blob:Blob}=>Boolean(s.blob)).map(s=>({key:s.key,image:s.blob,fileName:s.fileName}));
+   if (workspacePath) await saveWorkspaceReviewedCharacterExpressions(workspacePath, characterId, reviewed);
+   else await saveReviewedCharacterExpressions(characterId, reviewed);
+   setSaved(true);
+   window.dispatchEvent(new Event("brd-character-expressions-updated"));
+  }
   catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}
  }
  const back=(to:Step)=><button className="expression-back" onClick={()=>setStep(to)}><ArrowLeft size={15}/> Back</button>;
