@@ -17,8 +17,8 @@ type EmojiItem = {
   name: string;
   hexcode: string;
   group: string;
-  image: string;
-  colorImage: string;
+  image: () => Promise<string>;
+  colorImage: () => Promise<string>;
   searchText: string;
 };
 
@@ -127,7 +127,7 @@ export default function EmojiPicker({ editorRef }: Props) {
     });
   }
 
-  function insertEmoji(item: EmojiItem) {
+  async function insertEmoji(item: EmojiItem) {
     const editor = editorRef.current;
     if (!editor) return;
     editor.focus();
@@ -148,15 +148,16 @@ export default function EmojiPicker({ editorRef }: Props) {
     activeRange.deleteContents();
     const node = document.createElement(source === "system" || source === "linework" ? "span" : "img");
     if (source === "color") {
-      node.setAttribute("src", item.colorImage);
+      node.setAttribute("src", await item.colorImage());
       node.setAttribute("alt", item.emoji);
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-emoji message-openmoji-color";
       node.setAttribute("contenteditable", "false");
     } else if (source === "linework") {
-      node.setAttribute("data-openmoji-src", item.image);
-      (node as HTMLElement).style.maskImage = `url("${item.image}")`;
-      (node as HTMLElement).style.webkitMaskImage = `url("${item.image}")`;
+      const imageUrl = await item.image();
+      node.setAttribute("data-openmoji-src", imageUrl);
+      (node as HTMLElement).style.maskImage = `url("${imageUrl}")`;
+      (node as HTMLElement).style.webkitMaskImage = `url("${imageUrl}")`;
       node.setAttribute("aria-label", item.emoji);
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-linework";
@@ -197,9 +198,9 @@ export default function EmojiPicker({ editorRef }: Props) {
       <button key={item.hexcode} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name}
         onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
         {source === "color"
-          ? <img className="emoji-picker-color" src={item.colorImage} alt="" loading="lazy" />
+          ? <LazyOpenMoji loader={item.colorImage} className="emoji-picker-color" />
           : source === "linework"
-            ? <span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} />
+            ? <LazyOpenMoji loader={item.image} className="emoji-picker-openmoji" masked />
             : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
       </button>
     );
@@ -246,4 +247,16 @@ export default function EmojiPicker({ editorRef }: Props) {
       )}
     </div>
   );
+}
+
+
+function LazyOpenMoji({ loader, className, masked = false }: { loader: () => Promise<string>; className: string; masked?: boolean }) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    let active = true;
+    loader().then((value) => { if (active) setUrl(value); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [loader]);
+  if (masked) return <span className={className} aria-hidden="true" style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined} />;
+  return <img className={className} src={url || undefined} alt="" loading="lazy" />;
 }
