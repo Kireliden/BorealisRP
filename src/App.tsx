@@ -33,6 +33,7 @@ import GlobalSearch from "./GlobalSearch";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder, type WorkspaceCategory } from "./workspace/workspaceContent";
 import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath } from "./workspace/workspaceStorage";
+import { loadWorkspaceDraft, saveWorkspaceDraft } from "./workspace/workspaceDrafts.storage";
 import "./popup-motion.css";
 
 const appWindow = getCurrentWindow();
@@ -357,6 +358,8 @@ function sanitiseHtml(html: string) {
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const [enteringMessageId, setEnteringMessageId] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftLoadRequestRef = useRef(0);
   const characterPanelRef = useRef<HTMLElement>(null);
   const conversationRef = useRef<HTMLElement>(null);
   const previousMessageCountRef = useRef(messages.length);
@@ -615,6 +618,18 @@ function sanitiseHtml(html: string) {
         setActiveFolderId(null);
         setActiveSceneId(validScenes[0]?.id ?? null);
         setMessages(validScenes[0]?.messages ?? []);
+        const firstScene = validScenes[0];
+        if (firstScene) {
+          try {
+            const savedDraft = await loadWorkspaceDraft(activeWorkspace.path, firstScene.id);
+            if (!cancelled) {
+              setDraftHtml(savedDraft);
+              if (editorRef.current) editorRef.current.innerHTML = savedDraft;
+            }
+          } catch (reason) {
+            if (!cancelled) setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+          }
+        }
       })
       .catch((reason: unknown) => {
         if (!cancelled) setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
@@ -1102,13 +1117,38 @@ function sanitiseHtml(html: string) {
     }
   }
 
-  function selectScene(scene: WorkspaceScene) {
+  async function selectScene(scene: WorkspaceScene) {
     setActiveLibraryPage(null);
+    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    const requestId = ++draftLoadRequestRef.current;
     setActiveSceneId(scene.id);
     setMessages(scene.messages);
     setDraftHtml("");
+    if (editorRef.current) editorRef.current.innerHTML = "";
     setEditingMessageId(null);
     setWorkspaceError("");
+    if (!activeWorkspace) return;
+    try {
+      const savedDraft = await loadWorkspaceDraft(activeWorkspace.path, scene.id);
+      if (requestId !== draftLoadRequestRef.current) return;
+      setDraftHtml(savedDraft);
+      if (editorRef.current) editorRef.current.innerHTML = savedDraft;
+    } catch (reason) {
+      if (requestId === draftLoadRequestRef.current) setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
+  function handleDraftInput(html: string) {
+    setDraftHtml(html);
+    if (!activeWorkspace || !activeSceneId || editingMessageId !== null || workspaceLoading) return;
+    if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
+    const workspacePath = activeWorkspace.path;
+    const sceneId = activeSceneId;
+    draftSaveTimerRef.current = setTimeout(() => {
+      void saveWorkspaceDraft(workspacePath, sceneId, html)
+        .then(() => setWorkspaceError((current) => current.startsWith("Could not save draft:") ? "" : current))
+        .catch((reason: unknown) => setWorkspaceError(`Could not save draft: ${reason instanceof Error ? reason.message : String(reason)}`));
+    }, 500);
   }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -1470,7 +1510,7 @@ function sanitiseHtml(html: string) {
 <span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
-                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => setDraftHtml(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
                 <div className="composer-bottom"><span className="composer-hint">{editingMessageId !== null ? <>Editing message <span>·</span> <kbd>Enter</kbd> to save</> : <><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line <span>·</span> <kbd>↑</kbd> to edit latest</>}</span>{editingMessageId !== null && <button className="cancel-edit-button" type="button" onClick={cancelEditingMessage}>Cancel</button>}<button className="send-button" type="submit" disabled={!activeWorkspace || !activeSceneId || workspaceLoading || !draftHtml.replace(/<[^>]*>/g, "").trim()}>{editingMessageId !== null ? "Save changes" : "Send passage"} <span>↑</span></button></div>
               </form>
             </div>
