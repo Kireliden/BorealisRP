@@ -175,6 +175,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
     setIsCreating(false);
   }
   function updateRelationshipKinds(nextKinds: string[], renames: { from: string; to: string }[]) {
+    setRelationshipKinds(nextKinds);
     if (workspacePath) {
       void saveWorkspaceRelationshipKinds(workspacePath, nextKinds).then(() => setStorageError("")).catch((reason) => setStorageError(reason instanceof Error ? reason.message : String(reason)));
     } else {
@@ -231,7 +232,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
         onClose={() => { setSelectedId(null); setIsCreating(false); }}
         onSave={save}
         onRelationshipKindsChanged={updateRelationshipKinds}
-        relationshipKinds={relationshipKinds}
+        relationshipKinds={workspacePath ? relationshipKinds : undefined}
         workspaceScoped={Boolean(workspacePath)}
         onDelete={removeSelected}
       />}
