@@ -93,15 +93,19 @@ export async function deleteWorkspaceResource(workspacePath: string, id: string)
   await deleteWorkspaceFile(workspacePath, resource.relativePath);
 }
 
+const LEGACY_RESOURCE_MIGRATION_KEY = "brd.workspace-resource-migration.v1";
+
 /**
- * Copies the legacy IndexedDB library into this workspace without deleting or changing
- * the original records. Existing workspace IDs win, making repeat runs safe.
+ * Imports the legacy IndexedDB library into the first workspace that needs migration.
+ * Later workspaces start with their own resource library. The original records remain
+ * untouched, and the migration marker is written only after workspace changes succeed.
  */
 export async function migrateLegacyResources(
   workspacePath: string,
   legacy: Array<{ record: ResourceRecord; blob: Blob }>,
 ): Promise<number> {
-  if (!legacy.length) return 0;
+  if (localStorage.getItem(LEGACY_RESOURCE_MIGRATION_KEY) === "completed") return 0;
+
   const manifest = await loadManifest(workspacePath);
   const knownIds = new Set(manifest.resources.map((item) => item.id));
   let copied = 0;
@@ -117,5 +121,6 @@ export async function migrateLegacyResources(
   }
 
   if (copied) await saveManifest(workspacePath, manifest);
+  localStorage.setItem(LEGACY_RESOURCE_MIGRATION_KEY, "completed");
   return copied;
 }
