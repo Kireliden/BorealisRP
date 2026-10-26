@@ -37,3 +37,11 @@ export function writeWorkspaceJson(
   const bytes = new TextEncoder().encode(JSON.stringify(value, null, 2) + "\n");
   return writeWorkspaceFile(workspacePath, relativePath, bytes);
 }
+
+/** Removes a file stored inside a validated workspace. Missing files are treated as already removed. */
+export function deleteWorkspaceFile(workspacePath: string, relativePath: string): Promise<void> {
+  return invoke("delete_workspace_file", {
+    path: workspacePath,
+    relativePath,
+  });
+}
