@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ArrowLeft, Check, FileImage, Pencil, Save, Upload } from "lucide-react";
 import { loadCharacters } from "./characters.storage";
+import type { CharacterRecord } from "./characters.types";
 import { CHARACTER_EXPRESSION_SLOTS, saveReviewedCharacterExpressions, type CharacterExpressionKey } from "./characterExpressions.storage";
 import "./expressionManager.css";
 
-type Props = { onClose: () => void };
+type Props = { onClose: () => void; characters?: CharacterRecord[] };
 type Slot = { key: CharacterExpressionKey; label: string; blob: Blob | null; url: string | null; fileName: string };
 type Step = "welcome" | "templates" | "character" | "individual" | "sheet" | "review";
 const blank = (): Slot[] => CHARACTER_EXPRESSION_SLOTS.map(s => ({ ...s, blob: null, url: null, fileName: "" }));
