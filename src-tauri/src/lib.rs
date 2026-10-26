@@ -229,7 +229,6 @@ fn save_workspace_content(path: String, content: serde_json::Value) -> Result<()
     Ok(())
 }
 
-#[tauri::command]
 /// Resolve a workspace-relative file path without allowing traversal outside the workspace.
 fn workspace_file_path(workspace_path: &str, relative_path: &str) -> Result<PathBuf, String> {
     let workspace = read_workspace(Path::new(workspace_path))?;
@@ -288,6 +287,7 @@ fn write_workspace_file(path: String, relative_path: String, bytes: Vec<u8>) -> 
     Ok(())
 }
 
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
