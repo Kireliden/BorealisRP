@@ -23,6 +23,7 @@ import { loadCharacters } from "./characters/characters.storage";
 import { loadWorkspaceCharacters } from "./characters/workspaceCharacters.storage";
 import { characterAccentColor } from "./characters/characters.types";
 import { getResourceBlob } from "./resources/resources.storage";
+import { getWorkspaceResourceBlob } from "./resources/workspaceResources.storage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlob } from "./characters/workspaceCharacterExpressions.storage";
 import CharacterPortraitArt from "./characters/CharacterPortraitArt";
@@ -485,7 +486,9 @@ function sanitiseHtml(html: string) {
     const portraitIds = [...new Set(characters.map((item) => item.portraitResourceId).filter((id): id is string => Boolean(id)))];
     void Promise.all(portraitIds.map(async (id) => {
       try {
-        const blob = await getResourceBlob(id);
+        const blob = activeWorkspace
+          ? await getWorkspaceResourceBlob(activeWorkspace.path, id)
+          : await getResourceBlob(id);
         if (!blob || cancelled) return [id, ""] as const;
         const url = URL.createObjectURL(blob);
         objectUrls.push(url);
@@ -500,7 +503,7 @@ function sanitiseHtml(html: string) {
       cancelled = true;
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [characters]);
+  }, [characters, activeWorkspace?.path]);
   const characterResourcePortraitUrl = selectedCharacter === "You" || !selectedCharacterBase?.portraitResourceId
     ? null
     : characterPortraitUrls[selectedCharacterBase.portraitResourceId] ?? null;
