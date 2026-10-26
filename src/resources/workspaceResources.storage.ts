@@ -1,5 +1,5 @@
 import type { ResourceRecord } from "./resources.types";
-import { readWorkspaceFile, writeWorkspaceFile } from "../workspace/workspaceFiles";
+import { deleteWorkspaceFile, readWorkspaceFile, writeWorkspaceFile } from "../workspace/workspaceFiles";
 
 const MANIFEST_PATH = "Resources/manifest.json";
 const FILES_DIRECTORY = "Resources/Files";
@@ -84,8 +84,13 @@ export async function updateWorkspaceResourceTags(workspacePath: string, id: str
 
 export async function deleteWorkspaceResource(workspacePath: string, id: string): Promise<void> {
   const manifest = await loadManifest(workspacePath);
+  const resource = manifest.resources.find((item) => item.id === id);
+  if (!resource) return;
+
+  // Commit the metadata change first so a failed cleanup never leaves a dangling resource entry.
   manifest.resources = manifest.resources.filter((item) => item.id !== id);
   await saveManifest(workspacePath, manifest);
+  await deleteWorkspaceFile(workspacePath, resource.relativePath);
 }
 
 /**
