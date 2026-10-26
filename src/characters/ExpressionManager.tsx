@@ -3,14 +3,15 @@ import { ArrowLeft, Check, FileImage, Pencil, Save, Upload } from "lucide-react"
 import { loadCharacters } from "./characters.storage";
 import type { CharacterRecord } from "./characters.types";
 import { CHARACTER_EXPRESSION_SLOTS, saveReviewedCharacterExpressions, type CharacterExpressionKey } from "./characterExpressions.storage";
+import { saveWorkspaceReviewedCharacterExpressions } from "./workspaceCharacterExpressions.storage";
 import "./expressionManager.css";
 
-type Props = { onClose: () => void; characters?: CharacterRecord[] };
+type Props = { onClose: () => void; characters?: CharacterRecord[]; workspacePath?: string | null };
 type Slot = { key: CharacterExpressionKey; label: string; blob: Blob | null; url: string | null; fileName: string };
 type Step = "welcome" | "templates" | "character" | "individual" | "sheet" | "review";
 const blank = (): Slot[] => CHARACTER_EXPRESSION_SLOTS.map(s => ({ ...s, blob: null, url: null, fileName: "" }));
 
-export default function ExpressionManager({ onClose, characters: workspaceCharacters }: Props) {
+export default function ExpressionManager({ onClose, characters: workspaceCharacters, workspacePath }: Props) {
  const characters = (workspaceCharacters ?? loadCharacters()).filter(c => c.name.trim());
  const [step,setStep] = useState<Step>("welcome");
  const [characterId,setCharacterId] = useState("");
