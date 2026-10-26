@@ -28,7 +28,7 @@ async function loadManifest(workspacePath: string): Promise<WorkspaceResourceMan
     return candidate as WorkspaceResourceManifest;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (/not found|no such file|os error 2|could not inspect workspace file/i.test(message)) {
+    if (/not found|no such file|os error 2|system cannot find the file/i.test(message)) {
       return { schemaVersion: 1, resources: [] };
     }
     throw error;
@@ -69,7 +69,9 @@ export async function getWorkspaceResourceBlob(workspacePath: string, id: string
   const record = manifest.resources.find((item) => item.id === id);
   if (!record) return null;
   const bytes = await readWorkspaceFile(workspacePath, record.relativePath);
-  return new Blob([bytes], { type: record.mimeType });
+  // Copy into a standalone ArrayBuffer so TypeScript can safely treat it as a BlobPart.
+  const blobBytes = new Uint8Array(bytes);
+  return new Blob([blobBytes.buffer as ArrayBuffer], { type: record.mimeType });
 }
 
 export async function updateWorkspaceResourceTags(workspacePath: string, id: string, tags: string[]): Promise<void> {
