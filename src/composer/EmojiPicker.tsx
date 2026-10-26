@@ -17,8 +17,8 @@ type EmojiItem = {
   name: string;
   hexcode: string;
   group: string;
-  image: () => Promise<string>;
-  colorImage: () => Promise<string>;
+  image: string;
+  colorImage: string;
   searchText: string;
 };
 
@@ -31,27 +31,17 @@ const RECENT_KEY: Record<EmojiStyle, string> = {
   system: "borealis.emoji-recent.system",
 };
 
-// Keep SVGs as lazy URL imports: eagerly processing thousands of illustrations can
-// exhaust Windows file handles during production builds.
-const blackAssets = import.meta.glob("../../node_modules/openmoji/black/svg/*.svg", {
-  query: "?url",
-  import: "default",
-}) as Record<string, () => Promise<string>>;
-const colorAssets = import.meta.glob("../../node_modules/openmoji/color/svg/*.svg", {
-  query: "?url",
-  import: "default",
-}) as Record<string, () => Promise<string>>;
-
-const assetByHex = (assets: Record<string, () => Promise<string>>) => {
-  const map = new Map<string, () => Promise<string>>();
-  for (const [path, loader] of Object.entries(assets)) {
-    const filename = path.split("/").pop()?.replace(/\.svg$/, "");
-    if (filename) map.set(filename.toUpperCase(), loader);
+// OpenMoji SVGs are copied to public/openmoji by the predev/prebuild script.
+// Referencing public URLs avoids asking Vite to process thousands of SVG files.
+const assetByHex = (directory: string) => {
+  const map = new Map<string, string>();
+  for (const entry of openMojiData as OpenMojiRecord[]) {
+    if (entry.hexcode) map.set(entry.hexcode.toUpperCase(), `/openmoji/${directory}/svg/${entry.hexcode.toUpperCase()}.svg`);
   }
   return map;
 };
-const blackByHex = assetByHex(blackAssets);
-const colorByHex = assetByHex(colorAssets);
+const blackByHex = assetByHex("black");
+const colorByHex = assetByHex("color");
 
 const openMojiItems: EmojiItem[] = (openMojiData as OpenMojiRecord[])
   .filter((entry) => entry.emoji && entry.hexcode && blackByHex.has(entry.hexcode.toUpperCase()) && colorByHex.has(entry.hexcode.toUpperCase()))
@@ -126,7 +116,7 @@ export default function EmojiPicker({ editorRef }: Props) {
     });
   }
 
-  async function insertEmoji(item: EmojiItem) {
+  function insertEmoji(item: EmojiItem) {
     const editor = editorRef.current;
     if (!editor) return;
     editor.focus();
@@ -147,16 +137,15 @@ export default function EmojiPicker({ editorRef }: Props) {
     activeRange.deleteContents();
     const node = document.createElement(source === "system" || source === "linework" ? "span" : "img");
     if (source === "color") {
-      node.setAttribute("src", await item.colorImage());
+      node.setAttribute("src", item.colorImage);
       node.setAttribute("alt", item.emoji);
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-emoji message-openmoji-color";
       node.setAttribute("contenteditable", "false");
     } else if (source === "linework") {
-      const imageUrl = await item.image();
-      node.setAttribute("data-openmoji-src", imageUrl);
-      (node as HTMLElement).style.maskImage = `url("${imageUrl}")`;
-      (node as HTMLElement).style.webkitMaskImage = `url("${imageUrl}")`;
+      node.setAttribute("data-openmoji-src", item.image);
+      (node as HTMLElement).style.maskImage = `url("${item.image}")`;
+      (node as HTMLElement).style.webkitMaskImage = `url("${item.image}")`;
       node.setAttribute("aria-label", item.emoji);
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-linework";
@@ -197,9 +186,9 @@ export default function EmojiPicker({ editorRef }: Props) {
       <button key={item.hexcode} type="button" className="emoji-picker-item" title={item.name} aria-label={item.name}
         onMouseDown={(event) => event.preventDefault()} onClick={() => insertEmoji(item)}>
         {source === "color"
-          ? <LazyOpenMoji loader={item.colorImage} className="emoji-picker-color" />
+          ? <img className="emoji-picker-color" src={item.colorImage} alt="" loading="lazy" />
           : source === "linework"
-            ? <LazyOpenMoji loader={item.image} className="emoji-picker-openmoji" masked />
+            ? <span className="emoji-picker-openmoji" aria-hidden="true" style={{ maskImage: `url("${item.image}")`, WebkitMaskImage: `url("${item.image}")` }} />
             : <span className="emoji-picker-system" aria-hidden="true">{item.emoji}</span>}
       </button>
     );
@@ -248,14 +237,3 @@ export default function EmojiPicker({ editorRef }: Props) {
   );
 }
 
-
-function LazyOpenMoji({ loader, className, masked = false }: { loader: () => Promise<string>; className: string; masked?: boolean }) {
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    let active = true;
-    loader().then((value) => { if (active) setUrl(value); }).catch(() => undefined);
-    return () => { active = false; };
-  }, [loader]);
-  if (masked) return <span className={className} aria-hidden="true" style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined} />;
-  return <img className={className} src={url || undefined} alt="" loading="lazy" />;
-}
