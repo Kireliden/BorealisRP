@@ -242,6 +242,20 @@ fn workspace_file_path(workspace_path: &str, relative_path: &str) -> Result<Path
     Ok(Path::new(&workspace.path).join(relative))
 }
 
+/// Removes a file stored inside the selected workspace.
+#[tauri::command]
+fn delete_workspace_file(path: String, relative_path: String) -> Result<(), String> {
+    if relative_path == WORKSPACE_MANIFEST {
+        return Err("The workspace manifest cannot be deleted as an asset.".into());
+    }
+    let file_path = workspace_file_path(&path, &relative_path)?;
+    match fs::remove_file(&file_path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("Could not delete workspace file '{relative_path}': {error}")),
+    }
+}
+
 /// Reads bytes from a file stored inside the selected workspace.
 #[tauri::command]
 fn read_workspace_file(path: String, relative_path: String) -> Result<Vec<u8>, String> {
@@ -439,6 +453,7 @@ pub fn run() {
             save_workspace_content,
             read_workspace_file,
             write_workspace_file,
+            delete_workspace_file,
             import_profile_media,
             profile_sidebar_thumbnail_path,
             save_profile_sidebar_thumbnail,
