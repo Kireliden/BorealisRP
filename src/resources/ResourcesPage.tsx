@@ -3,10 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { deleteResource, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
+import { deleteWorkspaceResource, getWorkspaceResourceBlob, importWorkspaceResource, listWorkspaceResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
 
-type Props = { onClose: () => void };
+type Props = { onClose: () => void; workspacePath?: string | null };
 type NativeDroppedFile = { fileName: string; bytes: number[] };
 
 function mimeTypeFromName(fileName: string): string {
@@ -20,7 +21,7 @@ function mimeTypeFromName(fileName: string): string {
   return types[extension] ?? "application/octet-stream";
 }
 
-export default function ResourcesPage({ onClose }: Props) {
+export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [resources, setResources] = useState<ResourceRecord[]>([]);
   const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
@@ -34,13 +35,27 @@ export default function ResourcesPage({ onClose }: Props) {
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function refresh() { setResources(await listResources()); }
+  async function refresh() {
+    setResources(workspacePath ? await listWorkspaceResources(workspacePath) : await listResources());
+  }
+  async function getBlob(id: string) {
+    return workspacePath ? getWorkspaceResourceBlob(workspacePath, id) : getResourceBlob(id);
+  }
+  async function importFile(file: File) {
+    return workspacePath ? importWorkspaceResource(workspacePath, file) : importResource(file);
+  }
+  async function updateTags(id: string, tags: string[]) {
+    return workspacePath ? updateWorkspaceResourceTags(workspacePath, id, tags) : updateResourceTags(id, tags);
+  }
+  async function deleteFile(id: string) {
+    return workspacePath ? deleteWorkspaceResource(workspacePath, id) : deleteResource(id);
+  }
   useEffect(() => { void refresh().catch((reason) => setError(String(reason))); }, []);
   useEffect(() => {
     let cancelled = false;
     const urls: Record<string, string> = {};
     void Promise.all(resources.filter((item) => item.kind === "image").map(async (item) => {
-      const blob = await getResourceBlob(item.id).catch(() => null);
+      const blob = await getBlob(item.id).catch(() => null);
       if (blob) urls[item.id] = URL.createObjectURL(blob);
     })).then(() => { if (!cancelled) setThumbnailUrls(urls); else Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); });
     return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
@@ -58,7 +73,7 @@ export default function ResourcesPage({ onClose }: Props) {
         const buffer = new ArrayBuffer(dropped.bytes.length);
         new Uint8Array(buffer).set(dropped.bytes);
         const file = new File([buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
-        await importResource(file);
+        await importFile(file);
       }
       if (droppedFiles.length) await refresh();
     } catch (reason) {
@@ -91,7 +106,7 @@ export default function ResourcesPage({ onClose }: Props) {
   async function addFiles(files: FileList | File[]) {
     setError("");
     try {
-      for (const file of Array.from(files)) await importResource(file);
+      for (const file of Array.from(files)) await importFile(file);
       await refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   }
@@ -99,18 +114,18 @@ export default function ResourcesPage({ onClose }: Props) {
     setSelected(resource);
     setTagDraft(resource.tags.join(", "));
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const blob = await getResourceBlob(resource.id);
+    const blob = await getBlob(resource.id);
     setPreviewUrl(blob ? URL.createObjectURL(blob) : null);
   }
   async function saveTags() {
     if (!selected) return;
-    await updateResourceTags(selected.id, tagDraft.split(",").map((tag) => tag.trim()).filter(Boolean));
+    await updateTags(selected.id, tagDraft.split(",").map((tag) => tag.trim()).filter(Boolean));
     await refresh();
     setSelected((current) => current ? { ...current, tags: tagDraft.split(",").map((tag) => tag.trim()).filter(Boolean) } : null);
   }
   async function remove(resource: ResourceRecord) {
-    if (!window.confirm(`Delete “${resource.fileName}” from the global resource library?`)) return;
-    await deleteResource(resource.id);
+    if (!window.confirm(`Delete “${resource.fileName}” from the resource library?`)) return;
+    await deleteFile(resource.id);
     if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
     setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
     await refresh();
@@ -127,7 +142,7 @@ export default function ResourcesPage({ onClose }: Props) {
         const resource = resources.find((item) => item.id === id);
         if (!resource) continue;
         const merged = [...resource.tags, ...additions].filter((tag, index, tags) => tags.findIndex((other) => other.toLocaleLowerCase() === tag.toLocaleLowerCase()) === index);
-        await updateResourceTags(id, merged);
+        await updateTags(id, merged);
       }
       setBulkTagDraft("");
       setSelectedResourceIds([]);
@@ -149,7 +164,7 @@ export default function ResourcesPage({ onClose }: Props) {
     </header>
     <main className="resources-layout">
       <section className="resources-main">
-        <div className="library-eyebrow">GLOBAL ATELIER · {resources.length.toString().padStart(2, "0")} ASSETS</div>
+        <div className="library-eyebrow">{workspacePath ? "WORKSPACE LIBRARY" : "GLOBAL ATELIER"} · {resources.length.toString().padStart(2, "0")} ASSETS</div>
         <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
         <div className={`resource-dropzone ${dragging ? "is-dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); if (event.dataTransfer.files.length) void addFiles(event.dataTransfer.files); }}><Upload size={19} /><div><strong>Drop anything you want to keep close</strong><span>Images, audio, video and other files · stored in this app's local library</span></div><button type="button" onClick={() => inputRef.current?.click()}>Browse files</button></div>
