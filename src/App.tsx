@@ -197,7 +197,7 @@ function sanitiseHtml(html: string) {
       image.src = src;
       image.alt = source.getAttribute("alt") ?? "";
       image.title = source.getAttribute("title") ?? "";
-      image.className = "message-openmoji-emoji";
+      image.className = "message-openmoji-emoji message-openmoji-color";
       image.setAttribute("contenteditable", "false");
       return [image];
     }
