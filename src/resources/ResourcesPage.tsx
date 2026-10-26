@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
-import { deleteResource, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
-import { deleteWorkspaceResource, getWorkspaceResourceBlob, importWorkspaceResource, listWorkspaceResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
+import { deleteResource, exportResourcesForMigration, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
+import { deleteWorkspaceResource, getWorkspaceResourceBlob, importWorkspaceResource, listWorkspaceResources, migrateLegacyResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
 
@@ -36,7 +36,14 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function refresh() {
-    setResources(workspacePath ? await listWorkspaceResources(workspacePath) : await listResources());
+    if (workspacePath) {
+      // Preserve the legacy library and copy missing records into the selected workspace.
+      const legacy = await exportResourcesForMigration();
+      await migrateLegacyResources(workspacePath, legacy);
+      setResources(await listWorkspaceResources(workspacePath));
+      return;
+    }
+    setResources(await listResources());
   }
   async function getBlob(id: string) {
     return workspacePath ? getWorkspaceResourceBlob(workspacePath, id) : getResourceBlob(id);
@@ -50,7 +57,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   async function deleteFile(id: string) {
     return workspacePath ? deleteWorkspaceResource(workspacePath, id) : deleteResource(id);
   }
-  useEffect(() => { void refresh().catch((reason) => setError(String(reason))); }, []);
+  useEffect(() => { void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason))); }, [workspacePath]);
   useEffect(() => {
     let cancelled = false;
     const urls: Record<string, string> = {};
