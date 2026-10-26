@@ -24,6 +24,7 @@ import { loadWorkspaceCharacters } from "./characters/workspaceCharacters.storag
 import { characterAccentColor } from "./characters/characters.types";
 import { getResourceBlob } from "./resources/resources.storage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
+import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlob } from "./characters/workspaceCharacterExpressions.storage";
 import CharacterPortraitArt from "./characters/CharacterPortraitArt";
 import EffectLayer from "./effects/components/EffectLayer";
 import EmojiPicker from "./composer/EmojiPicker";
@@ -367,16 +368,27 @@ function sanitiseHtml(html: string) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { preferences } = usePreferences();
 
+
+  const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
+  const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | null>(null);
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
+  const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
+  const workspaceSelectionMadeRef = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
     let activeUrls: string[] = [];
     async function loadCustomExpressions() {
       const urls: Record<string, string> = {};
       try {
-        const libraryCharacters = loadCharacters();
+        const libraryCharacters = characters.filter((item): item is Character & { id: string } => Boolean(item.id));
+        if (activeWorkspace) {
+          await ensureWorkspaceCharacterExpressions(activeWorkspace.path, libraryCharacters.map((item) => item.id));
+        }
         await Promise.all(libraryCharacters.map(async (item) => {
           await Promise.all(CHARACTER_EXPRESSION_SLOTS.map(async (slot, index) => {
-            const blob = await getCharacterExpressionBlob(item.id, slot.key).catch(() => null);
+            const blob = await (activeWorkspace ? getWorkspaceCharacterExpressionBlob(activeWorkspace.path, item.id, slot.key) : getCharacterExpressionBlob(item.id, slot.key)).catch(() => null);
             if (blob) urls[`${item.id}:${expressions[index].emoji}`] = URL.createObjectURL(blob);
           }));
         }));
@@ -400,13 +412,7 @@ function sanitiseHtml(html: string) {
       window.removeEventListener("brd-character-expressions-updated", refreshExpressions);
       activeUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [characters]);
-  const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
-  const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | null>(null);
-  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
-  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
-  const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
-  const workspaceSelectionMadeRef = useRef(false);
+  }, [characters, activeWorkspace?.path]);
 
   useEffect(() => {
     let cancelled = false;
