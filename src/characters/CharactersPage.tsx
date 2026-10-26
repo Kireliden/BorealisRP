@@ -60,7 +60,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
     let cancelled = false;
     const urls: Record<string, string> = {};
     void Promise.all(imageResources.map(async (resource) => {
-      const blob = (workspacePath ? await getWorkspaceResourceBlob(workspacePath, resource.id) : await getResourceBlob(resource.id)).catch(() => null);
+      const blob = await (workspacePath ? getWorkspaceResourceBlob(workspacePath, resource.id) : getResourceBlob(resource.id)).catch(() => null);
       if (blob) urls[resource.id] = URL.createObjectURL(blob);
     })).then(() => { if (cancelled) Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); else setPortraitUrls(urls); });
     return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
