@@ -87,3 +87,19 @@ export async function updateResourceTags(id: string, tags: string[]): Promise<vo
     transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Could not update resource tags.")); };
   });
 }
+
+/** Returns legacy resource records with their binary payloads for a non-destructive migration. */
+export async function exportResourcesForMigration(): Promise<Array<{ record: ResourceRecord; blob: Blob }>> {
+  const db = await openResourceDb();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll();
+    request.onsuccess = () => {
+      db.close();
+      const migrated = (request.result as Array<ResourceRecord & { blob?: Blob }>)
+        .filter((item): item is ResourceRecord & { blob: Blob } => item.blob instanceof Blob && item.blob.size > 0)
+        .map(({ blob, ...record }) => ({ record, blob }));
+      resolve(migrated);
+    };
+    request.onerror = () => { db.close(); reject(request.error ?? new Error("Could not export legacy resources for migration.")); };
+  });
+}
