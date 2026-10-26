@@ -382,14 +382,16 @@ function sanitiseHtml(html: string) {
     async function loadCustomExpressions() {
       const urls: Record<string, string> = {};
       try {
-        const libraryCharacters = characters.filter((item): item is Character & { id: string } => Boolean(item.id));
+        const libraryCharacterIds = activeWorkspace
+          ? (await loadWorkspaceCharacters(activeWorkspace.path)).map((item) => item.id)
+          : loadCharacters().map((item) => item.id);
         if (activeWorkspace) {
-          await ensureWorkspaceCharacterExpressions(activeWorkspace.path, libraryCharacters.map((item) => item.id));
+          await ensureWorkspaceCharacterExpressions(activeWorkspace.path, libraryCharacterIds);
         }
-        await Promise.all(libraryCharacters.map(async (item) => {
+        await Promise.all(libraryCharacterIds.map(async (characterId) => {
           await Promise.all(CHARACTER_EXPRESSION_SLOTS.map(async (slot, index) => {
-            const blob = await (activeWorkspace ? getWorkspaceCharacterExpressionBlob(activeWorkspace.path, item.id, slot.key) : getCharacterExpressionBlob(item.id, slot.key)).catch(() => null);
-            if (blob) urls[`${item.id}:${expressions[index].emoji}`] = URL.createObjectURL(blob);
+            const blob = await (activeWorkspace ? getWorkspaceCharacterExpressionBlob(activeWorkspace.path, characterId, slot.key) : getCharacterExpressionBlob(characterId, slot.key)).catch(() => null);
+            if (blob) urls[`${characterId}:${expressions[index].emoji}`] = URL.createObjectURL(blob);
           }));
         }));
         if (cancelled) {
@@ -412,7 +414,7 @@ function sanitiseHtml(html: string) {
       window.removeEventListener("brd-character-expressions-updated", refreshExpressions);
       activeUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [characters, activeWorkspace?.path]);
+  }, [activeWorkspace?.path]);
 
   useEffect(() => {
     let cancelled = false;
