@@ -1156,6 +1156,9 @@ function sanitiseHtml(html: string) {
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!activeWorkspace || !activeSceneId || workspaceLoading) return;
+    const workspacePath = activeWorkspace.path;
+    const sceneId = activeSceneId;
+    const isEditingMessage = editingMessageId !== null;
     const editor = editorRef.current;
     const plainText = editor?.innerText.trim() ?? "";
     if (!plainText) return;
@@ -1198,15 +1201,17 @@ function sanitiseHtml(html: string) {
     const enteringId = editingMessageId === null ? nextMessages[nextMessages.length - 1]?.id : null;
     if (typeof enteringId === "number") setEnteringMessageId(null);
     await persistSceneMessages(nextMessages);
-    if (editingMessageId === null) {
+    if (!isEditingMessage) {
       if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
       try {
-        await saveWorkspaceDraft(activeWorkspace.path, activeSceneId, "");
+        await saveWorkspaceDraft(workspacePath, sceneId, "");
       } catch (reason) {
-        setWorkspaceError(`Could not clear saved draft: ${reason instanceof Error ? reason.message : String(reason)}`);
+        if (activeWorkspace?.path === workspacePath && activeSceneId === sceneId) {
+          setWorkspaceError(`Could not clear saved draft: ${reason instanceof Error ? reason.message : String(reason)}`);
+        }
       }
     }
-    if (typeof enteringId === "number") {
+    if (typeof enteringId === "number" && activeWorkspace?.path === workspacePath && activeSceneId === sceneId) {
       // Let React mount the message first, then apply the animation class on a later frame.
       // This reliably restarts the keyframes instead of mounting the element already animated.
       window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
@@ -1214,8 +1219,10 @@ function sanitiseHtml(html: string) {
         window.setTimeout(() => setEnteringMessageId((current) => current === enteringId ? null : current), 900);
       }));
     }
-    setDraftHtml("");
-    if (editor) editor.innerHTML = "";
+    if (activeWorkspace?.path === workspacePath && activeSceneId === sceneId) {
+      setDraftHtml("");
+      if (editor) editor.innerHTML = "";
+    }
   }
   return (
     <main className="app-shell" style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
