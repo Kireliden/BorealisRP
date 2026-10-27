@@ -69,12 +69,18 @@ export async function importWorkspaceResources(
   const manifest = await loadManifest(workspacePath);
   const imported: ResourceRecord[] = [];
 
-  for (const file of files) {
-    const record = createWorkspaceResourceRecord(file, tags);
-    const relativePath = resourcePath(record);
-    await writeWorkspaceFile(workspacePath, relativePath, new Uint8Array(await file.arrayBuffer()));
-    manifest.resources.push({ ...record, relativePath });
-    imported.push(record);
+  try {
+    for (const file of files) {
+      const record = createWorkspaceResourceRecord(file, tags);
+      const relativePath = resourcePath(record);
+      await writeWorkspaceFile(workspacePath, relativePath, new Uint8Array(await file.arrayBuffer()));
+      manifest.resources.push({ ...record, relativePath });
+      imported.push(record);
+    }
+  } catch (error) {
+    // Keep any files already written in this batch reachable if a later file fails.
+    if (imported.length) await saveManifest(workspacePath, manifest);
+    throw error;
   }
 
   await saveManifest(workspacePath, manifest);
