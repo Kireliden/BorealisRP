@@ -562,6 +562,12 @@ function sanitiseHtml(html: string) {
 
   useEffect(() => {
     let cancelled = false;
+    // Invalidate any scene-draft load started by the workspace we are leaving.
+    draftLoadRequestRef.current += 1;
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
+    }
     setWorkspaceError("");
     setDraftHtml("");
     setEditingMessageId(null);
