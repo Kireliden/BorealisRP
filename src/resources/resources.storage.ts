@@ -54,7 +54,16 @@ export async function importResources(files: File[], tags: string[] = []): Promi
     records.forEach((record) => store.put(record));
     transaction.oncomplete = () => {
       db.close();
-      resolve(records.map(({ blob: _blob, ...record }) => record));
+      resolve(records.map((record) => ({
+        id: record.id,
+        name: record.name,
+        fileName: record.fileName,
+        mimeType: record.mimeType,
+        kind: record.kind,
+        size: record.size,
+        tags: record.tags,
+        importedAt: record.importedAt,
+      })));
     };
     transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Could not import resources.")); };
     transaction.onabort = () => { db.close(); reject(transaction.error ?? new Error("Resource import was cancelled.")); };
