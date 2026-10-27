@@ -48,7 +48,7 @@ export async function listWorkspaceResources(workspacePath: string): Promise<Res
 function createWorkspaceResourceRecord(file: File, tags: string[]): ResourceRecord {
   return {
     id: crypto.randomUUID(),
-    name: file.name.replace(/\\.[^.]+$/, ""),
+    name: file.name.replace(/\.[^.]+$/, ""),
     fileName: file.name,
     mimeType: file.type || "application/octet-stream",
     kind: file.type.startsWith("image/") ? "image" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("video/") ? "video" : "other",
