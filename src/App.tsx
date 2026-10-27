@@ -377,6 +377,9 @@ function sanitiseHtml(html: string) {
   const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | null>(null);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
+  // Keep async workspace operations aware of the currently visible workspace.
+  const activeWorkspacePathRef = useRef<string | null>(null);
+  activeWorkspacePathRef.current = activeWorkspace?.path ?? null;
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
 
@@ -846,17 +849,21 @@ function sanitiseHtml(html: string) {
 
   async function persistSceneMessages(nextMessages: Message[]) {
     if (!activeWorkspace || !activeSceneId) return;
+    const workspacePath = activeWorkspace.path;
+    const sceneId = activeSceneId;
     const nextScenes = scenes.map((scene) =>
-      scene.id === activeSceneId ? { ...scene, messages: nextMessages } : scene,
+      scene.id === sceneId ? { ...scene, messages: nextMessages } : scene,
     );
     const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes, folders, categories };
     setScenes(nextScenes);
     setMessages(nextMessages);
     try {
-      await saveWorkspaceContent(activeWorkspace.path, content);
-      setWorkspaceError("");
+      await saveWorkspaceContent(workspacePath, content);
+      if (activeWorkspacePathRef.current === workspacePath) setWorkspaceError("");
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === workspacePath) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -1151,8 +1158,16 @@ function sanitiseHtml(html: string) {
     const sceneId = activeSceneId;
     draftSaveTimerRef.current = setTimeout(() => {
       void saveWorkspaceDraft(workspacePath, sceneId, html)
-        .then(() => setWorkspaceError((current) => current.startsWith("Could not save draft:") ? "" : current))
-        .catch((reason: unknown) => setWorkspaceError(`Could not save draft: ${reason instanceof Error ? reason.message : String(reason)}`));
+        .then(() => {
+          if (activeWorkspacePathRef.current === workspacePath) {
+            setWorkspaceError((current) => current.startsWith("Could not save draft:") ? "" : current);
+          }
+        })
+        .catch((reason: unknown) => {
+          if (activeWorkspacePathRef.current === workspacePath) {
+            setWorkspaceError(`Could not save draft: ${reason instanceof Error ? reason.message : String(reason)}`);
+          }
+        });
     }, 500);
   }
 
