@@ -879,6 +879,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = [...scenes, scene];
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       setActiveSceneId(scene.id);
       setMessages([]);
@@ -903,6 +904,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.filter((item) => item.id !== scene.id);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       if (activeSceneId === scene.id) {
         const nextActiveScene = nextScenes[0] ?? null;
@@ -930,6 +932,7 @@ function sanitiseHtml(html: string) {
     const nextFolders = folders.map((item) => item.id === folder.id ? { ...item, name } : item);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setWorkspaceError("");
     } catch (reason) {
@@ -948,6 +951,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.map((item) => item.id === scene.id ? { ...item, name } : item);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       setWorkspaceError("");
     } catch (reason) {
@@ -967,6 +971,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.filter((scene) => (scene.folderId ?? null) !== targetFolderId && scene.id !== draggedId).concat(siblings);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       setWorkspaceError("");
     } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
@@ -977,6 +982,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.map((scene) => scene.id === sceneId ? { ...scene, folderId } : scene);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       if (folderId) {
         setExpandedFolderIds((current) => current.includes(folderId) ? current : [...current, folderId]);
@@ -1000,6 +1006,7 @@ function sanitiseHtml(html: string) {
     const nextCategories = [...categories, category];
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders, categories: nextCategories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setCategories(nextCategories);
       setExpandedCategoryIds((current) => [...current, category.id]);
       setActiveCategoryId(category.id);
@@ -1020,6 +1027,7 @@ function sanitiseHtml(html: string) {
     const nextCategories = categories.map((item) => item.id === category.id ? { ...item, name } : item);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders, categories: nextCategories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setCategories(nextCategories);
       setWorkspaceError("");
     } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
@@ -1030,6 +1038,7 @@ function sanitiseHtml(html: string) {
     const nextFolders = folders.map((folder) => folder.id === folderId ? { ...folder, categoryId } : folder);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setWorkspaceError("");
     } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
@@ -1046,6 +1055,7 @@ function sanitiseHtml(html: string) {
     const nextFolders = folders.filter((item) => (item.categoryId ?? null) !== categoryId && item.id !== draggedId).concat(siblings);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setWorkspaceError("");
     } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
@@ -1059,6 +1069,7 @@ function sanitiseHtml(html: string) {
     nextCategories.splice(to, 0, moved);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders, categories: nextCategories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setCategories(nextCategories);
       setWorkspaceError("");
     } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
@@ -1079,6 +1090,7 @@ function sanitiseHtml(html: string) {
       : scenes;
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders: nextFolders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setScenes(nextScenes);
       setPendingSceneMoveId(null);
@@ -1101,6 +1113,7 @@ function sanitiseHtml(html: string) {
     const nextCategories = categories.filter((item) => item.id !== category.id);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes, folders: nextFolders, categories: nextCategories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setCategories(nextCategories);
       setExpandedCategoryIds((current) => current.filter((id) => id !== category.id));
@@ -1119,6 +1132,7 @@ function sanitiseHtml(html: string) {
     const nextScenes = scenes.map((scene) => scene.folderId === folder.id ? { ...scene, folderId: null } : scene);
     try {
       await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders: nextFolders, categories });
+      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setScenes(nextScenes);
       setExpandedFolderIds((current) => current.filter((id) => id !== folder.id));
