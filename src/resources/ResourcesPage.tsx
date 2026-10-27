@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
-import { deleteResource, exportResourcesForMigration, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
+import { deleteResource, exportResourcesForMigration, getResourceBlob, importResource, importResources, listResources, updateResourceTags } from "./resources.storage";
 import { deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResources, migrateLegacyResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
@@ -108,7 +108,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         return new File([buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
       });
       if (workspacePath) await importWorkspaceResources(workspacePath, files);
-      else for (const file of files) await importResource(file);
+      else await importResources(files);
       if (files.length) await refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -142,7 +142,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     try {
       const batch = Array.from(files);
       if (workspacePath) await importWorkspaceResources(workspacePath, batch);
-      else for (const file of batch) await importResource(file);
+      else await importResources(batch);
       if (batch.length) await refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   }
