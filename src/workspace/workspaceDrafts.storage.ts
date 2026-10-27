@@ -6,7 +6,21 @@ function draftPath(sceneId: string): string {
   return `Chats/Drafts/${encodeURIComponent(sceneId)}.json`;
 }
 
+// Serialize operations per workspace + scene so an older autosave cannot finish
+// after a newer save (for example, clearing a draft after sending a message).
+const pendingDraftWrites = new Map<string, Promise<void>>();
+
+function draftKey(workspacePath: string, sceneId: string): string {
+  return `${workspacePath}\u0000${sceneId}`;
+}
+
+async function waitForPendingWrite(workspacePath: string, sceneId: string): Promise<void> {
+  const pending = pendingDraftWrites.get(draftKey(workspacePath, sceneId));
+  if (pending) await pending.catch(() => undefined);
+}
+
 export async function loadWorkspaceDraft(workspacePath: string, sceneId: string): Promise<string> {
+  await waitForPendingWrite(workspacePath, sceneId);
   try {
     const bytes = await readWorkspaceFile(workspacePath, draftPath(sceneId));
     const value: unknown = JSON.parse(new TextDecoder().decode(bytes));
@@ -22,5 +36,16 @@ export async function loadWorkspaceDraft(workspacePath: string, sceneId: string)
 }
 
 export function saveWorkspaceDraft(workspacePath: string, sceneId: string, html: string): Promise<void> {
-  return writeWorkspaceJson(workspacePath, draftPath(sceneId), { html });
+  const key = draftKey(workspacePath, sceneId);
+  const previous = pendingDraftWrites.get(key) ?? Promise.resolve();
+  const next = previous
+    .catch(() => undefined)
+    .then(() => writeWorkspaceJson(workspacePath, draftPath(sceneId), { html }));
+
+  pendingDraftWrites.set(key, next);
+  const clearPending = () => {
+    if (pendingDraftWrites.get(key) === next) pendingDraftWrites.delete(key);
+  };
+  void next.then(clearPending, clearPending);
+  return next;
 }
