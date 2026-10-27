@@ -565,6 +565,22 @@ function sanitiseHtml(html: string) {
     setWorkspaceError("");
     setDraftHtml("");
     setEditingMessageId(null);
+    setOpenMessageActionsId(null);
+    setIsSceneOptionsOpen(false);
+    setCleanConfirmationStep(null);
+    setScenePendingDeletion(null);
+    setFolderPendingDeletion(null);
+    setCategoryPendingDeletion(null);
+    setIsCreatingScene(false);
+    setSceneNameDraft("");
+    setIsCreatingCategory(false);
+    setCategoryNameDraft("");
+    setIsCreatingFolder(false);
+    setFolderNameDraft("");
+    setPendingSceneMoveId(null);
+    setDraggingNode(null);
+    setDraggingSceneId(null);
+    pointerDragRef.current = null;
     if (!activeWorkspace) {
       setScenes([]);
       setFolders([]);
@@ -889,7 +905,9 @@ function sanitiseHtml(html: string) {
       setSceneNameDraft("");
       setIsCreatingScene(false);
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -917,7 +935,9 @@ function sanitiseHtml(html: string) {
       setWorkspaceError("");
       setScenePendingDeletion(null);
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -936,7 +956,9 @@ function sanitiseHtml(html: string) {
       setFolders(nextFolders);
       setWorkspaceError("");
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -955,7 +977,9 @@ function sanitiseHtml(html: string) {
       setScenes(nextScenes);
       setWorkspaceError("");
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -974,7 +998,7 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function moveSceneToFolder(sceneId: string, folderId: string | null) {
@@ -991,7 +1015,7 @@ function sanitiseHtml(html: string) {
         setActiveFolderId(null);
       }
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function createCategory() {
@@ -1013,7 +1037,7 @@ function sanitiseHtml(html: string) {
       setCategoryNameDraft("");
       setIsCreatingCategory(false);
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function renameCategory(category: WorkspaceCategory) {
@@ -1030,7 +1054,7 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setCategories(nextCategories);
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function moveFolder(folderId: string, categoryId: string | null) {
@@ -1041,7 +1065,7 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function reorderFolders(draggedId: string, targetId: string, categoryId: string | null) {
@@ -1058,7 +1082,7 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setFolders(nextFolders);
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function reorderCategories(draggedId: string, targetId: string) {
@@ -1072,7 +1096,7 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setCategories(nextCategories);
       setWorkspaceError("");
-    } catch (reason) { setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
+    } catch (reason) { if (activeWorkspacePathRef.current === activeWorkspace.path) setWorkspaceError(reason instanceof Error ? reason.message : String(reason)); }
   }
 
   async function createFolder() {
@@ -1100,7 +1124,9 @@ function sanitiseHtml(html: string) {
       setIsCreatingFolder(false);
       setWorkspaceError("");
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -1121,7 +1147,9 @@ function sanitiseHtml(html: string) {
       setCategoryPendingDeletion(null);
       setWorkspaceError("");
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
@@ -1140,7 +1168,9 @@ function sanitiseHtml(html: string) {
       setFolderPendingDeletion(null);
       setWorkspaceError("");
     } catch (reason) {
-      setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === activeWorkspace.path) {
+        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
     }
   }
 
