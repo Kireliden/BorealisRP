@@ -614,7 +614,10 @@ function sanitiseHtml(html: string) {
             folders: validFolders,
             categories: validCategories,
           });
+          // Workspace may have changed while the migration was being saved.
+          if (cancelled) return;
         }
+        if (cancelled) return;
         setCategories(validCategories);
         setExpandedCategoryIds(validCategories.map((category) => category.id));
         setExpandedFolderIds(validFolders.map((folder) => folder.id));
