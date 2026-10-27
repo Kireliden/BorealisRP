@@ -45,10 +45,10 @@ export async function listWorkspaceResources(workspacePath: string): Promise<Res
   return manifest.resources.slice().sort((a, b) => b.importedAt.localeCompare(a.importedAt));
 }
 
-export async function importWorkspaceResource(workspacePath: string, file: File, tags: string[] = []): Promise<ResourceRecord> {
-  const record: ResourceRecord = {
+function createWorkspaceResourceRecord(file: File, tags: string[]): ResourceRecord {
+  return {
     id: crypto.randomUUID(),
-    name: file.name.replace(/\.[^.]+$/, ""),
+    name: file.name.replace(/\\.[^.]+$/, ""),
     fileName: file.name,
     mimeType: file.type || "application/octet-stream",
     kind: file.type.startsWith("image/") ? "image" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("video/") ? "video" : "other",
@@ -56,11 +56,33 @@ export async function importWorkspaceResource(workspacePath: string, file: File,
     tags: [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))],
     importedAt: new Date().toISOString(),
   };
+}
+
+/** Import a batch of files while loading and saving the manifest only once. */
+export async function importWorkspaceResources(
+  workspacePath: string,
+  files: File[],
+  tags: string[] = [],
+): Promise<ResourceRecord[]> {
+  if (!files.length) return [];
+
   const manifest = await loadManifest(workspacePath);
-  const relativePath = resourcePath(record);
-  await writeWorkspaceFile(workspacePath, relativePath, new Uint8Array(await file.arrayBuffer()));
-  manifest.resources.push({ ...record, relativePath });
+  const imported: ResourceRecord[] = [];
+
+  for (const file of files) {
+    const record = createWorkspaceResourceRecord(file, tags);
+    const relativePath = resourcePath(record);
+    await writeWorkspaceFile(workspacePath, relativePath, new Uint8Array(await file.arrayBuffer()));
+    manifest.resources.push({ ...record, relativePath });
+    imported.push(record);
+  }
+
   await saveManifest(workspacePath, manifest);
+  return imported;
+}
+
+export async function importWorkspaceResource(workspacePath: string, file: File, tags: string[] = []): Promise<ResourceRecord> {
+  const [record] = await importWorkspaceResources(workspacePath, [file], tags);
   return record;
 }
 
@@ -95,6 +117,10 @@ export async function deleteWorkspaceResource(workspacePath: string, id: string)
 
 const LEGACY_RESOURCE_MIGRATION_KEY = "brd.workspace-resource-migration.v1";
 
+export function hasCompletedLegacyResourceMigration(): boolean {
+  return localStorage.getItem(LEGACY_RESOURCE_MIGRATION_KEY) === "completed";
+}
+
 /**
  * Imports the legacy IndexedDB library into the first workspace that needs migration.
  * Later workspaces start with their own resource library. The original records remain
@@ -104,7 +130,7 @@ export async function migrateLegacyResources(
   workspacePath: string,
   legacy: Array<{ record: ResourceRecord; blob: Blob }>,
 ): Promise<number> {
-  if (localStorage.getItem(LEGACY_RESOURCE_MIGRATION_KEY) === "completed") return 0;
+  if (hasCompletedLegacyResourceMigration()) return 0;
 
   const manifest = await loadManifest(workspacePath);
   const knownIds = new Set(manifest.resources.map((item) => item.id));
