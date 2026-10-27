@@ -2,6 +2,17 @@
 
 This changelog records significant known project changes. It is not a complete Git history. Dates are approximate where an exact implementation date was not recorded.
 
+## 2026-10-27 — Resource library performance and inspector layout
+
+- Batched multi-file imports in the workspace resource library so the manifest is loaded and saved once per batch rather than once per image.
+- Batched global resource imports into a single IndexedDB transaction.
+- Reused existing image thumbnail object URLs when the resource list changes, loading only newly added images and releasing URLs for removed assets.
+- Avoided repeatedly reading the legacy global resource library after its one-time migration has completed.
+- Moved the selected-resource inspector out of the scrolling library content container so it can occupy the right-hand side panel beside the resource grid.
+- Preserved manifest entries for files already written if a later file in a workspace import batch fails.
+- Runtime performance and layout still require verification in the running app; a successful build alone does not confirm perceived responsiveness.
+
+
 ## 2026-10-16 — Documentation baseline
 
 - Created the initial developer documentation set:
