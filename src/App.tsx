@@ -1209,12 +1209,12 @@ function sanitiseHtml(html: string) {
     draftSaveTimerRef.current = setTimeout(() => {
       void saveWorkspaceDraft(workspacePath, sceneId, html)
         .then(() => {
-          if (activeWorkspacePathRef.current === workspacePath) {
+          if (activeWorkspacePathRef.current === workspacePath && activeSceneId === sceneId) {
             setWorkspaceError((current) => current.startsWith("Could not save draft:") ? "" : current);
           }
         })
         .catch((reason: unknown) => {
-          if (activeWorkspacePathRef.current === workspacePath) {
+          if (activeWorkspacePathRef.current === workspacePath && activeSceneId === sceneId) {
             setWorkspaceError(`Could not save draft: ${reason instanceof Error ? reason.message : String(reason)}`);
           }
         });
@@ -1267,10 +1267,13 @@ function sanitiseHtml(html: string) {
     }
 
     const enteringId = editingMessageId === null ? nextMessages[nextMessages.length - 1]?.id : null;
+    if (!isEditingMessage && draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current);
+      draftSaveTimerRef.current = null;
+    }
     if (typeof enteringId === "number") setEnteringMessageId(null);
     await persistSceneMessages(nextMessages);
     if (!isEditingMessage) {
-      if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
       try {
         await saveWorkspaceDraft(workspacePath, sceneId, "");
       } catch (reason) {
