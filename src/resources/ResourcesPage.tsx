@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { deleteResource, exportResourcesForMigration, getResourceBlob, importResource, listResources, updateResourceTags } from "./resources.storage";
-import { deleteWorkspaceResource, getWorkspaceResourceBlob, importWorkspaceResource, listWorkspaceResources, migrateLegacyResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
+import { deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResources, migrateLegacyResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceRecord } from "./resources.types";
 import "./resources.css";
 
@@ -24,6 +24,7 @@ function mimeTypeFromName(fileName: string): string {
 export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [resources, setResources] = useState<ResourceRecord[]>([]);
   const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
+  const thumbnailUrlsRef = useRef<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [tagDraft, setTagDraft] = useState("");
@@ -37,9 +38,11 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
 
   async function refresh() {
     if (workspacePath) {
-      // Preserve the legacy library and copy missing records into the selected workspace.
-      const legacy = await exportResourcesForMigration();
-      await migrateLegacyResources(workspacePath, legacy);
+      // Only read the legacy library once, when a migration is still needed.
+      if (!hasCompletedLegacyResourceMigration()) {
+        const legacy = await exportResourcesForMigration();
+        await migrateLegacyResources(workspacePath, legacy);
+      }
       setResources(await listWorkspaceResources(workspacePath));
       return;
     }
@@ -47,9 +50,6 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }
   async function getBlob(id: string) {
     return workspacePath ? getWorkspaceResourceBlob(workspacePath, id) : getResourceBlob(id);
-  }
-  async function importFile(file: File) {
-    return workspacePath ? importWorkspaceResource(workspacePath, file) : importResource(file);
   }
   async function updateTags(id: string, tags: string[]) {
     return workspacePath ? updateWorkspaceResourceTags(workspacePath, id, tags) : updateResourceTags(id, tags);
@@ -60,13 +60,39 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   useEffect(() => { void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason))); }, [workspacePath]);
   useEffect(() => {
     let cancelled = false;
-    const urls: Record<string, string> = {};
-    void Promise.all(resources.filter((item) => item.kind === "image").map(async (item) => {
+    const scope = workspacePath ?? "__global__";
+    const imageResources = resources.filter((item) => item.kind === "image");
+    const activeKeys = new Set(imageResources.map((item) => `${scope}::${item.id}`));
+
+    // Keep existing thumbnails when the library changes; only load newly added images.
+    for (const [key, url] of Object.entries(thumbnailUrlsRef.current)) {
+      if (!activeKeys.has(key)) {
+        URL.revokeObjectURL(url);
+        delete thumbnailUrlsRef.current[key];
+      }
+    }
+
+    const missing = imageResources.filter((item) => !thumbnailUrlsRef.current[`${scope}::${item.id}`]);
+    void Promise.all(missing.map(async (item) => {
       const blob = await getBlob(item.id).catch(() => null);
-      if (blob) urls[item.id] = URL.createObjectURL(blob);
-    })).then(() => { if (!cancelled) setThumbnailUrls(urls); else Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); });
-    return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
-  }, [resources]);
+      return blob ? [`${scope}::${item.id}`, URL.createObjectURL(blob)] as const : null;
+    })).then((created) => {
+      const urls = created.filter((item): item is readonly [string, string] => item !== null);
+      if (cancelled) {
+        urls.forEach(([, url]) => URL.revokeObjectURL(url));
+        return;
+      }
+      urls.forEach(([key, url]) => { thumbnailUrlsRef.current[key] = url; });
+      setThumbnailUrls({ ...thumbnailUrlsRef.current });
+    });
+
+    return () => { cancelled = true; };
+  }, [resources, workspacePath]);
+
+  useEffect(() => () => {
+    Object.values(thumbnailUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+    thumbnailUrlsRef.current = {};
+  }, []);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
@@ -76,13 +102,14 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setError("");
     try {
       const droppedFiles = await invoke<NativeDroppedFile[]>("read_dropped_resource_files", { paths });
-      for (const dropped of droppedFiles) {
+      const files = droppedFiles.map((dropped) => {
         const buffer = new ArrayBuffer(dropped.bytes.length);
         new Uint8Array(buffer).set(dropped.bytes);
-        const file = new File([buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
-        await importFile(file);
-      }
-      if (droppedFiles.length) await refresh();
+        return new File([buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
+      });
+      if (workspacePath) await importWorkspaceResources(workspacePath, files);
+      else for (const file of files) await importResource(file);
+      if (files.length) await refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
     }
@@ -113,8 +140,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   async function addFiles(files: FileList | File[]) {
     setError("");
     try {
-      for (const file of Array.from(files)) await importFile(file);
-      await refresh();
+      const batch = Array.from(files);
+      if (workspacePath) await importWorkspaceResources(workspacePath, batch);
+      else for (const file of batch) await importResource(file);
+      if (batch.length) await refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   }
   async function openPreview(resource: ResourceRecord) {
@@ -178,6 +207,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     </header>
     <main className="resources-layout">
       <section className="resources-main">
+        <div className="resources-library-content">
         <div className="library-eyebrow">{workspacePath ? "WORKSPACE LIBRARY" : "GLOBAL ATELIER"} · {resources.length.toString().padStart(2, "0")} ASSETS</div>
         <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
@@ -190,10 +220,11 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <div className="resource-grid">{filtered.map((resource) => <div key={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
             <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => void openPreview(resource)}>
-              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[resource.id] ? <img src={thumbnailUrls[resource.id]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
+              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[resource.id]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
               <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
             </button>
           </div>)}</div>}
+        </div>
       {selected && <aside className="resource-inspector"><div className="character-editor-top"><span>RESOURCE DETAILS</span><button type="button" onClick={() => { setSelected(null); setPreviewUrl(null); }} aria-label="Close resource details"><X size={16} /></button></div>
         <div className="resource-preview-large">{previewUrl && selected.kind === "image" ? <img src={previewUrl} alt={selected.fileName} /> : previewUrl && selected.kind === "audio" ? <audio controls src={previewUrl} /> : previewUrl && selected.kind === "video" ? <video controls src={previewUrl} /> : iconFor(selected)}</div>
         <h2>{selected.name}</h2><p className="resource-file-name">{selected.fileName}</p><div className="resource-metadata"><span>Type</span><strong>{selected.mimeType || "Unknown"}</strong><span>Size</span><strong>{(selected.size / 1024 / 1024).toFixed(2)} MB</strong></div>
