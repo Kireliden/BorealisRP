@@ -28,11 +28,10 @@ export async function listResources(): Promise<ResourceRecord[]> {
   });
 }
 
-export async function importResource(file: File, tags: string[] = []): Promise<ResourceRecord> {
-  const db = await openResourceDb();
-  const record: ResourceRecord & { blob: Blob } = {
+function createResourceRecord(file: File, tags: string[]): ResourceRecord & { blob: Blob } {
+  return {
     id: crypto.randomUUID(),
-    name: file.name.replace(/\.[^.]+$/, ""),
+    name: file.name.replace(/\\.[^.]+$/, ""),
     fileName: file.name,
     mimeType: file.type || "application/octet-stream",
     kind: file.type.startsWith("image/") ? "image" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("video/") ? "video" : "other",
@@ -41,13 +40,30 @@ export async function importResource(file: File, tags: string[] = []): Promise<R
     importedAt: new Date().toISOString(),
     blob: file,
   };
+}
+
+/** Import multiple resources in one IndexedDB transaction. */
+export async function importResources(files: File[], tags: string[] = []): Promise<ResourceRecord[]> {
+  if (!files.length) return [];
+  const db = await openResourceDb();
+  const records = files.map((file) => createResourceRecord(file, tags));
+
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
-    transaction.objectStore(STORE_NAME).put(record);
-    transaction.oncomplete = () => { db.close(); resolve({ id: record.id, name: record.name, fileName: record.fileName, mimeType: record.mimeType, kind: record.kind, size: record.size, tags: record.tags, importedAt: record.importedAt }); };
-    transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Could not import resource.")); };
+    const store = transaction.objectStore(STORE_NAME);
+    records.forEach((record) => store.put(record));
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(records.map(({ blob: _blob, ...record }) => record));
+    };
+    transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Could not import resources.")); };
     transaction.onabort = () => { db.close(); reject(transaction.error ?? new Error("Resource import was cancelled.")); };
   });
+}
+
+export async function importResource(file: File, tags: string[] = []): Promise<ResourceRecord> {
+  const [record] = await importResources([file], tags);
+  return record;
 }
 
 export async function getResourceBlob(id: string): Promise<Blob | null> {
