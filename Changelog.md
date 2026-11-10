@@ -2,8 +2,17 @@
 
 This changelog records meaningful project changes, not every Git commit. Dates are approximate where an exact implementation date was not recorded. Completed code and user-confirmed behavior are distinguished from work that still needs broader testing.
 
-**Current development status (10 November 2026):** internal Alpha, work in progress. The repository's package and Tauri configuration currently declare `0.1.0`. The retrospective `v0.0.x` milestones and proposed `v0.1.0-alpha.1` label below are **historical/organizational labels only**; they were not necessarily published, built, or tagged in Git. No official releases are implied.
+**Current development status (11 November 2026):** internal Alpha, work in progress. The repository's package and Tauri configuration currently declare `0.1.0`. The retrospective `v0.0.x` milestones and proposed `v0.1.0-alpha.1` label below are **historical/organizational labels only**; they were not necessarily published, built, or tagged in Git. No official releases are implied.
 
+
+
+## 2026-11-11 — BRS branding and final interface polish
+
+- Standardised visible **BRS** initials for Borealis Roleplay Studio across the profile, holographic avatar card, Resources dialogs, workspace manager, settings, user-facing errors and development documentation.
+- Preserved legacy `brd.*` application storage keys, event names, CSS selectors, character identifiers and migration markers to avoid breaking existing data and integrations. These are internal compatibility identifiers, not display branding.
+- Rebuilt the Moon/Star special-title aura as an outward-expanding rounded outline, using equal physical spacing on every side and a restrained 6.8-second cycle; opened the sidebar's clipping containers to show it.
+- Added a close button to the workspace status notice. The dismissal lasts for the current app session, while a newly raised workspace error makes the notice visible again.
+- Kept the existing accessibility/reduced-motion behavior for visual effects. Visual checks on narrow sidebars and multiple themes remain recommended.
 
 ## 2026-11-10 — Studio naming, scene rename and visual polish
 
