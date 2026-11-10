@@ -69,7 +69,7 @@ fn read_workspace(path: &Path) -> Result<WorkspaceInfo, String> {
         .map_err(|error| format!("The workspace manifest is invalid JSON: {error}"))?;
 
     if manifest.format != WORKSPACE_FORMAT {
-        return Err("This folder is not a Borealis Roleplay Den workspace.".into());
+        return Err("This folder is not a Borealis Roleplay Studio workspace.".into());
     }
     if manifest.schema_version != WORKSPACE_SCHEMA_VERSION {
         return Err(format!(
