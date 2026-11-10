@@ -17,3 +17,28 @@
 .resource-card-tags i:nth-child(5n){--tag-colour:var(--ctp-peach)}
 
 .resource-select-all{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--ctp-subtext1);font-size:10px;cursor:pointer;user-select:none}.resource-select-all input{width:14px;height:14px;margin:0;accent-color:var(--accent);cursor:pointer}.resource-grid{position:relative;user-select:none}.resource-grid:has(.resource-selection-rectangle){cursor:crosshair}.resource-selection-rectangle{position:absolute;z-index:4;pointer-events:none;border:1px solid var(--accent);border-radius:3px;background:color-mix(in srgb,var(--accent) 16%,transparent)}
+
+
+/* Gallery presentation: reveal controls and metadata only on hover. */
+.resources-library-content{position:relative}
+.resource-select{opacity:0;pointer-events:none;transition:opacity .15s ease}
+.resource-card-shell:hover .resource-select,
+.resource-card-shell:focus-within .resource-select,
+.resource-card-shell:has(.resource-select input:checked) .resource-select{opacity:1;pointer-events:auto}
+.resource-card>strong,
+.resource-card>small,
+.resource-card-tags{visibility:hidden;opacity:0;transition:opacity .15s ease,visibility .15s ease}
+.resource-card:hover>strong,
+.resource-card:hover>small,
+.resource-card:hover .resource-card-tags,
+.resource-card:focus-visible>strong,
+.resource-card:focus-visible>small,
+.resource-card:focus-visible .resource-card-tags{visibility:visible;opacity:1}
+.resources-library-content:has(.resource-selection-rectangle){cursor:crosshair}
+.resource-selection-rectangle{z-index:8}
+@media(hover:none){
+  .resource-select{opacity:1;pointer-events:auto}
+  .resource-card>strong,
+  .resource-card>small,
+  .resource-card-tags{visibility:visible;opacity:1}
+}
