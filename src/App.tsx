@@ -1506,9 +1506,6 @@ function sanitiseHtml(html: string) {
                       expressionImage={selectedCharacter !== "You" ? (customExpressionUrls[`${character.id}:${selectedExpression}`] ?? null) : null}
                       expressionIsPhoto={selectedCharacter !== "You" && Boolean(customExpressionUrls[`${character.id}:${selectedExpression}`])}
                       expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
-                      // The local profile has its own framing preferences.
-                      // Keep the original image/GIF in the 4:5 composer portrait;
-                      // the small sidebar thumbnail is generated separately on profile save.
                       fit={selectedCharacter === "You" ? "cover" : character.portraitFit ?? "contain"}
                       positionX={selectedCharacter === "You" ? preferences.profile.avatarPositionX : character.portraitPositionX ?? 50}
                       positionY={selectedCharacter === "You" ? preferences.profile.avatarPositionY : character.portraitPositionY ?? 50}
