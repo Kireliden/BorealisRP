@@ -1,4 +1,4 @@
-# 🔒 BRD — Holographic Character Portrait Template (LOCKED)
+# 🔒 BRS — Holographic Character Portrait Template (LOCKED)
 
 **Status:** Approved / DO NOT regress  
 **Project:** Borealis Roleplay Studio (BorealisRP)
