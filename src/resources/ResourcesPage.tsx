@@ -101,6 +101,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     const target = event.target;
     if (target instanceof Element && target.closest(".resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
+    event.currentTarget.setPointerCapture(event.pointerId);
   }
   function handleGridPointerMove(event: PointerEvent<HTMLDivElement>) {
     const drag = dragSelection.current;
@@ -109,6 +110,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     drag.currentY = event.clientY;
     if (Math.abs(drag.currentX - drag.startX) + Math.abs(drag.currentY - drag.startY) < 5) return;
     drag.moved = true;
+    event.preventDefault();
     updateSelectionRect(event.clientX, event.clientY);
   }
   function handleGridPointerUp(event: PointerEvent<HTMLDivElement>) {
@@ -258,8 +260,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <div className="resource-grid">{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
             <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } void openPreview(resource); }}>
-              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
-              <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
+              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div></div>
             </button>
           </div> )}</div>}
         {selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}
