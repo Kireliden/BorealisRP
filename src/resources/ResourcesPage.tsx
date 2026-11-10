@@ -130,7 +130,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       if (drag.startedOnCard) suppressCardClick.current = true;
     } else {
       const target = event.target;
-      if (!(target instanceof Element) || !target.closest(".resource-card-shell, .resource-inspector, .resource-bulk-tools, .resource-select-all, .resource-controls, .resource-dropzone, .library-heading-row, .library-eyebrow, .library-tag-suggestions, .resource-grid button, button, input, select, textarea, label")) {
+      if (!drag.startedOnCard && (!(target instanceof Element) || !target.closest(".resource-card-shell, .resource-inspector, .resource-bulk-tools, .resource-select-all, .resource-controls, .resource-dropzone, .library-heading-row, .library-eyebrow, .library-tag-suggestions, .resource-grid button, button, input, select, textarea, label"))) {
         setSelectedResourceIds([]);
       }
     }
