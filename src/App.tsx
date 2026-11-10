@@ -780,7 +780,6 @@ function sanitiseHtml(html: string) {
   }
   useEffect(() => {
     let stopResize: (() => void) | undefined;
-    let stopClose: (() => void) | undefined;
     let cancelled = false;
     // Restore physical pixels rather than CSS dimensions so display scaling is respected.
     const restoreSize = async () => {
@@ -809,11 +808,9 @@ function sanitiseHtml(html: string) {
         if (!cancelled && !value) void recordSize().catch((error) => console.warn("Could not remember BRD window size:", error));
       }).catch(() => undefined);
     }).then((unlisten) => { if (cancelled) unlisten(); else stopResize = unlisten; });
-    // This also covers closing from the custom title bar, not only natural shutdown.
-    void appWindow.onCloseRequested(() => recordSize().catch(() => undefined))
-      .then((unlisten) => { if (cancelled) unlisten(); else stopClose = unlisten; })
-      .catch(() => undefined);
-    return () => { cancelled = true; stopResize?.(); stopClose?.(); };
+    // Window size is saved on resize; do not intercept the close request.
+    // Awaiting another Tauri window command from a close-request handler can delay closing.
+    return () => { cancelled = true; stopResize?.(); };
   }, []);
 
   async function toggleMaximize() {
