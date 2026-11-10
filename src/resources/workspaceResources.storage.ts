@@ -149,7 +149,8 @@ export async function migrateLegacyResources(
     const relativePath = resourcePath(item.record);
     const bytes = new Uint8Array(await item.blob.arrayBuffer());
     await writeWorkspaceFile(workspacePath, relativePath, bytes);
-    manifest.resources.push({ ...item.record, relativePath });
+    // Global folders belong to a different library; start migrated assets at the workspace root.
+    manifest.resources.push({ ...item.record, folderId: null, relativePath });
     knownIds.add(item.record.id);
     copied += 1;
   }
