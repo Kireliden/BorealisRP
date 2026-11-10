@@ -357,8 +357,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }
 
   function showResourceContextMenu(event: MouseEvent<HTMLDivElement>) {
-    event.preventDefault();
     const target = event.target;
+    // Preserve copy/paste context actions inside editable text controls.
+    if (target instanceof Element && target.closest("input, textarea, [contenteditable=true]")) return;
+    event.preventDefault();
     if (!(target instanceof Element)) return;
     if (target.closest(".resource-viewer-backdrop, .resource-delete-backdrop, .resource-context-menu")) return;
     const resourceId = target.closest<HTMLElement>(".resource-card-shell")?.dataset.resourceId;
