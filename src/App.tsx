@@ -810,12 +810,12 @@ function sanitiseHtml(html: string) {
         localStorage.setItem(SAVED_WINDOW_SIZE_KEY, JSON.stringify({ width: size.width, height: size.height }));
       }
     };
-    void restoreSize().catch((error) => console.warn("Could not restore BRD window size:", error));
+    void restoreSize().catch((error) => console.warn("Could not restore BRS window size:", error));
     void appWindow.isMaximized().then((value) => { if (!cancelled) setIsMaximized(value); }).catch((error) => console.warn("Could not check maximised state:", error));
     void appWindow.onResized(() => {
       void appWindow.isMaximized().then((value) => {
         if (!cancelled) setIsMaximized(value);
-        if (!cancelled && !value) void recordSize().catch((error) => console.warn("Could not remember BRD window size:", error));
+        if (!cancelled && !value) void recordSize().catch((error) => console.warn("Could not remember BRS window size:", error));
       }).catch(() => undefined);
     }).then((unlisten) => { if (cancelled) unlisten(); else stopResize = unlisten; });
     // Window size is saved on resize; do not intercept the close request.
@@ -1860,7 +1860,7 @@ function sanitiseHtml(html: string) {
               <div className="avatar-preview-details">
                 <h2>{previewCharacter.name}</h2>
               </div>
-              <div className="avatar-preview-footer"><span>BRD</span><span>HOLOGRAPHIC EDITION</span></div>
+              <div className="avatar-preview-footer"><span>BRS</span><span>HOLOGRAPHIC EDITION</span></div>
             </div>
             <EffectLayer effect="particles" intensity="balanced" particleCount={18} className="avatar-preview-effect-layer" />
           </section>
