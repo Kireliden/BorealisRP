@@ -2564,7 +2564,9 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
 .sidebar-profile-trigger .profile-status { min-width: 0; }
 .sidebar-profile-trigger .profile-name,
 .sidebar-profile-trigger .profile-status { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sidebar-profile-trigger .sidebar-special-title { display: inline-flex; max-width: 100%; min-width: 0; overflow: hidden; vertical-align: bottom; }
+/* Leave breathing room around the title aura rather than clipping it to its text box. */
+.sidebar-profile-trigger .profile-status { overflow: visible; text-overflow: clip; }
+.sidebar-profile-trigger .sidebar-special-title { display: inline-flex; max-width: calc(100% - 12px); min-width: 0; margin: 4px 6px; overflow: visible; vertical-align: middle; }
 .sidebar-profile-trigger .sidebar-special-title > span:not(.special-title-particles) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-profile-trigger .sidebar-special-title .special-title-symbol { flex: 0 0 auto; }
 
