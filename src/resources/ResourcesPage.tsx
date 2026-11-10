@@ -458,7 +458,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     if (!(target instanceof Element)) return;
     if (target.closest(".resource-viewer-backdrop, .resource-delete-backdrop, .resource-context-menu")) return;
     const resourceId = target.closest<HTMLElement>(".resource-card-shell")?.dataset.resourceId;
-    const folderId = target.closest<HTMLElement>(".resource-folder-card")?.dataset.folderId;
+    const folderId = target.closest<HTMLElement>(".resource-folder-shell")?.dataset.folderId;
     if (resourceId && !selectedResourceIds.includes(resourceId)) setSelectedResourceIds([resourceId]);
     const width = 224;
     const height = resourceId ? 292 : folderId ? 108 : 108;
@@ -573,7 +573,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><select aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></select><label className="resource-size-control" title={`Thumbnail size: ${cardSize}px`}><span>Size</span><input type="range" min="140" max="420" step="20" value={cardSize} onChange={(event) => setCardSize(Number(event.target.value))} aria-label="Thumbnail size" /><output>{cardSize}px</output></label></div>
         <div className="resource-folder-navigation">
           <nav aria-label="Resource folders" className="resource-breadcrumbs">
-            <button type="button" onClick={() => openFolder(null)}>Library</button>
+            <button type="button" className={dragOverFolder === "__root__" ? "resource-drop-target" : ""} onDragOver={(event) => hoverFolderDrop(event, null)} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragOverFolder(null); }} onDrop={(event) => void dropIntoFolder(event, null)} onClick={() => openFolder(null)}>Library</button>
             {breadcrumbs.map((folder) => <span key={folder.id}><ChevronRight size={13} /><button type="button" onClick={() => openFolder(folder.id)}>{folder.name}</button></span>)}
           </nav>
           <span>{visibleFolders.length} folders · {resources.filter((resource) => (resource.folderId ?? null) === currentFolderId).length} files</span>
@@ -587,10 +587,14 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 10).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length > 0 && <label className="resource-select-all"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelectedResourceIds((current) => event.target.checked ? [...new Set([...current, ...filteredIds])] : current.filter((id) => !filteredIds.includes(id)))} /> Select all visible ({filtered.length})</label>}
         {selectedResourceIds.length > 0 && <div className="resource-bulk-tools"><div><strong>{selectedResourceIds.length} selected</strong><button type="button" onClick={() => setSelectedResourceIds([])}>Clear selection</button></div><label><Tag size={14} /><input value={bulkTagDraft} onChange={(event) => setBulkTagDraft(event.target.value)} placeholder="Add tags, comma separated" aria-label="Tags to add to selected resources" /></label><button type="button" className="library-primary" onClick={() => void addTagsToSelected()} disabled={!bulkTagDraft.split(",").some((tag) => tag.trim())}>Add tags</button><div className="resource-bulk-actions"><button type="button" onClick={() => showBulkDialog("move")}><Move size={14} /> Move</button><button type="button" onClick={() => showBulkDialog("copy")}><Copy size={14} /> Copy</button><button type="button" className="resource-bulk-delete" onClick={() => setConfirmBulkDelete(true)}><Trash2 size={14} /> Delete</button></div></div>}
-        {visibleFolders.length > 0 && <div className="resource-folders">{visibleFolders.map((folder) => <button type="button" className="resource-folder-card" data-folder-id={folder.id} key={folder.id} onClick={() => openFolder(folder.id)}><Folder size={27} /><span title={folder.name}>{folder.name}</span><ChevronRight size={15} /></button>)}</div>}
+        {visibleFolders.length > 0 && <div className="resource-folders">{visibleFolders.map((folder) => <div key={folder.id} className={`resource-folder-shell ${dragOverFolder === folder.id ? "resource-drop-target" : ""}`} data-folder-id={folder.id} onDragOver={(event) => hoverFolderDrop(event, folder.id)} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragOverFolder(null); }} onDrop={(event) => void dropIntoFolder(event, folder.id)}>
+          <button type="button" className="resource-folder-card" onClick={() => openFolder(folder.id)}><Folder size={27} /><span title={folder.name}>{folder.name}</span><ChevronRight size={15} /></button>
+          <div className="resource-folder-actions"><button type="button" onClick={() => editFolder(folder, "rename")} title={`Rename ${folder.name}`} aria-label={`Rename ${folder.name}`}><Pencil size={13} /></button><button type="button" onClick={() => editFolder(folder, "delete")} title={`Delete ${folder.name}`} aria-label={`Delete ${folder.name}`}><Trash2 size={13} /></button></div>
+        </div>)}</div>}
         {filtered.length === 0 && visibleFolders.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
           filtered.length > 0 ? <div className="resource-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(min(${cardSize}px, 100%), 1fr))` }}>{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
+            <button type="button" className="resource-card-drag" draggable title={`Drag ${resource.fileName} into a folder`} aria-label={`Drag ${resource.fileName} into a folder`} onDragStart={(event) => beginResourceDrag(event, resource.id)} onDragEnd={() => { draggedResourceIds.current = []; setDragOverFolder(null); }}><GripVertical size={15} /></button>
             <button type="button" className="resource-card-delete" title={`Delete ${resource.fileName}`} aria-label={`Delete ${resource.fileName}`} onClick={(event) => { event.stopPropagation(); void requestDelete(resource); }}><Trash2 size={14} /></button>
             <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } openFileViewer(resource); }}>
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
@@ -606,6 +610,16 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <button className="library-danger resource-delete" type="button" onClick={() => void requestDelete(selected)}><Trash2 size={14} /> Delete resource</button>
       </aside>}
 
+      {folderToEdit && <div className="resource-delete-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !folderBusy) setFolderToEdit(null); }}>
+        <form className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-folder-edit-title" onSubmit={(event) => void confirmFolderEdit(event)}>
+          <div className="resource-delete-dialog-icon">{folderToEdit.action === "rename" ? <Pencil size={18} /> : <Trash2 size={18} />}</div>
+          <h2 id="resource-folder-edit-title">{folderToEdit.action === "rename" ? "Rename folder" : "Remove folder"}: {folderToEdit.folder.name}</h2>
+          {folderToEdit.action === "rename" ? <label className="resource-dialog-folder-label">Folder name<input autoFocus value={folderRenameDraft} onChange={(event) => setFolderRenameDraft(event.target.value)} maxLength={80} required /></label> :
+            <p>The folder and its {folderContents(folderToEdit.folder.id).subfolders} subfolders will be removed. All {folderContents(folderToEdit.folder.id).files} files inside will be kept and moved to the parent folder. No original files are deleted.</p>}
+          <button type="submit" className={folderToEdit.action === "delete" ? "library-danger" : "library-primary"} disabled={folderBusy || (folderToEdit.action === "rename" && (!folderRenameDraft.trim() || folderRenameDraft.trim() === folderToEdit.folder.name))}>{folderToEdit.action === "rename" ? "Save folder name" : "Remove folder · keep files"}</button>
+          <button type="button" className="resource-delete-cancel" disabled={folderBusy} onClick={() => setFolderToEdit(null)}>Cancel</button>
+        </form>
+      </div>}
       {pendingDelete && <div className="resource-delete-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !deleting) setPendingDelete(null); }}>
         <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-delete-title">
           <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
@@ -684,6 +698,9 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         </> : contextFolder ? <>
           <button type="button" role="menuitem" onClick={() => openFolder(contextFolder.id)}><Folder size={15} /> Open folder</button>
           <button type="button" role="menuitem" onClick={() => { openFolder(contextFolder.id); setCreatingFolder(true); setContextMenu(null); }}><FolderPlus size={15} /> New subfolder</button>
+          <div className="resource-context-separator" />
+          <button type="button" role="menuitem" onClick={() => editFolder(contextFolder, "rename")}><Pencil size={15} /> Rename folder</button>
+          <button type="button" role="menuitem" className="resource-context-danger" onClick={() => editFolder(contextFolder, "delete")}><Trash2 size={15} /> Delete folder</button>
         </> : <>
           <button type="button" role="menuitem" onClick={() => { setCreatingFolder(true); setContextMenu(null); }}><FolderPlus size={15} /> New folder</button>
           <button type="button" role="menuitem" onClick={() => { setContextMenu(null); inputRef.current?.click(); }}><Upload size={15} /> Import files</button>
