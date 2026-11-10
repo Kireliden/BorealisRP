@@ -65,3 +65,17 @@
 .expression-review-card .expression-replace-actions>button:hover{border-color:var(--accent)}
 .expression-review-card .expression-replace-actions>label{display:flex;flex-direction:column;gap:6px;margin:0;color:var(--ctp-subtext1);font-size:10px}
 @media(max-width:750px){.expression-source-options{grid-template-columns:1fr}.expression-source-options .expression-vault-button,.expression-source-options .expression-upload{min-height:120px}}
+
+
+/* Review layout: scroll image previews, anchor actions to the bottom of the vault view. */
+.characters-expressions-view .expression-manager{height:100%;min-height:0;max-height:100%;overflow:hidden}
+.expression-manager .expression-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;padding:0}
+.expression-manager .expression-main-scroll{flex:1 1 auto;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px}
+.expression-manager .expression-main-scroll>small{display:inline-block;margin:2px 0 10px;color:var(--accent);font-size:9px;font-weight:800;letter-spacing:1.7px}
+.expression-manager .expression-main-scroll>p{color:var(--muted);font-size:12px;line-height:1.65}
+.expression-manager .expression-main-scroll>button:not(.expression-back){display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:9px 13px;border:1px solid color-mix(in srgb,var(--accent) 55%,var(--border));border-radius:9px;background:color-mix(in srgb,var(--accent) 15%,var(--surface));color:var(--ctp-text);font-size:11px;font-weight:700}
+.expression-manager .expression-main-scroll>button:not(.expression-back):hover{background:color-mix(in srgb,var(--accent) 25%,var(--surface))}
+.expression-manager .expression-save-actions{position:relative;bottom:auto;z-index:2;flex:0 0 auto;margin:0;padding:14px 20px;border-top:1px solid var(--border);background:var(--sidebar-bg)}
+.expression-manager .expression-error-banner{flex:0 0 auto;max-height:100px;overflow-y:auto;overflow-wrap:anywhere;margin:0;padding:10px 20px;border-top:1px solid color-mix(in srgb,var(--ctp-red) 38%,var(--border));background:color-mix(in srgb,var(--ctp-red) 8%,var(--sidebar-bg));color:var(--ctp-red);font-size:11px;line-height:1.55}
+@media(max-width:900px){.expression-manager .expression-main-scroll{padding:16px}.expression-manager .expression-save-actions{margin:0;padding:12px 16px}.expression-manager .expression-error-banner{padding:10px 16px}}
+@media(max-width:620px){.expression-manager .expression-main-scroll{padding:12px}.expression-manager .expression-save-actions{margin:0;padding:10px 12px}.expression-manager .expression-error-banner{padding:10px 12px}}
