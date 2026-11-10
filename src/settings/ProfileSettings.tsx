@@ -111,7 +111,7 @@ export default function ProfileSettings() {
   return (
     <div className="profile-settings">
       <div className="profile-settings-intro">
-        <p>Shape the little corner of BRD that represents you. Your profile is saved locally and stays separate from your roleplay characters.</p>
+        <p>Shape the little corner of BRS that represents you. Your profile is saved locally and stays separate from your roleplay characters.</p>
       </div>
 
       <div className="profile-preview-layout">
