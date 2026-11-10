@@ -34,6 +34,7 @@ export interface CharacterDisplayPreferences {
   nameMode: CharacterNameMode;
   showRoleLabel: boolean;
   showExpression: boolean;
+  highlightOwnMessages: boolean;
   messageSpacing: UiDensity;
   colorMode: CharacterColorMode;
   customColor: string | null;
@@ -71,6 +72,8 @@ export interface AppPreferences {
     bannerAssetPath: string | null;
     title: string;
     showSpecialTitle: boolean;
+    specialTitleCodes: Record<string, string>;
+    activeSpecialTitleId: string | null;
     motto: string;
     description: string;
     frameStyle: "none" | "lavender" | "ornate";
