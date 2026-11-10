@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, OpenOptions},
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     time::Duration,
 };
+use sha2::{Digest, Sha256};
 use tauri::{AppHandle, Manager, PhysicalPosition, Window};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use uuid::Uuid;
@@ -400,6 +401,55 @@ fn read_dropped_resource_files(paths: Vec<String>) -> Result<Vec<DroppedResource
     Ok(files)
 }
 
+/// Deletes a file only after the user selects it and BRD verifies its name, size and
+/// SHA-256 against the imported copy. No stored path or arbitrary file is trusted.
+#[tauri::command]
+fn delete_confirmed_original_resource_file(
+    path: String,
+    expected_file_name: String,
+    expected_size: u64,
+    expected_sha256: String,
+) -> Result<(), String> {
+    if expected_sha256.len() != 64 || !expected_sha256.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return Err("The file verification fingerprint is invalid.".into());
+    }
+    let original = PathBuf::from(path)
+        .canonicalize()
+        .map_err(|error| format!("Could not locate the selected original file: {error}"))?;
+    let info = fs::metadata(&original)
+        .map_err(|error| format!("Could not inspect the selected original: {error}"))?;
+    if !info.is_file() {
+        return Err("The selected original is not a regular file.".into());
+    }
+    if info.len() != expected_size
+        || original.file_name().and_then(|name| name.to_str()) != Some(expected_file_name.as_str())
+    {
+        return Err("The selected file does not match the imported resource's name and size. Nothing was deleted.".into());
+    }
+
+    let mut reader = fs::File::open(&original)
+        .map_err(|error| format!("Could not read the selected original: {error}"))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        let amount = reader.read(&mut buffer)
+            .map_err(|error| format!("Could not verify original file contents: {error}"))?;
+        if amount == 0 {
+            break;
+        }
+        hasher.update(&buffer[..amount]);
+    }
+    let digest = format!("{:x}", hasher.finalize());
+    if !digest.eq_ignore_ascii_case(&expected_sha256) {
+        return Err("The file on disk has different contents from the imported resource. Nothing was deleted.".into());
+    }
+    // Close the read handle before deleting (required on Windows).
+    drop(reader);
+    fs::remove_file(&original)
+        .map_err(|error| format!("Could not delete the selected local original: {error}"))?;
+    Ok(())
+}
+
 /// Moves the native application window briefly from side to side.
 #[tauri::command]
 fn shake_window(window: Window) -> Result<(), String> {
@@ -458,7 +508,8 @@ pub fn run() {
             profile_sidebar_thumbnail_path,
             save_profile_sidebar_thumbnail,
             remove_profile_sidebar_thumbnail,
-            read_dropped_resource_files
+            read_dropped_resource_files,
+            delete_confirmed_original_resource_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
