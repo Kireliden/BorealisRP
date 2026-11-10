@@ -258,7 +258,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
    * dragstart (which conflicts with the image and with selection marquee). */
   function dropDestinationAt(x: number, y: number): string | null | undefined {
     const element = document.elementFromPoint(x, y);
-    const folder = element?.closest<HTMLElement>(".resource-folder-shell");
+    const folder = element?.closest<HTMLElement>(".resource-folder-shell, .resource-breadcrumb-folder");
     if (folder?.dataset.folderId) return folder.dataset.folderId;
     if (element?.closest(".resource-library-root-drop")) return null;
     return undefined;
@@ -604,7 +604,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <div className="resource-folder-navigation">
           <nav aria-label="Resource folders" className="resource-breadcrumbs">
             <button type="button" className={`resource-library-root-drop ${dragOverFolder === "__root__" ? "resource-drop-target" : ""}`} onClick={() => openFolder(null)}>Library</button>
-            {breadcrumbs.map((folder) => <span key={folder.id}><ChevronRight size={13} /><button type="button" onClick={() => openFolder(folder.id)}>{folder.name}</button></span>)}
+            {breadcrumbs.map((folder) => <span key={folder.id}><ChevronRight size={13} /><button type="button" className={`resource-breadcrumb-folder ${dragOverFolder === folder.id ? "resource-drop-target" : ""}`} data-folder-id={folder.id} onClick={() => openFolder(folder.id)}>{folder.name}</button></span>)}
           </nav>
           <span>{visibleFolders.length} folders · {resources.filter((resource) => (resource.folderId ?? null) === currentFolderId).length} files</span>
         </div>
