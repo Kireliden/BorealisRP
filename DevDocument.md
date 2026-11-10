@@ -1,4 +1,4 @@
-# Borealis Roleplay Den
+# Borealis Roleplay Studio
 ## Developer Documentation
 
 **Project codename:** BRD  
@@ -14,7 +14,7 @@
 
 ## 1. Project overview
 
-Borealis Roleplay Den (BRD) is a private, desktop-first application designed to provide a comfortable, customizable and feature-rich environment for written roleplay.
+Borealis Roleplay Studio (BRD) is a private, desktop-first application designed to provide a comfortable, customizable and feature-rich environment for written roleplay.
 
 The project aims to bring character management, scene organization, rich-text writing, message history and personal customization together in one application, without depending on a general-purpose chat platform.
 
@@ -31,7 +31,7 @@ The interface should feel like a dedicated writing and roleplay workspace rather
 
 ### 1.2 Naming and identity
 
-The name *Borealis* is a personal reference to the lost ship from *Half-Life*, an idea that has been meaningful to the project owner since adolescence. *Roleplay Den* describes the application’s purpose as a dedicated space for roleplay.
+The name *Borealis* is a personal reference to the lost ship from *Half-Life*, an idea that has been meaningful to the project owner since adolescence. *Roleplay Studio* describes the application’s purpose as a dedicated space for roleplay.
 
 The project should retain its identity as Borealis even if the subtitle or presentation changes.
 
@@ -549,7 +549,7 @@ The Android companion, advanced synchronization and additional conveniences can 
 
 ## 13. Project status summary
 
-Borealis Roleplay Den has progressed beyond the initial concept: the React/TypeScript desktop application exists, the Tauri shell and custom title bar are in place, and a substantial theme and preferences foundation has been built.
+Borealis Roleplay Studio has progressed beyond the initial concept: the React/TypeScript desktop application exists, the Tauri shell and custom title bar are in place, and a substantial theme and preferences foundation has been built.
 
 The next milestone is not simply adding more screens. It is turning the existing interface into a complete, dependable roleplay workflow: characters, expressions, writing, editing, history and persistent data.
 
