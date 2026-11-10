@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
-import { deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResources, updateResourceTags } from "./resources.storage";
-import { deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResources, migrateLegacyResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
-import type { ResourceRecord } from "./resources.types";
+import { ArrowLeft, ChevronRight, Copy, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, Move, Search, Tag, Trash2, Upload, X } from "lucide-react";
+import { createResourceFolder, deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResourceFolders, listResources, organiseResources, updateResourceTags } from "./resources.storage";
+import { createWorkspaceResourceFolder, deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResourceFolders, listWorkspaceResources, migrateLegacyResources, organiseWorkspaceResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
+import type { ResourceBatchAction, ResourceFolder, ResourceRecord } from "./resources.types";
 import { getCachedResourceObjectUrl, invalidateCachedResourceObjectUrl } from "./resourceMediaCache";
 import "./resources.css";
 
@@ -24,6 +24,15 @@ function mimeTypeFromName(fileName: string): string {
 
 export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [resources, setResources] = useState<ResourceRecord[]>([]);
+  const [folders, setFolders] = useState<ResourceFolder[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const currentFolderRef = useRef<string | null>(null);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const [bulkDialog, setBulkDialog] = useState<"move" | "copy" | null>(null);
+  const [bulkTargetId, setBulkTargetId] = useState<string | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
@@ -51,10 +60,14 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         const legacy = await exportResourcesForMigration();
         await migrateLegacyResources(workspacePath, legacy);
       }
-      setResources(await listWorkspaceResources(workspacePath));
+      const [records, folderRecords] = await Promise.all([listWorkspaceResources(workspacePath), listWorkspaceResourceFolders(workspacePath)]);
+      setResources(records);
+      setFolders(folderRecords);
       return;
     }
-    setResources(await listResources());
+    const [records, folderRecords] = await Promise.all([listResources(), listResourceFolders()]);
+    setResources(records);
+    setFolders(folderRecords);
   }
   async function getBlob(id: string) {
     return workspacePath ? getWorkspaceResourceBlob(workspacePath, id) : getResourceBlob(id);
@@ -65,7 +78,14 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   async function deleteFile(id: string) {
     return workspacePath ? deleteWorkspaceResource(workspacePath, id) : deleteResource(id);
   }
-  useEffect(() => { void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason))); }, [workspacePath]);
+  useEffect(() => {
+    currentFolderRef.current = null;
+    setCurrentFolderId(null);
+    setSelectedResourceIds([]);
+    setSelected(null);
+    setPreviewUrl(null);
+    void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
+  }, [workspacePath]);
   useEffect(() => {
     let cancelled = false;
     const scope = workspacePath ?? "__global__";
@@ -82,13 +102,86 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }, [resources, workspacePath]);
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
-  const filtered = resources.filter((resource) => (kind === "all" || resource.kind === kind) && [resource.name, resource.fileName, ...resource.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+  const filtered = resources.filter((resource) => (resource.folderId ?? null) === currentFolderId && (kind === "all" || resource.kind === kind) && [resource.name, resource.fileName, ...resource.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+  const visibleFolders = folders.filter((folder) => folder.parentId === currentFolderId).sort((a, b) => a.name.localeCompare(b.name));
+  const sortedFolders = [...folders].sort((a, b) => folderLabel(a.id).localeCompare(folderLabel(b.id)));
+  const breadcrumbs: ResourceFolder[] = [];
+  let breadcrumbId = currentFolderId;
+  for (let index = 0; index < folders.length && breadcrumbId; index++) {
+    const folder = folders.find((item) => item.id === breadcrumbId);
+    if (!folder) break;
+    breadcrumbs.unshift(folder);
+    breadcrumbId = folder.parentId;
+  }
   const filteredIds = filtered.map((resource) => resource.id);
   const selectedVisibleCount = filteredIds.filter((id) => selectedResourceIds.includes(id)).length;
   const allVisibleSelected = filteredIds.length > 0 && selectedVisibleCount === filteredIds.length;
   useEffect(() => {
     if (selectAllRef.current) selectAllRef.current.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected;
   }, [selectedVisibleCount, allVisibleSelected]);
+
+  function folderLabel(id: string): string {
+    const parts: string[] = [];
+    let current: string | null = id;
+    for (let index = 0; index < folders.length && current; index++) {
+      const folder = folders.find((item) => item.id === current);
+      if (!folder) break;
+      parts.unshift(folder.name);
+      current = folder.parentId;
+    }
+    return parts.join(" / ");
+  }
+  function openFolder(id: string | null) {
+    currentFolderRef.current = id;
+    setCurrentFolderId(id);
+    setSelectedResourceIds([]);
+    setSelected(null);
+    setPreviewUrl(null);
+    setQuery("");
+    setCreatingFolder(false);
+  }
+  async function createFolder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!folderName.trim()) return;
+    setError("");
+    try {
+      if (workspacePath) await createWorkspaceResourceFolder(workspacePath, folderName, currentFolderId);
+      else await createResourceFolder(folderName, currentFolderId);
+      setFolderName("");
+      setCreatingFolder(false);
+      await refresh();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
+  }
+  function showBulkDialog(action: "move" | "copy") {
+    setBulkTargetId(currentFolderId);
+    setBulkDialog(action);
+  }
+  async function applyBulk(action: ResourceBatchAction, target: string | null = null) {
+    if (!selectedResourceIds.length || bulkBusy) return;
+    setBulkBusy(true);
+    setError("");
+    const ids = [...selectedResourceIds];
+    try {
+      if (workspacePath) await organiseWorkspaceResources(workspacePath, ids, action, target);
+      else await organiseResources(ids, action, target);
+      if (action === "delete") {
+        await Promise.all(ids.map((id) => invalidateCachedResourceObjectUrl(workspacePath ?? "__global__", id)));
+        if (selected && ids.includes(selected.id)) { setSelected(null); setPreviewUrl(null); }
+      }
+      setSelectedResourceIds([]);
+      setBulkDialog(null);
+      setConfirmBulkDelete(false);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      setSelectedResourceIds([]);
+      setBulkDialog(null);
+      setConfirmBulkDelete(false);
+      await refresh().catch(() => undefined);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   function updateSelectionRect(clientX: number, clientY: number) {
     const area = document.querySelector<HTMLElement>(".resources-main");
@@ -103,7 +196,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     if (event.button !== 0) return;
     suppressCardClick.current = false;
     const target = event.target;
-    if (target instanceof Element && target.closest(".resource-inspector, .resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
+    if (target instanceof Element && target.closest(".resource-inspector, .resource-select, .resource-folder-navigation, .resource-create-folder, .resource-folders, .resource-bulk-tools, .resource-delete-backdrop, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -134,7 +227,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       if (drag.startedOnCard) suppressCardClick.current = true;
     } else {
       const target = event.target;
-      if (!drag.startedOnCard && (!(target instanceof Element) || !target.closest(".resource-card-shell, .resource-inspector, .resource-bulk-tools, .resource-select-all, .resource-controls, .resource-dropzone, .library-heading-row, .library-eyebrow, .library-tag-suggestions, .resource-grid button, button, input, select, textarea, label"))) {
+      if (!drag.startedOnCard && (!(target instanceof Element) || !target.closest(".resource-card-shell, .resource-folders, .resource-folder-navigation, .resource-create-folder, .resource-inspector, .resource-bulk-tools, .resource-select-all, .resource-controls, .resource-dropzone, .library-heading-row, .library-eyebrow, .library-tag-suggestions, .resource-grid button, button, input, select, textarea, label"))) {
         setSelectedResourceIds([]);
       }
     }
@@ -151,8 +244,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         new Uint8Array(buffer).set(dropped.bytes);
         return new File([buffer], dropped.fileName, { type: mimeTypeFromName(dropped.fileName) });
       });
-      if (workspacePath) await importWorkspaceResources(workspacePath, files);
-      else await importResources(files);
+      if (workspacePath) await importWorkspaceResources(workspacePath, files, [], currentFolderRef.current);
+      else await importResources(files, [], currentFolderRef.current);
       if (files.length) await refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -185,8 +278,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setError("");
     try {
       const batch = Array.from(files);
-      if (workspacePath) await importWorkspaceResources(workspacePath, batch);
-      else await importResources(batch);
+      if (workspacePath) await importWorkspaceResources(workspacePath, batch, [], currentFolderRef.current);
+      else await importResources(batch, [], currentFolderRef.current);
       if (batch.length) await refresh();
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   }
