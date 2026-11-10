@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Check, FileImage, FolderOpen, Pencil, Save, Upload } from "lucide-react";
 import { loadCharacters } from "./characters.storage";
 import type { CharacterRecord } from "./characters.types";
-import { CHARACTER_EXPRESSION_SLOTS, saveReviewedCharacterExpressions, type CharacterExpressionKey } from "./characterExpressions.storage";
-import { saveWorkspaceReviewedCharacterExpressions } from "./workspaceCharacterExpressions.storage";
+import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob, listCharacterExpressions, saveReviewedCharacterExpressions, type CharacterExpressionKey } from "./characterExpressions.storage";
+import { getWorkspaceCharacterExpressionBlob, listWorkspaceCharacterExpressions, saveWorkspaceReviewedCharacterExpressions } from "./workspaceCharacterExpressions.storage";
 import { getResourceBlob } from "../resources/resources.storage";
 import { getWorkspaceResourceBlob } from "../resources/workspaceResources.storage";
 import type { ResourceRecord } from "../resources/resources.types";
@@ -26,6 +26,44 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
  const [saved,setSaved] = useState(false);
  const [busy,setBusy] = useState(false);
  const [vaultTarget,setVaultTarget] = useState<VaultTarget|null>(null);
+ const [loadingExpressions,setLoadingExpressions] = useState(false);
+ useEffect(() => {
+  let cancelled = false;
+  const createdUrls: string[] = [];
+  setSlots(blank());
+  setSaved(false);
+  setEditing(null);
+  if (!characterId) return;
+  setLoadingExpressions(true);
+  setError("");
+  void (async () => {
+   try {
+    const existing = workspacePath
+     ? await listWorkspaceCharacterExpressions(workspacePath, characterId)
+     : await listCharacterExpressions(characterId);
+    const loaded = await Promise.all(CHARACTER_EXPRESSION_SLOTS.map(async (slot): Promise<Slot> => {
+     const metadata = existing.find((item) => item.key === slot.key);
+     if (!metadata) return { ...slot, blob: null, url: null, fileName: "" };
+     const blob = workspacePath
+      ? await getWorkspaceCharacterExpressionBlob(workspacePath, characterId, slot.key)
+      : await getCharacterExpressionBlob(characterId, slot.key);
+     if (!blob) return { ...slot, blob: null, url: null, fileName: "" };
+     const url = URL.createObjectURL(blob);
+     createdUrls.push(url);
+     return { ...slot, blob, url, fileName: metadata.fileName };
+    }));
+    if (!cancelled) setSlots(loaded);
+   } catch (reason) {
+    if (!cancelled) setError(reason instanceof Error ? reason.message : String(reason));
+   } finally {
+    if (!cancelled) setLoadingExpressions(false);
+   }
+  })();
+  return () => {
+   cancelled = true;
+   for (const url of createdUrls) URL.revokeObjectURL(url);
+  };
+ }, [characterId, workspacePath]);
  const character = characters.find(c => c.id === characterId);
  const missing = slots.filter(s => !s.blob).length;
  function assign(files: FileList|File[]|null) {
@@ -91,7 +129,7 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
  return <div className="expression-manager"><nav className="expression-steps"><button className="expression-back" onClick={onClose}><ArrowLeft size={15}/> Back to Resources</button><strong>✦ Expression Manager</strong><p>Character artwork tools</p>{(["welcome","templates","character","individual","sheet","review"] as Step[]).map((s,i)=><button className={step===s?"active":""} key={s} onClick={()=>setStep(s)}>{i+1}. {s==="welcome"?"Welcome":s==="templates"?"Templates":s==="character"?"Character":s==="individual"?"Individual files":s==="sheet"?"Expression sheet":"Review & save"}</button>)}</nav><main className="expression-main">
  {step==="welcome"&&<><small>BOREALIS · CHARACTER TOOLS</small><h1>Welcome to the Expression Manager</h1><p>What are you looking for?</p><div className="expression-choice-grid"><button onClick={()=>setStep("templates")}><FileImage/><b>Templates</b><span>Download guides for your artwork.</span></button><button onClick={()=>setStep("character")}><Upload/><b>Edit character expressions</b><span>Import, review and save six expressions.</span></button></div></>}
  {step==="templates"&&<>{back("welcome")}<h1>Expression templates</h1><p>Download a blank canvas for individual files or a six-cell sheet. Individual canvas: 512 × 640. Sheet: 1536 × 1280, 3 columns × 2 rows.</p><div className="expression-choice-grid"><button onClick={()=>downloadTemplate(false)}><FileImage/><b>Individual Template</b><span>Save a blank 512 × 640 canvas.</span></button><button onClick={()=>downloadTemplate(true)}><FileImage/><b>Sheet Template</b><span>Save a labelled 3 × 2 sheet.</span></button></div></>}
- {step==="character"&&<>{back("welcome")}<h1>Choose a character</h1><label className="expression-field">Character<select value={characterId} onChange={e=>setCharacterId(e.target.value)}><option value="">Select a character…</option>{characters.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><div className="expression-choice-grid"><button disabled={!characterId} onClick={()=>setStep("individual")}><Upload/><b>Individual files</b><span>Import images and assign them in review.</span></button><button disabled={!characterId} onClick={()=>setStep("sheet")}><FileImage/><b>Expression sheet</b><span>Automatically crop a 3 × 2 sheet.</span></button></div></>}
+ {step==="character"&&<>{back("welcome")}<h1>Choose a character</h1><label className="expression-field">Character<select value={characterId} onChange={e=>setCharacterId(e.target.value)}><option value="">Select a character…</option>{characters.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><div className="expression-choice-grid"><button disabled={!characterId||loadingExpressions} onClick={()=>setStep("individual")}><Upload/><b>Individual files</b><span>Import images and assign them in review.</span></button><button disabled={!characterId||loadingExpressions} onClick={()=>setStep("sheet")}><FileImage/><b>Expression sheet</b><span>Automatically crop a 3 × 2 sheet.</span></button></div></>}
  {step==="individual"&&<>{back("character")}<h1>Import individual expressions</h1><p>Names matching neutral, smile, smirk, angry, crying or flushed are assigned automatically; other files fill empty slots in order.</p>
  <div className="expression-source-options">
   <button type="button" className="expression-vault-button" onClick={()=>setVaultTarget({kind:"individual"})}><FolderOpen size={20}/><b>Choose from Resources</b><span>Browse images already in {workspacePath?"this workspace":"the global"} vault, including folders.</span></button>
@@ -102,7 +140,7 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
   <button type="button" className="expression-vault-button" onClick={()=>setVaultTarget({kind:"sheet"})}><FolderOpen size={20}/><b>Choose sheet from Resources</b><span>Use an existing image from the workspace vault.</span></button>
   <label className="expression-upload"><Upload/><b>Upload sheet from device</b><input type="file" accept="image/*" onChange={e=>void split(e.target.files?.[0])}/></label>
  </div></>}
- {step==="review"&&<>{back("character")}<h1>Review expressions</h1><p>{character?.name??"Choose a character"} · {6-missing}/6 ready. Edit any image before saving.</p><div className="expression-review-grid">{slots.map(s=><article key={s.key} className="expression-review-card"><header><b>{s.label}</b><button onClick={()=>setEditing(editing===s.key?null:s.key)}><Pencil size={13}/> Edit</button></header><div className="expression-crop-preview">{s.url?<img src={s.url} alt={s.label}/>:<span><FileImage/> Image missing</span>}</div><small>{s.fileName||"No image assigned"}</small>{editing===s.key&&<div className="expression-replace-actions"><button type="button" onClick={()=>setVaultTarget({kind:"slot",key:s.key})}><FolderOpen size={13}/> From Resources</button><label>From device<input type="file" accept="image/*" onChange={e=>{assignSingle(s.key,e.target.files?.[0],slots,setSlots,setEditing);setSaved(false);}} /></label></div>}</article>)}</div><div className="expression-save-actions"><span>Imported originals remain untouched. Saving replaces this character's six expressions only after confirmation.</span><button disabled={busy||missing>0||!characterId} onClick={()=>{if(window.confirm("Save these expressions for "+(character?.name??"this character")+"? Existing expressions will be replaced."))void save();}}><Save size={15}/>{busy?"Saving…":"Save expressions"}</button>{saved&&<p><Check size={15}/> Saved all six expressions for {character?.name}.</p>}</div></>}
+ {step==="review"&&<>{back("character")}<h1>Review expressions</h1><p>{character?.name??"Choose a character"} · {loadingExpressions?"Loading saved expressions…":`${6-missing}/6 ready`}. Edit any image before saving.</p><div className="expression-review-grid">{slots.map(s=><article key={s.key} className="expression-review-card"><header><b>{s.label}</b><button onClick={()=>setEditing(editing===s.key?null:s.key)}><Pencil size={13}/> Edit</button></header><div className="expression-crop-preview">{s.url?<img src={s.url} alt={s.label}/>:<span><FileImage/> Image missing</span>}</div><small>{s.fileName||"No image assigned"}</small>{editing===s.key&&<div className="expression-replace-actions"><button type="button" onClick={()=>setVaultTarget({kind:"slot",key:s.key})}><FolderOpen size={13}/> From Resources</button><label>From device<input type="file" accept="image/*" onChange={e=>{assignSingle(s.key,e.target.files?.[0],slots,setSlots,setEditing);setSaved(false);}} /></label></div>}</article>)}</div><div className="expression-save-actions"><span>Imported originals remain untouched. Saving replaces this character's six expressions only after confirmation.</span><button disabled={busy||loadingExpressions||missing>0||!characterId} onClick={()=>{if(window.confirm("Save these expressions for "+(character?.name??"this character")+"? Existing expressions will be replaced."))void save();}}><Save size={15}/>{busy?"Saving…":"Save expressions"}</button>{saved&&<p><Check size={15}/> Saved all six expressions for {character?.name}.</p>}</div></>}
  {error&&<p role="alert">{error}</p>}</main>
  {vaultTarget&&<ResourceImagePicker
   workspacePath={workspacePath}
