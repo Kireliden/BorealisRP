@@ -417,6 +417,31 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <button type="button" className="resource-delete-cancel" disabled={deleting} onClick={() => setPendingDelete(null)}>Cancel</button>
         </section>
       </div>}
+
+      {bulkDialog && <div className="resource-delete-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !bulkBusy) setBulkDialog(null); }}>
+        <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-organise-title">
+          <div className="resource-delete-dialog-icon">{bulkDialog === "move" ? <Move size={18} /> : <Copy size={18} />}</div>
+          <h2 id="resource-organise-title">{bulkDialog === "move" ? "Move" : "Copy"} {selectedResourceIds.length} selected files</h2>
+          <p>Choose a destination folder in {workspacePath ? "this workspace" : "the app-wide library"}. {bulkDialog === "copy" ? "Original files will be kept." : "Files will be reorganised without changing their original imports."}</p>
+          <label className="resource-dialog-folder-label">Destination folder
+            <select value={bulkTargetId ?? ""} onChange={(event) => setBulkTargetId(event.target.value || null)}>
+              <option value="">Library root</option>
+              {sortedFolders.map((folder) => <option value={folder.id} key={folder.id}>{folderLabel(folder.id)}</option>)}
+            </select>
+          </label>
+          <button type="button" className="library-primary" disabled={bulkBusy} onClick={() => void applyBulk(bulkDialog, bulkTargetId)}>{bulkDialog === "move" ? "Move files" : "Copy files"}</button>
+          <button type="button" className="resource-delete-cancel" disabled={bulkBusy} onClick={() => setBulkDialog(null)}>Cancel</button>
+        </section>
+      </div>}
+      {confirmBulkDelete && <div className="resource-delete-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !bulkBusy) setConfirmBulkDelete(false); }}>
+        <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-bulk-delete-title">
+          <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
+          <h2 id="resource-bulk-delete-title">Delete {selectedResourceIds.length} selected files?</h2>
+          <p>These files will be removed from {workspacePath ? "this workspace library" : "the app-wide library"}. Other workspaces and your original files on the PC will not be affected.</p>
+          <button type="button" className="library-danger" disabled={bulkBusy} onClick={() => void applyBulk("delete")}><Trash2 size={14} /> Delete selected files</button>
+          <button type="button" className="resource-delete-cancel" disabled={bulkBusy} onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+        </section>
+      </div>}
       </section>
     </main>
   </div>;
