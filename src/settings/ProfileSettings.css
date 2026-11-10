@@ -2,7 +2,8 @@
 .profile-settings-intro p { margin: 0; max-width: 650px; color: var(--ctp-subtext1); font-size: 12px; line-height: 1.7; }
 .profile-settings .profile-banner { height: 150px; }
 .profile-settings .profile-identity { gap: 16px; padding-right: 18px; padding-left: 18px; }
-.profile-settings .profile-avatar-column { flex-basis: 124px; margin-top: -68px; }
+/* Anchor the profile portrait to the top of the identity row. Expanding the special-title controls must not push it downward. */
+.profile-settings .profile-avatar-column { flex-basis: 124px; margin-top: -68px; align-self: flex-start; }
 .profile-settings .profile-portrait { width: 124px; aspect-ratio: 4 / 5; }
 .profile-settings .profile-details { padding: 4px 18px 18px; }
 .profile-settings-fields { display: flex; flex-direction: column; gap: 12px; }
