@@ -112,22 +112,22 @@
   inset: 0;
   border-radius: inherit;
   box-shadow:
-    0 0 4px 1px color-mix(in srgb, var(--special-title-tint) 25%, transparent),
-    0 0 9px 2px color-mix(in srgb, var(--special-title-tint) 9%, transparent);
-  filter: blur(1.5px);
+    0 0 6px 1.5px color-mix(in srgb, var(--special-title-tint) 25%, transparent),
+    0 0 14px 3px color-mix(in srgb, var(--special-title-tint) 9%, transparent);
+  filter: blur(2.2px);
   pointer-events: none;
   animation: brs-special-title-halo 6.8s ease-in-out infinite;
 }
 @keyframes brs-special-title-halo {
   0%, 100% {
     box-shadow:
-      0 0 4px 1px color-mix(in srgb, var(--special-title-tint) 25%, transparent),
-      0 0 9px 2px color-mix(in srgb, var(--special-title-tint) 9%, transparent);
+      0 0 6px 1.5px color-mix(in srgb, var(--special-title-tint) 25%, transparent),
+      0 0 14px 3px color-mix(in srgb, var(--special-title-tint) 9%, transparent);
   }
   50% {
     box-shadow:
-      0 0 4px 1px color-mix(in srgb, color-mix(in srgb, var(--special-title-tint) 82%, white 18%) 52%, transparent),
-      0 0 9px 2px color-mix(in srgb, color-mix(in srgb, var(--special-title-tint) 82%, white 18%) 20%, transparent);
+      0 0 6px 1.5px color-mix(in srgb, color-mix(in srgb, var(--special-title-tint) 82%, white 18%) 52%, transparent),
+      0 0 14px 3px color-mix(in srgb, color-mix(in srgb, var(--special-title-tint) 82%, white 18%) 20%, transparent);
   }
 }
 :root[data-animations="off"] .special-title-badge {
