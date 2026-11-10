@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-Borealis Roleplay Den (BRD) must treat a user's workspace folder as the authoritative home of that workspace's content. BRD is an editor and manager for the user's data; it must not own that data through an opaque application-only storage system.
+Borealis Roleplay Studio (BRD) must treat a user's workspace folder as the authoritative home of that workspace's content. BRD is an editor and manager for the user's data; it must not own that data through an opaque application-only storage system.
 
 This is inspired by the user experience of Obsidian vaults: users choose where a workspace lives, can open existing workspace folders on demand, and retain direct access to the underlying files independently of the application.
 
@@ -91,7 +91,7 @@ The schema should be designed around stable IDs rather than assuming a display n
 
 The initial implementation uses a root `workspace.json` with these fields:
 
-- `format`: `borealis-roleplay-den-workspace`, used to identify BRD workspace folders.
+- `format`: `borealis-roleplay-den-workspace`, used to identify BRD workspace folders. **Keep this legacy on-disk value unchanged** so existing workspaces stay readable after the Studio rebrand.
 - `schemaVersion`: integer `1`; unsupported versions are rejected rather than silently rewritten.
 - `id`: stable UUID generated once when the workspace is created.
 - `name`: display name chosen by the user.
