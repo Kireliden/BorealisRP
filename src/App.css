@@ -1347,7 +1347,7 @@ button:disabled {
 }
 
 /* ==================================================
-   BRD — Theme-aware component colors
+   BRS — Theme-aware component colors
    ================================================== */
 
 /* Workspace, buttons and navigation */
@@ -1705,7 +1705,7 @@ textarea:focus-visible {
 }
 
 /* ========================================
-   BRD — Soft pop-up motion
+   BRS — Soft pop-up motion
    ======================================== */
 
 @keyframes brd-pop-in {
