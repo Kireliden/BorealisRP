@@ -333,6 +333,10 @@ function sanitiseHtml(html: string) {
   const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [scenePendingDeletion, setScenePendingDeletion] = useState<WorkspaceScene | null>(null);
+  const [scenePendingRename, setScenePendingRename] = useState<WorkspaceScene | null>(null);
+  const [sceneRenameDraft, setSceneRenameDraft] = useState("");
+  const [sceneRenameError, setSceneRenameError] = useState("");
+  const [sceneRenameBusy, setSceneRenameBusy] = useState(false);
   const [folderPendingDeletion, setFolderPendingDeletion] = useState<WorkspaceFolder | null>(null);
   const [categoryPendingDeletion, setCategoryPendingDeletion] = useState<WorkspaceCategory | null>(null);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
@@ -999,24 +1003,54 @@ function sanitiseHtml(html: string) {
     }
   }
 
-  async function renameScene(scene: WorkspaceScene) {
+  function renameScene(scene: WorkspaceScene) {
     if (!activeWorkspace || workspaceLoading) return;
-    const name = window.prompt("Rename scene", scene.name)?.trim();
-    if (!name || name === scene.name) return;
-    if (scenes.some((item) => item.id !== scene.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-      setWorkspaceError("A scene with that name already exists in this workspace.");
+    setScenePendingRename(scene);
+    setSceneRenameDraft(scene.name);
+    setSceneRenameError("");
+  }
+
+  function cancelRenameScene() {
+    if (sceneRenameBusy) return;
+    setScenePendingRename(null);
+    setSceneRenameDraft("");
+    setSceneRenameError("");
+  }
+
+  async function confirmRenameScene() {
+    const scene = scenePendingRename;
+    if (!scene || !activeWorkspace || workspaceLoading || sceneRenameBusy) return;
+    const name = sceneRenameDraft.trim();
+    if (!name) {
+      setSceneRenameError("Enter a name for this scene.");
       return;
     }
+    if (name === scene.name) {
+      cancelRenameScene();
+      return;
+    }
+    if (scenes.some((item) => item.id !== scene.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setSceneRenameError("A scene with that name already exists in this workspace.");
+      return;
+    }
+
+    const workspacePath = activeWorkspace.path;
     const nextScenes = scenes.map((item) => item.id === scene.id ? { ...item, name } : item);
+    setSceneRenameBusy(true);
+    setSceneRenameError("");
     try {
-      await saveWorkspaceContent(activeWorkspace.path, { schemaVersion: 1, scenes: nextScenes, folders, categories });
-      if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
+      await saveWorkspaceContent(workspacePath, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== workspacePath) return;
       setScenes(nextScenes);
       setWorkspaceError("");
+      setScenePendingRename(null);
+      setSceneRenameDraft("");
     } catch (reason) {
-      if (activeWorkspacePathRef.current === activeWorkspace.path) {
-        setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      if (activeWorkspacePathRef.current === workspacePath) {
+        setSceneRenameError(reason instanceof Error ? reason.message : String(reason));
       }
+    } finally {
+      setSceneRenameBusy(false);
     }
   }
 
@@ -1677,6 +1711,29 @@ function sanitiseHtml(html: string) {
               <button type="button" className="clean-continue-button" onClick={() => void confirmDeleteFolder()}>Delete folder</button>
             </div>
           </section>
+        </div>
+      )}
+      {scenePendingRename && (
+        <div className="clean-confirmation-backdrop" role="presentation"
+          onMouseDown={(event) => { if (event.target === event.currentTarget) cancelRenameScene(); }}>
+          <form className="clean-confirmation-dialog folder-create-dialog" role="dialog" aria-modal="true"
+            aria-labelledby="rename-scene-title" onSubmit={(event) => { event.preventDefault(); void confirmRenameScene(); }}
+            onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); cancelRenameScene(); } }}>
+            <div className="clean-confirmation-icon"><Pencil size={21} /></div>
+            <span className="clean-confirmation-eyebrow">ROLEPLAY SPACE · RENAME SCENE</span>
+            <h2 id="rename-scene-title">Rename scene</h2>
+            <p>Give “{scenePendingRename.name}” a new name. Its messages and resources will stay untouched.</p>
+            <input autoFocus className="folder-name-input" value={sceneRenameDraft}
+              onChange={(event) => { setSceneRenameDraft(event.target.value); setSceneRenameError(""); }}
+              placeholder="Scene name" aria-label="New scene name" maxLength={100} disabled={sceneRenameBusy} />
+            {sceneRenameError && <p className="scene-rename-error" role="alert">{sceneRenameError}</p>}
+            <div className="clean-confirmation-actions">
+              <button type="button" className="clean-cancel-button" onClick={cancelRenameScene} disabled={sceneRenameBusy}>Cancel</button>
+              <button type="submit" className="clean-continue-button" disabled={!sceneRenameDraft.trim() || sceneRenameBusy}>
+                {sceneRenameBusy ? "Saving…" : "Save name"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
       {isCreatingScene && (
