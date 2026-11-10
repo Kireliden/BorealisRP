@@ -99,7 +99,7 @@ export default function CollectionsModal({
         <header className="collections-header">
           <div className="collections-heading-copy">
             <span className="collections-eyebrow">
-              BOREALIS ROLEPLAY DEN
+              BOREALIS ROLEPLAY STUDIO
             </span>
 
             <h2 id="collections-title">Collections</h2>
