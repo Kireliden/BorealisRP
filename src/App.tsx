@@ -1506,10 +1506,13 @@ function sanitiseHtml(html: string) {
                       expressionImage={selectedCharacter !== "You" ? (customExpressionUrls[`${character.id}:${selectedExpression}`] ?? null) : null}
                       expressionIsPhoto={selectedCharacter !== "You" && Boolean(customExpressionUrls[`${character.id}:${selectedExpression}`])}
                       expressionLabel={expressions.find((expression) => expression.emoji === selectedExpression)?.label ?? "Character expression"}
-                      fit={character.portraitFit ?? "contain"}
-                      positionX={character.portraitPositionX ?? 50}
-                      positionY={character.portraitPositionY ?? 50}
-                      zoom={character.portraitZoom ?? 100}
+                      // The local profile has its own framing preferences.
+                      // Keep the original image/GIF in the 4:5 composer portrait;
+                      // the small sidebar thumbnail is generated separately on profile save.
+                      fit={selectedCharacter === "You" ? "cover" : character.portraitFit ?? "contain"}
+                      positionX={selectedCharacter === "You" ? preferences.profile.avatarPositionX : character.portraitPositionX ?? 50}
+                      positionY={selectedCharacter === "You" ? preferences.profile.avatarPositionY : character.portraitPositionY ?? 50}
+                      zoom={selectedCharacter === "You" ? preferences.profile.avatarZoom : character.portraitZoom ?? 100}
                     />
                   </button>
                   <button className="portrait-picker-button character-picker-button" type="button" aria-label="Choose character" title={`Writing as ${character.name}`} aria-expanded={showCharacterPicker} onClick={() => { setShowCharacterPicker((visible) => !visible); setShowExpressions(false); }}><span className="expression-image character-picker-image" style={{ maskImage: `url("${personSilhouette}")`, WebkitMaskImage: `url("${personSilhouette}")` }} aria-hidden="true" /></button>
