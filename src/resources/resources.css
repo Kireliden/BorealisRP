@@ -90,3 +90,39 @@
 .resource-dialog-folder-label{display:flex;flex-direction:column;gap:8px;margin:2px 0 5px;color:var(--ctp-subtext1);font-size:10px}
 .resource-dialog-folder-label select{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:7px;background:var(--app-bg);color:var(--ctp-text);font-size:11px}
 @media(max-width:720px){.resource-controls{flex-wrap:wrap}.resource-size-control{min-height:36px}.resource-folder-navigation{flex-wrap:wrap}.resource-create-folder{flex-wrap:wrap}.resource-new-folder-button{margin-right:0}}
+
+
+/* Native-style context menu replaces webview browser menu inside Resources. */
+.resource-context-backdrop{position:fixed;inset:0;z-index:110;background:transparent}
+.resource-context-menu{position:fixed;display:flex;flex-direction:column;min-width:214px;max-width:min(290px,calc(100vw - 16px));padding:5px;border:1px solid var(--border);border-radius:10px;background:var(--sidebar-bg);box-shadow:0 15px 42px #0008;user-select:none;-webkit-user-select:none}
+.resource-context-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 11px;border:0;border-radius:6px;background:transparent;color:var(--ctp-text);font-size:11px;text-align:left;cursor:pointer}
+.resource-context-menu button:hover,.resource-context-menu button:focus-visible{background:color-mix(in srgb,var(--accent) 14%,var(--sidebar-bg));color:var(--accent)}
+.resource-context-menu button svg{flex:0 0 auto}
+.resource-context-separator{height:1px;margin:4px 6px;background:var(--border)}
+.resource-context-menu .resource-context-danger{color:var(--ctp-red)}
+.resource-context-menu .resource-context-danger:hover{background:color-mix(in srgb,var(--ctp-red) 12%,var(--sidebar-bg));color:var(--ctp-red)}
+
+/* Spacious modal file preview with a blurred workspace behind it. */
+.resource-viewer-backdrop{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:clamp(10px,2.2vw,28px);box-sizing:border-box;background:color-mix(in srgb,var(--ctp-crust) 78%,transparent);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px)}
+.resource-viewer{display:flex;flex-direction:column;width:min(1450px,100%);height:min(92vh,100%);min-width:0;min-height:250px;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--app-bg);box-shadow:0 20px 80px #0009}
+.resource-viewer-header{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--sidebar-bg)}
+.resource-viewer-title{display:flex;flex-direction:column;gap:4px;min-width:0}
+.resource-viewer-title strong{overflow:hidden;color:var(--ctp-text);font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.resource-viewer-title small{color:var(--muted);font-size:9px}
+.resource-viewer-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.resource-viewer-actions button,.resource-viewer-actions a{display:grid;width:32px;height:32px;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ctp-subtext1);text-decoration:none;cursor:pointer}
+.resource-viewer-actions button:hover,.resource-viewer-actions a:hover{border-color:var(--border);background:var(--surface);color:var(--accent)}
+.resource-viewer-actions .resource-viewer-close:hover,.resource-viewer-actions button[title="Delete resource"]:hover{color:var(--ctp-red)}
+.resource-viewer-content{display:flex;flex:1;align-items:center;justify-content:center;min-width:0;min-height:0;overflow:auto;padding:14px;box-sizing:border-box}
+.resource-viewer-image{display:block;max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 6px 30px #0004}
+.resource-viewer-video{width:100%;height:100%;max-height:100%;object-fit:contain}
+.resource-viewer-audio{width:min(520px,100%)}
+.resource-viewer-document{width:100%;height:100%;min-height:250px;border:0;border-radius:6px;background:white}
+.resource-viewer-text{align-self:stretch;flex:1;min-width:0;margin:0;padding:20px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--ctp-text);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;line-height:1.55;white-space:pre;overflow:auto;user-select:text;-webkit-user-select:text}
+.resource-viewer-message{display:flex;flex-direction:column;align-items:center;gap:9px;max-width:540px;color:var(--muted);font-size:12px;text-align:center;line-height:1.6}
+.resource-viewer-message a{color:var(--accent)}
+.resource-local-delete-button{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--ctp-red) 35%,var(--border));border-radius:7px;background:transparent;color:var(--ctp-red);font-size:11px;cursor:pointer}
+.resource-local-delete-button:hover{background:color-mix(in srgb,var(--ctp-red) 10%,var(--sidebar-bg))}
+.resource-delete-dialog .resource-delete-original-warning{margin:-2px 0 2px;color:var(--muted);font-size:10px;line-height:1.5}
+.resource-delete-dialog .resource-local-delete-notice{padding:9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--ctp-text);font-size:10px;overflow-wrap:anywhere}
+@media(max-width:700px){.resource-viewer{height:min(95vh,100%)}.resource-viewer-content{padding:8px}.resource-viewer-header{padding:7px 9px}.resource-viewer-actions button,.resource-viewer-actions a{width:28px;height:28px}}
