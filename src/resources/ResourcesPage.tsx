@@ -72,7 +72,6 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
     return () => { cancelled = true; };
   }, [resources, workspacePath]);
-  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
   const filtered = resources.filter((resource) => (kind === "all" || resource.kind === kind) && [resource.name, resource.fileName, ...resource.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
@@ -128,9 +127,12 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   async function openPreview(resource: ResourceRecord) {
     setSelected(resource);
     setTagDraft(resource.tags.join(", "));
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const blob = await getBlob(resource.id);
-    setPreviewUrl(blob ? URL.createObjectURL(blob) : null);
+    const url = await getCachedResourceObjectUrl(
+      workspacePath ?? "__global__",
+      resource.id,
+      () => getBlob(resource.id),
+    );
+    setPreviewUrl(url);
   }
   async function saveTags() {
     if (!selected) return;
