@@ -2,26 +2,48 @@ import { useEffect, useState } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import type { AppPreferences } from "../preferences/types";
 import { chooseProfileMedia, profileMediaSource, removeSidebarAvatarThumbnail, saveSidebarAvatarThumbnail } from "../profile/profileMedia";
-import EffectLayer from "../effects/components/EffectLayer";
+import SpecialTitleBadge from "../profile/SpecialTitleBadge";
+import { verifiedSpecialTitles, verifySpecialTitleCode, type SpecialTitle } from "../profile/specialTitles";
 import "../profile/ProfileModal.css";
 import "./ProfileSettings.css";
 
 type Profile = AppPreferences["profile"];
-
-function SpecialTitle({ displayName }: { displayName: string }) {
-  const isZero = displayName.trim().toLocaleLowerCase() === "zero";
-  return <span className={`special-title-badge ${isZero ? "special-title-star" : "special-title-moon"}`}>
-    <span className="special-title-symbol" aria-hidden="true">{isZero ? "✦" : "☾"}</span>
-    <span>{isZero ? "Star Developer" : "Moon Developer"}</span>
-    <EffectLayer effect="particles" intensity="subtle" className="special-title-particles" />
-  </span>;
-}
 
 export default function ProfileSettings() {
   const { preferences, updatePreferences } = usePreferences();
   const [draft, setDraft] = useState<Profile>(preferences.profile);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [titleCodeInput, setTitleCodeInput] = useState("");
+  const [verifiedTitles, setVerifiedTitles] = useState<{ key: string; titles: SpecialTitle[] } | null>(null);
+  const titleValidationKey = `${draft.displayName}\u0000${JSON.stringify(draft.specialTitleCodes)}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    void verifiedSpecialTitles(draft.displayName, draft.specialTitleCodes).then((titles) => {
+      if (!cancelled) setVerifiedTitles({ key: titleValidationKey, titles });
+    });
+    return () => { cancelled = true; };
+  }, [draft.displayName, draft.specialTitleCodes, titleValidationKey]);
+
+  const unlockedTitles = verifiedTitles?.key === titleValidationKey ? verifiedTitles.titles : [];
+  const activeTitle = unlockedTitles.find((title) => title.id === draft.activeSpecialTitleId);
+
+  async function redeemTitle() {
+    setError("");
+    const title = await verifySpecialTitleCode(titleCodeInput, draft.displayName);
+    if (!title) {
+      setError("Invalid unlock code, or this display name is not authorised for the title.");
+      return;
+    }
+    update({
+      specialTitleCodes: { ...draft.specialTitleCodes, [title.id]: titleCodeInput.trim() },
+      activeSpecialTitleId: title.id,
+      showSpecialTitle: true,
+    });
+    setTitleCodeInput("");
+  }
+
 
   useEffect(() => {
     setDraft(preferences.profile);
@@ -117,11 +139,27 @@ export default function ProfileSettings() {
             <label className="profile-field-label">Title <span>Optional · hidden while special title is enabled</span>
               <input maxLength={80} value={draft.title} onChange={(event) => update({ title: event.target.value })} placeholder="A little title" />
             </label>
-            <label className="profile-special-title-toggle">
-              <input type="checkbox" checked={draft.showSpecialTitle} onChange={(event) => update({ showSpecialTitle: event.target.checked })} />
-              <span><strong>Show special title</strong><small>Display your Borealis developer identity instead of your regular title.</small></span>
-            </label>
-            <div className="profile-special-title-preview"><SpecialTitle displayName={draft.displayName} /></div>
+            <div className="profile-special-titles">
+              <strong>Special titles</strong>
+              <p>Exclusive titles require a signed unlock code. Developer titles also require the matching reserved display name.</p>
+              <div className="profile-title-redeem">
+                <input type="password" autoComplete="off" spellCheck={false} aria-label="Special title unlock code" value={titleCodeInput} onChange={(event) => setTitleCodeInput(event.target.value)} placeholder="Enter an unlock code…" />
+                <button className="profile-secondary-button" type="button" disabled={!titleCodeInput.trim()} onClick={() => void redeemTitle()}>Unlock</button>
+              </div>
+              {unlockedTitles.length > 0 ? <>
+                <label className="profile-special-title-toggle">
+                  <input type="checkbox" checked={draft.showSpecialTitle} onChange={(event) => update({ showSpecialTitle: event.target.checked })} />
+                  <span><strong>Show special title</strong><small>Use an unlocked title instead of your regular profile title.</small></span>
+                </label>
+                <label className="profile-title-choice">Unlocked title
+                  <select value={activeTitle?.id ?? ""} onChange={(event) => update({ activeSpecialTitleId: event.target.value || null })}>
+                    <option value="">Select a title…</option>
+                    {unlockedTitles.map((title) => <option value={title.id} key={title.id}>{title.label}</option>)}
+                  </select>
+                </label>
+                {draft.showSpecialTitle && activeTitle && <div className="profile-special-title-preview"><SpecialTitleBadge title={activeTitle} /></div>}
+              </> : <small>No special titles are unlocked for this display name.</small>}
+            </div>
           </div>
         </div>
 
