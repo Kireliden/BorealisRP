@@ -56,6 +56,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [bulkTagDraft, setBulkTagDraft] = useState("");
   const [cardSize, setCardSize] = useState(240);
   const [pendingDelete, setPendingDelete] = useState<ResourceRecord | null>(null);
+  const [deleteDialogMode, setDeleteDialogMode] = useState<"library" | "original">("library");
   const [deleteHasGlobalCopy, setDeleteHasGlobalCopy] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -315,11 +316,12 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     await refresh();
     setSelected((current) => current ? { ...current, tags: tagDraft.split(",").map((tag) => tag.trim()).filter(Boolean) } : null);
   }
-  async function requestDelete(resource: ResourceRecord) {
+  async function requestDelete(resource: ResourceRecord, mode: "library" | "original" = "library") {
+    setDeleteDialogMode(mode);
     setContextMenu(null);
     setLocalDeletionNotice("");
     setDeleteHasGlobalCopy(false);
-    if (workspacePath) {
+    if (workspacePath && mode === "library") {
       try {
         const globalResources = await listResources();
         setDeleteHasGlobalCopy(globalResources.some((item) => item.id === resource.id));
@@ -515,12 +517,12 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       {pendingDelete && <div className="resource-delete-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !deleting) setPendingDelete(null); }}>
         <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-delete-title">
           <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
-          <h2 id="resource-delete-title">Delete resource?</h2>
-          <p><strong>{pendingDelete.fileName}</strong> will be permanently removed from the selected library location.</p>
-          {workspacePath ? <>
+          <h2 id="resource-delete-title">{deleteDialogMode === "original" ? "Delete a local original?" : "Delete resource?"}</h2>
+          <p><strong>{pendingDelete.fileName}</strong> {deleteDialogMode === "original" ? "has a copy saved in BRD. To remove the original, choose its location on your computer." : "will be permanently removed from the selected library location."}</p>
+          {deleteDialogMode === "library" && (workspacePath ? <>
             <button type="button" className="library-primary" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Only this workspace</button>
             {deleteHasGlobalCopy && <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, true)}>This workspace and the app-wide library</button>}
-          </> : <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Delete from app-wide library</button>}
+          </> : <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Delete from app-wide library</button>)}
           <button type="button" className="resource-local-delete-button" disabled={deleting || localDeletionBusy} onClick={() => void deleteMatchingLocalOriginal(pendingDelete)}>
             <Trash2 size={14} /> Delete matching original from device…
           </button>
@@ -586,7 +588,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <button type="button" role="menuitem" onClick={() => { setContextMenu(null); showBulkDialog("copy"); }}><Copy size={15} /> Copy {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
           <button type="button" role="menuitem" className="resource-context-danger" onClick={() => { setContextMenu(null); if (selectedResourceIds.length > 1) setConfirmBulkDelete(true); else void requestDelete(contextResource); }}><Trash2 size={15} /> Delete {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
           <div className="resource-context-separator" />
-          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); void requestDelete(contextResource); }}><Trash2 size={15} /> Delete local original…</button>
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); void requestDelete(contextResource, "original"); }}><Trash2 size={15} /> Delete local original…</button>
         </> : contextFolder ? <>
           <button type="button" role="menuitem" onClick={() => openFolder(contextFolder.id)}><Folder size={15} /> Open folder</button>
           <button type="button" role="menuitem" onClick={() => { openFolder(contextFolder.id); setCreatingFolder(true); setContextMenu(null); }}><FolderPlus size={15} /> New subfolder</button>
