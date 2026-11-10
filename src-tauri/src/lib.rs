@@ -73,7 +73,7 @@ fn read_workspace(path: &Path) -> Result<WorkspaceInfo, String> {
     }
     if manifest.schema_version != WORKSPACE_SCHEMA_VERSION {
         return Err(format!(
-            "Unsupported workspace schema version {} (this version of BRD supports {}).",
+            "Unsupported workspace schema version {} (this version of BRS supports {}).",
             manifest.schema_version, WORKSPACE_SCHEMA_VERSION
         ));
     }
@@ -293,7 +293,7 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-/// Imports an image into BRD-owned application storage so the original file can be moved safely.
+/// Imports an image into BRS-owned application storage so the original file can be moved safely.
 #[tauri::command]
 fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, String> {
     let source = PathBuf::from(source_path);
@@ -317,10 +317,10 @@ fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, S
     }
 
     let app_data = app.path().app_data_dir()
-        .map_err(|error| format!("Could not locate BRD application storage: {error}"))?;
+        .map_err(|error| format!("Could not locate BRS application storage: {error}"))?;
     let media_dir = app_data.join("media");
     fs::create_dir_all(&media_dir)
-        .map_err(|error| format!("Could not create BRD media storage: {error}"))?;
+        .map_err(|error| format!("Could not create BRS media storage: {error}"))?;
 
     let destination = media_dir.join(format!("{}.{}", Uuid::new_v4(), extension));
     fs::copy(&source, &destination)
@@ -332,7 +332,7 @@ fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, S
 
 #[tauri::command]
 fn profile_sidebar_thumbnail_path(app: AppHandle) -> Result<String, String> {
-    let path = app.path().app_data_dir().map_err(|error| format!("Could not locate BRD application storage: {error}"))?.join("media").join("profile-sidebar-avatar.png");
+    let path = app.path().app_data_dir().map_err(|error| format!("Could not locate BRS application storage: {error}"))?.join("media").join("profile-sidebar-avatar.png");
     if !path.is_file() {
         return Err("No sidebar thumbnail has been generated yet.".into());
     }
@@ -344,7 +344,7 @@ fn save_profile_sidebar_thumbnail(app: AppHandle, bytes: Vec<u8>) -> Result<Stri
     if bytes.len() < 8 || bytes.len() > MAX_THUMBNAIL_BYTES || bytes.get(0..8) != Some(&[137,80,78,71,13,10,26,10]) {
         return Err("The sidebar thumbnail is not a valid-sized PNG image.".into());
     }
-    let path = app.path().app_data_dir().map_err(|error| format!("Could not locate BRD application storage: {error}"))?.join("media").join("profile-sidebar-avatar.png");
+    let path = app.path().app_data_dir().map_err(|error| format!("Could not locate BRS application storage: {error}"))?.join("media").join("profile-sidebar-avatar.png");
     let parent = path.parent().ok_or_else(|| "Could not locate sidebar thumbnail folder.".to_string())?;
     fs::create_dir_all(parent).map_err(|error| format!("Could not create sidebar thumbnail folder: {error}"))?;
     fs::write(&path, bytes).map_err(|error| format!("Could not save sidebar thumbnail: {error}"))?;
@@ -357,7 +357,7 @@ fn remove_profile_sidebar_thumbnail(app: AppHandle) -> Result<(), String> {
     // returns an error when the file is absent.
     let path = app.path()
         .app_data_dir()
-        .map_err(|error| format!("Could not locate BRD application storage: {error}"))?
+        .map_err(|error| format!("Could not locate BRS application storage: {error}"))?
         .join("media")
         .join("profile-sidebar-avatar.png");
     match fs::remove_file(path) {
@@ -401,7 +401,7 @@ fn read_dropped_resource_files(paths: Vec<String>) -> Result<Vec<DroppedResource
     Ok(files)
 }
 
-/// Deletes a file only after the user selects it and BRD verifies its name, size and
+/// Deletes a file only after the user selects it and BRS verifies its name, size and
 /// SHA-256 against the imported copy. No stored path or arbitrary file is trusted.
 #[tauri::command]
 fn delete_confirmed_original_resource_file(
