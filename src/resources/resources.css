@@ -64,7 +64,20 @@
 .resources-main:has(.resource-selection-rectangle){cursor:crosshair}
 .resource-selection-rectangle{z-index:20;pointer-events:none}
 
-/* Restore the solid card footer; only show it for explicitly selected assets. */
+/* Restore the solid footer on hover/focus or selection, without stretching neighbouring cards. */
+.resource-card-shell{align-self:start}
+.resource-card{height:auto;align-self:start;padding:0;background:var(--sidebar-bg)}
+.resource-card-preview{aspect-ratio:1.25}
+.resource-card-info{position:static;display:none;gap:5px;padding:9px 10px 10px;background:var(--sidebar-bg);text-align:left;opacity:1;visibility:visible;pointer-events:none}
+.resource-card:hover .resource-card-info,
+.resource-card:focus-visible .resource-card-info,
+.resource-card-shell:has(.resource-select input:checked) .resource-card-info{display:flex}
+.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.resource-card-info>small{margin:0;color:var(--muted);font-size:9px}
+.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
+.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
+.resource-card-preview>span{z-index:3;top:6px;right:6px;bottom:auto}
+@media(hover:none){.resource-card-info{display:none}.resource-card-shell:has(.resource-select input:checked) .resource-card-info{display:flex}}
 .resource-card{padding:0;background:var(--sidebar-bg)}
 .resource-card-preview{aspect-ratio:1.25}
 .resource-card-info{position:static;display:none;gap:5px;padding:9px 10px 10px;background:var(--sidebar-bg);text-align:left;opacity:1;visibility:visible;pointer-events:none}
