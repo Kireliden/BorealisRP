@@ -15,3 +15,5 @@
 .resource-card-tags i:nth-child(5n+3){--tag-colour:var(--ctp-pink)}
 .resource-card-tags i:nth-child(5n+4){--tag-colour:var(--ctp-teal)}
 .resource-card-tags i:nth-child(5n){--tag-colour:var(--ctp-peach)}
+
+.resource-select-all{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--ctp-subtext1);font-size:10px;cursor:pointer;user-select:none}.resource-select-all input{width:14px;height:14px;margin:0;accent-color:var(--accent);cursor:pointer}.resource-grid{position:relative;user-select:none}.resource-grid:has(.resource-selection-rectangle){cursor:crosshair}.resource-selection-rectangle{position:absolute;z-index:4;pointer-events:none;border:1px solid var(--accent);border-radius:3px;background:color-mix(in srgb,var(--accent) 16%,transparent)}
