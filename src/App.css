@@ -2591,3 +2591,26 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+
+/* Dismissible workspace status: the close control stays visible at all scales. */
+.demo-notice .demo-notice-text { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.demo-notice .demo-notice-close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  margin: -4px -5px -4px 4px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--ctp-subtext1);
+  background: transparent;
+  cursor: pointer;
+}
+.demo-notice .demo-notice-close:hover,
+.demo-notice .demo-notice-close:focus-visible {
+  color: var(--ctp-text);
+  border-color: var(--notice-border, var(--border));
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
