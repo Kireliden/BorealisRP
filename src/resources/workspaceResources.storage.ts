@@ -219,7 +219,7 @@ export async function organiseWorkspaceResources(
   } else {
     manifest.resources = manifest.resources.filter((item) => !selected.has(item.id));
     await saveManifest(workspacePath, manifest);
-    // Delete only BRD-managed copies, never their original import paths.
+    // Delete only BRS-managed copies, never their original import paths.
     for (const item of matching) await deleteWorkspaceFile(workspacePath, item.relativePath);
   }
 }
