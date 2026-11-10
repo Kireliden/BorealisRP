@@ -521,7 +521,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       });
       if (typeof choice !== "string") return;
       const blob = await getBlob(resource.id);
-      if (!blob) throw new Error("BRD's copy of this resource could not be read.");
+      if (!blob) throw new Error("BRS's copy of this resource could not be read.");
       const bytes = await blob.arrayBuffer();
       const fingerprint = await crypto.subtle.digest("SHA-256", bytes);
       const expectedSha256 = Array.from(new Uint8Array(fingerprint), (value) => value.toString(16).padStart(2, "0")).join("");
@@ -551,7 +551,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         expectedSha256: candidate.fingerprint,
       });
       setPendingOriginalDeletion(null);
-      setLocalDeletionNotice("Matching original deleted from your device. The copy in BRD is still available.");
+      setLocalDeletionNotice("Matching original deleted from your device. The copy in BRS is still available.");
     } catch (reason) {
       setPendingOriginalDeletion(null);
       setLocalDeletionNotice(reason instanceof Error ? reason.message : String(reason));
@@ -653,7 +653,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-delete-title">
           <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
           <h2 id="resource-delete-title">{deleteDialogMode === "original" ? "Delete a local original?" : "Delete resource?"}</h2>
-          <p><strong>{pendingDelete.fileName}</strong> {deleteDialogMode === "original" ? "has a copy saved in BRD. To remove the original, choose its location on your computer." : "will be permanently removed from the selected library location."}</p>
+          <p><strong>{pendingDelete.fileName}</strong> {deleteDialogMode === "original" ? "has a copy saved in BRS. To remove the original, choose its location on your computer." : "will be permanently removed from the selected library location."}</p>
           {deleteDialogMode === "library" && (workspacePath ? <>
             <button type="button" className="library-primary" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Only this workspace</button>
             {deleteHasGlobalCopy && <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, true)}>This workspace and the app-wide library</button>}
@@ -661,7 +661,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <button type="button" className="resource-local-delete-button" disabled={deleting || localDeletionBusy} onClick={() => void deleteMatchingLocalOriginal(pendingDelete)}>
             <Trash2 size={14} /> Delete matching original from device…
           </button>
-          <p className="resource-delete-original-warning">Choose the original file on your computer. It will be checked against the imported copy before permanent deletion. The BRD copy stays safe.</p>
+          <p className="resource-delete-original-warning">Choose the original file on your computer. It will be checked against the imported copy before permanent deletion. The BRS copy stays safe.</p>
           {localDeletionNotice && <p className="resource-local-delete-notice" role="status">{localDeletionNotice}</p>}
           <button type="button" className="resource-delete-cancel" disabled={deleting || localDeletionBusy} onClick={() => setPendingDelete(null)}>Cancel</button>
         </section>
@@ -695,7 +695,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-delete-original-title">
           <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
           <h2 id="resource-delete-original-title">Permanently delete this local file?</h2>
-          <p>This will delete the selected original on your computer, not the copy stored in BRD. The file will be verified first; if its contents differ, nothing will be deleted.</p>
+          <p>This will delete the selected original on your computer, not the copy stored in BRS. The file will be verified first; if its contents differ, nothing will be deleted.</p>
           <p className="resource-original-path">{pendingOriginalDeletion.path}</p>
           <button type="button" className="library-danger" disabled={localDeletionBusy} onClick={() => void confirmDeleteLocalOriginal()}>Delete original permanently</button>
           <button type="button" className="resource-delete-cancel" disabled={localDeletionBusy} onClick={() => setPendingOriginalDeletion(null)}>Cancel</button>
