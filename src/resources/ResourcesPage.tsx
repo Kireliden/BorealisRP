@@ -77,7 +77,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       const blob = await getBlob(item.id).catch(() => null);
       return blob ? [`${scope}::${item.id}`, URL.createObjectURL(blob)] as const : null;
     })).then((created) => {
-      const urls = created.filter((item): item is readonly [string, string] => item !== null);
+      const urls = created.flatMap((item) => item === null ? [] : [item]);
       if (cancelled) {
         urls.forEach(([, url]) => URL.revokeObjectURL(url));
         return;
