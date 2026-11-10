@@ -5,6 +5,7 @@ import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, T
 import { deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResources, updateResourceTags } from "./resources.storage";
 import { deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResources, migrateLegacyResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceRecord } from "./resources.types";
+import { getCachedResourceObjectUrl, invalidateCachedResourceObjectUrl } from "./resourceMediaCache";
 import "./resources.css";
 
 type Props = { onClose: () => void; workspacePath?: string | null };
@@ -24,7 +25,6 @@ function mimeTypeFromName(fileName: string): string {
 export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [resources, setResources] = useState<ResourceRecord[]>([]);
   const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
-  const thumbnailUrlsRef = useRef<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("all");
   const [tagDraft, setTagDraft] = useState("");
@@ -62,37 +62,16 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     let cancelled = false;
     const scope = workspacePath ?? "__global__";
     const imageResources = resources.filter((item) => item.kind === "image");
-    const activeKeys = new Set(imageResources.map((item) => `${scope}::${item.id}`));
-
-    // Keep existing thumbnails when the library changes; only load newly added images.
-    for (const [key, url] of Object.entries(thumbnailUrlsRef.current)) {
-      if (!activeKeys.has(key)) {
-        URL.revokeObjectURL(url);
-        delete thumbnailUrlsRef.current[key];
-      }
-    }
-
-    const missing = imageResources.filter((item) => !thumbnailUrlsRef.current[`${scope}::${item.id}`]);
-    void Promise.all(missing.map(async (item) => {
-      const blob = await getBlob(item.id).catch(() => null);
-      return blob ? [`${scope}::${item.id}`, URL.createObjectURL(blob)] as const : null;
+    void Promise.all(imageResources.map(async (item) => {
+      const url = await getCachedResourceObjectUrl(scope, item.id, () => getBlob(item.id));
+      return url ? [`${scope}::${item.id}`, url] as const : null;
     })).then((created) => {
+      if (cancelled) return;
       const urls = created.flatMap((item) => item === null ? [] : [item]);
-      if (cancelled) {
-        urls.forEach(([, url]) => URL.revokeObjectURL(url));
-        return;
-      }
-      urls.forEach(([key, url]) => { thumbnailUrlsRef.current[key] = url; });
-      setThumbnailUrls({ ...thumbnailUrlsRef.current });
-    });
-
+      setThumbnailUrls((current) => ({ ...current, ...Object.fromEntries(urls) }));
+    }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
     return () => { cancelled = true; };
   }, [resources, workspacePath]);
-
-  useEffect(() => () => {
-    Object.values(thumbnailUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
-    thumbnailUrlsRef.current = {};
-  }, []);
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
@@ -164,6 +143,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setError("");
     try {
       await deleteFile(resource.id);
+      await invalidateCachedResourceObjectUrl(workspacePath ?? "__global__", resource.id);
       if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
       setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
       await refresh();
