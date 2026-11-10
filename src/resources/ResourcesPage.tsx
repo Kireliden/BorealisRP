@@ -33,7 +33,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [dragging, setDragging] = useState(false);
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
   const [selectionRect, setSelectionRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
-  const dragSelection = useRef<{ startX: number; startY: number; currentX: number; currentY: number; moved: boolean } | null>(null);
+  const dragSelection = useRef<{ startX: number; startY: number; currentX: number; currentY: number; moved: boolean; startedOnCard: boolean } | null>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
   const suppressCardClick = useRef(false);
   const [bulkTagDraft, setBulkTagDraft] = useState("");
@@ -99,7 +99,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     if (event.button !== 0) return;
     const target = event.target;
     if (target instanceof Element && target.closest(".resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
-    dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false };
+    dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
   function handleGridPointerMove(event: PointerEvent<HTMLDivElement>) {
@@ -125,7 +125,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         return rect.left < selection.right && rect.right > selection.left && rect.top < selection.bottom && rect.bottom > selection.top;
       }).map((card) => card.dataset.resourceId).filter((id): id is string => Boolean(id));
       if (intersectingIds.length) setSelectedResourceIds((current) => [...new Set([...current, ...intersectingIds])]);
-      suppressCardClick.current = true;
+      if (drag.startedOnCard) suppressCardClick.current = true;
     }
     dragSelection.current = null;
     setSelectionRect(null);
@@ -261,7 +261,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
               <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
             </button>
-          </div>)}{selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}</div>}
+          </div> )}</div>}
+        {selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}
         </div>
       {selected && <aside className="resource-inspector"><div className="character-editor-top"><span>RESOURCE DETAILS</span><button type="button" onClick={() => { setSelected(null); setPreviewUrl(null); }} aria-label="Close resource details"><X size={16} /></button></div>
         <div className="resource-preview-large">{previewUrl && selected.kind === "image" ? <img src={previewUrl} alt={selected.fileName} /> : previewUrl && selected.kind === "audio" ? <audio controls src={previewUrl} /> : previewUrl && selected.kind === "video" ? <video controls src={previewUrl} /> : iconFor(selected)}</div>
