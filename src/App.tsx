@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { usePreferences } from "./preferences/PreferencesContext";
 import ProfileModal from "./profile/ProfileModal";
@@ -38,6 +38,7 @@ import { loadWorkspaceDraft, saveWorkspaceDraft } from "./workspace/workspaceDra
 import "./popup-motion.css";
 
 const appWindow = getCurrentWindow();
+const SAVED_WINDOW_SIZE_KEY = "brd.window-physical-size.v1";
 
 type Role = "Narration" | "Dialogue";
 type Character = { id?: string; name: string; initials: string; avatar: string; description: string; avatarAssetPath?: string | null; portraitResourceId?: string | null; portraitFit?: "cover" | "contain"; portraitPositionX?: number; portraitPositionY?: number; portraitZoom?: number };
@@ -778,12 +779,40 @@ function sanitiseHtml(html: string) {
   }
   useEffect(() => {
     let stopResize: (() => void) | undefined;
+    let stopClose: (() => void) | undefined;
     let cancelled = false;
+    // Restore physical pixels rather than CSS dimensions so display scaling is respected.
+    const restoreSize = async () => {
+      const raw = localStorage.getItem(SAVED_WINDOW_SIZE_KEY);
+      if (!raw || await appWindow.isMaximized()) return;
+      const saved: unknown = JSON.parse(raw);
+      if (!saved || typeof saved !== "object") return;
+      const size = saved as { width?: unknown; height?: unknown };
+      if (typeof size.width !== "number" || typeof size.height !== "number" ||
+          !Number.isFinite(size.width) || !Number.isFinite(size.height) ||
+          size.width < 760 || size.height < 560 || size.width > 16000 || size.height > 16000) return;
+      await appWindow.setSize(new PhysicalSize(size.width, size.height));
+    };
+    const recordSize = async () => {
+      if (await appWindow.isMaximized()) return;
+      const size = await appWindow.outerSize();
+      if (size.width >= 760 && size.height >= 560) {
+        localStorage.setItem(SAVED_WINDOW_SIZE_KEY, JSON.stringify({ width: size.width, height: size.height }));
+      }
+    };
+    void restoreSize().catch((error) => console.warn("Could not restore BRD window size:", error));
     void appWindow.isMaximized().then((value) => { if (!cancelled) setIsMaximized(value); }).catch((error) => console.warn("Could not check maximised state:", error));
     void appWindow.onResized(() => {
-      void appWindow.isMaximized().then((value) => { if (!cancelled) setIsMaximized(value); }).catch(() => undefined);
+      void appWindow.isMaximized().then((value) => {
+        if (!cancelled) setIsMaximized(value);
+        if (!cancelled && !value) void recordSize().catch((error) => console.warn("Could not remember BRD window size:", error));
+      }).catch(() => undefined);
     }).then((unlisten) => { if (cancelled) unlisten(); else stopResize = unlisten; });
-    return () => { cancelled = true; stopResize?.(); };
+    // This also covers closing from the custom title bar, not only natural shutdown.
+    void appWindow.onCloseRequested(() => recordSize().catch(() => undefined))
+      .then((unlisten) => { if (cancelled) unlisten(); else stopClose = unlisten; })
+      .catch(() => undefined);
+    return () => { cancelled = true; stopResize?.(); stopClose?.(); };
   }, []);
 
   async function toggleMaximize() {
