@@ -57,6 +57,8 @@ export type CharacterDraft = {
 };
 
 export type CharacterRecord = CharacterDraft & {
+  /** Previous names allow older messages without a character ID to track renames. */
+  formerNames?: string[];
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -131,6 +133,10 @@ export function makeCharacterRecord(draft: CharacterDraft, existing?: Partial<Ch
     ...draft,
     id: existing?.id ?? crypto.randomUUID(),
     name: draft.name.trim(),
+    formerNames: [...new Set([
+      ...(existing?.formerNames ?? []),
+      ...(existing?.name?.trim() && existing.name.trim() !== draft.name.trim() ? [existing.name.trim()] : []),
+    ])],
     subtitle: draft.subtitle.trim(),
     description: draft.description.trim(),
     initials: (draft.initials.trim() || draft.name.trim().slice(0, 2)).toUpperCase().slice(0, 3),
