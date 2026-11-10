@@ -146,7 +146,7 @@ The following checks should be performed in the running application. They are no
 - [ ] Type and send a message while autosave may be pending; confirm the message is saved once and the sent text does not reappear as a draft.
 - [ ] Switch workspaces during a pending operation; confirm the previous workspace's result or error does not alter the active workspace's UI.
 - [ ] Switch workspaces with dialogs or drag operations open; confirm transient UI state is reset.
-- [ ] Close and reopen BRD; confirm expected workspace content and drafts persist.
+- [ ] Close and reopen BRS; confirm expected workspace content and drafts persist.
 
 ## Scope and limitations
 
