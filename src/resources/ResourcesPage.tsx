@@ -333,7 +333,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setError("");
     try {
       await deleteFile(resource.id);
-      if (workspacePath && includeGlobalCopy) await deleteResource(resource.id);
+      if (workspacePath && includeGlobalCopy) {
+        await deleteResource(resource.id);
+        await invalidateCachedResourceObjectUrl("__global__", resource.id);
+      }
       await invalidateCachedResourceObjectUrl(workspacePath ?? "__global__", resource.id);
       if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
       if (viewerResource?.id === resource.id) setViewerResource(null);
@@ -550,7 +553,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <button type="button" role="menuitem" onClick={() => { setContextMenu(null); showBulkDialog("copy"); }}><Copy size={15} /> Copy {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
           <button type="button" role="menuitem" className="resource-context-danger" onClick={() => { setContextMenu(null); if (selectedResourceIds.length > 1) setConfirmBulkDelete(true); else void requestDelete(contextResource); }}><Trash2 size={15} /> Delete {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
           <div className="resource-context-separator" />
-          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); void deleteMatchingLocalOriginal(contextResource); }}><Trash2 size={15} /> Delete local original…</button>
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); void requestDelete(contextResource); }}><Trash2 size={15} /> Delete local original…</button>
         </> : contextFolder ? <>
           <button type="button" role="menuitem" onClick={() => openFolder(contextFolder.id)}><Folder size={15} /> Open folder</button>
           <button type="button" role="menuitem" onClick={() => { openFolder(contextFolder.id); setCreatingFolder(true); setContextMenu(null); }}><FolderPlus size={15} /> New subfolder</button>
