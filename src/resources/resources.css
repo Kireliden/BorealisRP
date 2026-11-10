@@ -42,3 +42,16 @@
   .resource-card>small,
   .resource-card-tags{visibility:visible;opacity:1}
 }
+
+
+/* Keep file details inside the thumbnail, revealed as one gallery caption. */
+.resource-card-preview{isolation:isolate}
+.resource-card-info{position:absolute;inset:auto 0 0;z-index:2;display:flex;flex-direction:column;gap:4px;padding:24px 9px 9px;background:linear-gradient(transparent,color-mix(in srgb,var(--ctp-crust) 94%,transparent));text-align:left;opacity:0;visibility:hidden;transition:opacity .16s ease,visibility .16s ease;pointer-events:none}
+.resource-card:hover .resource-card-info,
+.resource-card:focus-visible .resource-card-info{opacity:1;visibility:visible}
+.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.resource-card-info>small{margin:0;color:var(--ctp-subtext1);font-size:9px}
+.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
+.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
+.resource-card-preview>span{z-index:3;top:6px;right:6px;bottom:auto}
+@media(hover:none){.resource-card-info{opacity:1;visibility:visible}}
