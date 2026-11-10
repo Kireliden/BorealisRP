@@ -20,7 +20,7 @@ export default function AccessibilitySettings() {
     <section className="chat-settings accessibility-settings">
       <div className="appearance-section-heading">
         <h4>Motion</h4>
-        <p>Choose how much movement BRD uses when menus, popups and other interface elements appear.</p>
+        <p>Choose how much movement BRS uses when menus, popups and other interface elements appear.</p>
       </div>
       <div className="chat-setting-toggles">
         <label>
