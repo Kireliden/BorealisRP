@@ -15,7 +15,6 @@ import NudgeEgg from "./easter-eggs/NudgeEgg";
 import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
-import avatarPlaceholder from "./assets/Avatar_placeholder.png";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
 import CharactersPage from "./characters/CharactersPage";
@@ -1771,8 +1770,8 @@ function sanitiseHtml(html: string) {
             >×</button>
             <div className="avatar-preview-card-inner">
               <div className="avatar-preview-topline">BOREALIS · CHARACTER FILE</div>
-              <div className={`avatar-preview-art ${(previewCharacter.avatarAssetPath || (previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId]) || previewCharacter.name === "Keira") ? "has-portrait-image" : "has-portrait-initials"}`}>
-                {!(previewCharacter.avatarAssetPath || (previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId]) || previewCharacter.name === "Keira") && <>
+              <div className={`avatar-preview-art ${(previewCharacter.avatarAssetPath || (previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId])) ? "has-portrait-image" : "has-portrait-initials"}`}>
+                {!(previewCharacter.avatarAssetPath || (previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId])) && <>
                   <div className="avatar-preview-orbit avatar-preview-orbit-one" />
                   <div className="avatar-preview-orbit avatar-preview-orbit-two" />
                 </>}
@@ -1784,8 +1783,6 @@ function sanitiseHtml(html: string) {
                   <div className="avatar-preview-image-layer avatar-preview-image-layer-fade">
                     <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={characterPortraitStyle({ fit: previewCharacter.portraitFit, positionX: previewCharacter.portraitPositionX, positionY: previewCharacter.portraitPositionY, zoom: previewCharacter.portraitZoom })} />
                   </div>
-                ) : previewCharacter.name === "Keira" ? (
-                  <div className="avatar-preview-image-layer avatar-preview-image-layer-fade"><img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" /></div>
                 ) : (
                   <span className="avatar-preview-initials">{previewCharacter.initials}</span>
                 )}
