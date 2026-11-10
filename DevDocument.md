@@ -1,7 +1,7 @@
 # Borealis Roleplay Studio
 ## Developer Documentation
 
-**Project codename:** BRD  
+**Project codename:** BRS  
 **Project type:** Private desktop roleplay application  
 **Primary platform:** Windows desktop  
 **Secondary platform:** Android companion (planned)  
@@ -14,7 +14,7 @@
 
 ## 1. Project overview
 
-Borealis Roleplay Studio (BRD) is a private, desktop-first application designed to provide a comfortable, customizable and feature-rich environment for written roleplay.
+Borealis Roleplay Studio (BRS) is a private, desktop-first application designed to provide a comfortable, customizable and feature-rich environment for written roleplay.
 
 The project aims to bring character management, scene organization, rich-text writing, message history and personal customization together in one application, without depending on a general-purpose chat platform.
 
@@ -25,7 +25,7 @@ The interface should feel like a dedicated writing and roleplay workspace rather
 - **Desktop first.** Desktop is the primary platform and receives priority for organization, writing and advanced management.
 - **Writing comes first.** The composer, character selection and message presentation are core functionality, not secondary features.
 - **Customization without compromise.** Users should be able to personalize the interface without sacrificing usability.
-- **Private by design.** BRD is a personal project; private data and user-controlled storage are important design considerations.
+- **Private by design.** BRS is a personal project; private data and user-controlled storage are important design considerations.
 - **Reliable persistence.** Drafts, messages and project data must survive application restarts and unexpected closures.
 - **Incremental development.** Each feature should be implemented, tested and stabilized before the next major feature is introduced.
 
@@ -127,7 +127,7 @@ The final persistence architecture for roleplay projects, scenes, characters, me
 
 ### 4.1 Custom window title bar
 
-BRD uses a custom title bar rather than relying entirely on the native window decoration.
+BRS uses a custom title bar rather than relying entirely on the native window decoration.
 
 The application has a custom title bar and window-control integration. The drag region and related behavior have been addressed during earlier development.
 
@@ -279,7 +279,7 @@ Tasks:
 3. Test the appearance controls at every supported scale.
 4. Confirm that the title bar retains its standard size.
 5. Check compact, comfortable and spacious density modes.
-6. Verify preference persistence after restarting BRD.
+6. Verify preference persistence after restarting BRS.
 7. Fix any layout regressions discovered during testing.
 
 **Completion criteria:** the existing interface remains usable and preferences consistently apply and persist.
@@ -393,7 +393,7 @@ The precise hierarchy and navigation model should be finalized before the projec
 
 ### Phase 8 — Android companion
 
-**Goal:** extend BRD to mobile without sacrificing the desktop experience.
+**Goal:** extend BRS to mobile without sacrificing the desktop experience.
 
 The Android companion is planned as a secondary application for accessing private projects, scenes and resources, with writing functionality where practical.
 
@@ -411,7 +411,7 @@ No synchronization or networking architecture should be considered finalized unt
 
 ### Phase 9 — Packaging and release readiness
 
-Before considering BRD ready for regular use, the project should have:
+Before considering BRS ready for regular use, the project should have:
 
 - A reliable Windows installer.
 - A defined application data location.
@@ -471,7 +471,7 @@ The project is developed incrementally in VS Code.
 3. Decide on the smallest safe change.
 4. Apply the change without replacing unrelated functionality.
 5. Run the build.
-6. Launch BRD and test the affected behavior.
+6. Launch BRS and test the affected behavior.
 7. Check that existing features still work.
 8. Update this document when implementation status changes.
 
@@ -533,7 +533,7 @@ These items should remain explicitly unresolved until confirmed.
 
 ## 12. Definition of a successful first usable version
 
-The first genuinely usable version of BRD should allow a user to:
+The first genuinely usable version of BRS should allow a user to:
 
 - Open the application and access a project and scene.
 - Select a character and compose a roleplay message.
