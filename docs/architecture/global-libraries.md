@@ -27,7 +27,7 @@
 - Resource metadata and file blobs are stored in IndexedDB under `borealis-resource-library`.
 - Character portrait fields store a resource ID, not a copied image.
 - Resource URLs are created temporarily for display and revoked when no longer needed.
-- These stores are global to the BRD app profile, not scoped to a Roleplay Space.
+- These stores are global to the BRS app profile, not scoped to a Roleplay Space.
 
 ## Known follow-up work
 
