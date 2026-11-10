@@ -82,7 +82,7 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
       const selected = await openFolderDialog({
         directory: true,
         multiple: false,
-        title: "Open a Borealis Roleplay Den workspace",
+        title: "Open a Borealis Roleplay Studio workspace",
       });
       if (typeof selected !== "string") return;
       setBusy(true);
@@ -149,7 +149,7 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
       <section className="workspace-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-modal-title">
         <header className="workspace-modal-header">
           <div>
-            <span className="workspace-modal-eyebrow">BOREALIS ROLEPLAY DEN</span>
+            <span className="workspace-modal-eyebrow">BOREALIS ROLEPLAY STUDIO</span>
             <h2 id="workspace-modal-title">{view === "create" ? "Create a workspace" : "Your workspaces"}</h2>
             <p>Your projects stay in folders you control.</p>
           </div>
