@@ -41,7 +41,8 @@
   font-size: 34px;
   font-weight: 750;
   letter-spacing: -1px;
-  aspect-ratio: auto;
+  /* The portrait frame is 164 × 205 by default: always keep its 4:5 shape. */
+  aspect-ratio: 4 / 5;
 }
 
 .character-portrait.avatar-blue {
