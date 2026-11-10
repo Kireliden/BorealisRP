@@ -197,3 +197,66 @@ export async function organiseResources(ids: string[], action: ResourceBatchActi
     transaction.onabort = () => { db.close(); reject(new Error(reason || "Resource operation was cancelled.")); };
   });
 }
+
+
+/** Rename a logical folder without changing any imported file. */
+export async function renameResourceFolder(id: string, name: string): Promise<void> {
+  const trimmed = name.trim();
+  if (!trimmed || /[/\\]/.test(trimmed)) throw new Error("Choose a folder name without slashes.");
+  const db = await openResourceDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(FOLDERS_STORE_NAME, "readwrite");
+    const store = tx.objectStore(FOLDERS_STORE_NAME);
+    let issue = "";
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const folders = request.result as ResourceFolder[];
+      const folder = folders.find((item) => item.id === id);
+      if (!folder) issue = "Folder not found.";
+      else if (folders.some((item) => item.id !== id && item.parentId === folder.parentId && item.name.toLocaleLowerCase() === trimmed.toLocaleLowerCase())) issue = "A folder with this name already exists here.";
+      if (issue) tx.abort();
+      else if (folder) store.put({ ...folder, name: trimmed });
+    };
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error ?? new Error("Could not rename folder.")); };
+    tx.onabort = () => { db.close(); reject(new Error(issue || "Folder rename was cancelled.")); };
+  });
+}
+
+/** Remove a folder tree without deleting its files: lift all contained resources to the parent. */
+export async function removeResourceFolder(id: string): Promise<void> {
+  const db = await openResourceDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction([FOLDERS_STORE_NAME, STORE_NAME], "readwrite");
+    const folderStore = tx.objectStore(FOLDERS_STORE_NAME);
+    const resourceStore = tx.objectStore(STORE_NAME);
+    let issue = "";
+    const foldersRequest = folderStore.getAll();
+    foldersRequest.onsuccess = () => {
+      const folders = foldersRequest.result as ResourceFolder[];
+      const target = folders.find((item) => item.id === id);
+      if (!target) { issue = "Folder not found."; tx.abort(); return; }
+      const removed = new Set([id]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const folder of folders) {
+          if (folder.parentId && removed.has(folder.parentId) && !removed.has(folder.id)) {
+            removed.add(folder.id);
+            changed = true;
+          }
+        }
+      }
+      const resourcesRequest = resourceStore.getAll();
+      resourcesRequest.onsuccess = () => {
+        for (const record of resourcesRequest.result as Array<ResourceRecord & { blob: Blob }>) {
+          if (record.folderId && removed.has(record.folderId)) resourceStore.put({ ...record, folderId: target.parentId });
+        }
+        for (const folderId of removed) folderStore.delete(folderId);
+      };
+    };
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error ?? new Error("Could not remove folder.")); };
+    tx.onabort = () => { db.close(); reject(new Error(issue || "Folder removal was cancelled.")); };
+  });
+}
