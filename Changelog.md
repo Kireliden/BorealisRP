@@ -30,6 +30,14 @@ These milestones are a *retrospective narrative*, not the exact Git history or a
 - Honoured reduced-motion / animations-off settings and preserved unmodified chat data. Existing users with the older, unrestricted developer-title toggle need to redeem their corresponding title code.
 - **Security note:** local/offline signed codes prevent casual unlocking but cannot establish a globally unique user identity or stop someone modifying their own copy of the application.
 
+## 2026-11-10 — Profile layout and You composer avatar framing
+
+- Kept the profile avatar anchored at the top of the identity area when redeemable special-title controls expand, instead of aligning the portrait to the bottom of those controls.
+- Applied the profile's saved portrait X/Y position and zoom to the **You** portrait in the composer through the same portrait renderer used for OCs.
+- Matched the composer's user portrait to a 4:5 **cover** crop, consistent with the profile preview and generated sidebar thumbnail.
+- Preserved the original local profile media path, animated GIF playback and the existing static sidebar-thumbnail generation/refresh logic without modifying its storage routines.
+- Runtime validation still required for normal images, GIFs, different zoom/positions, and profile-title toggle/resizing.
+
 ## 2026-11-10 — Expressions, portrait consistency and interface polish
 
 ### Added
