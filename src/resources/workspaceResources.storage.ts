@@ -223,3 +223,42 @@ export async function organiseWorkspaceResources(
     for (const item of matching) await deleteWorkspaceFile(workspacePath, item.relativePath);
   }
 }
+
+
+export async function renameWorkspaceResourceFolder(workspacePath: string, id: string, name: string): Promise<void> {
+  const trimmed = name.trim();
+  if (!trimmed || /[/\\]/.test(trimmed)) throw new Error("Choose a folder name without slashes.");
+  const manifest = await loadManifest(workspacePath);
+  const folders = manifest.folders ?? [];
+  const folder = folders.find((item) => item.id === id);
+  if (!folder) throw new Error("Folder not found.");
+  if (folders.some((item) => item.id !== id && item.parentId === folder.parentId && item.name.toLocaleLowerCase() === trimmed.toLocaleLowerCase())) {
+    throw new Error("A folder with this name already exists here.");
+  }
+  folder.name = trimmed;
+  await saveManifest(workspacePath, manifest);
+}
+
+/** Preserve all files, moving contents of deleted folders into their parent folder. */
+export async function removeWorkspaceResourceFolder(workspacePath: string, id: string): Promise<void> {
+  const manifest = await loadManifest(workspacePath);
+  const folders = manifest.folders ?? [];
+  const target = folders.find((item) => item.id === id);
+  if (!target) throw new Error("Folder not found.");
+  const removed = new Set([id]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const folder of folders) {
+      if (folder.parentId && removed.has(folder.parentId) && !removed.has(folder.id)) {
+        removed.add(folder.id);
+        changed = true;
+      }
+    }
+  }
+  manifest.folders = folders.filter((folder) => !removed.has(folder.id));
+  for (const resource of manifest.resources) {
+    if (resource.folderId && removed.has(resource.folderId)) resource.folderId = target.parentId;
+  }
+  await saveManifest(workspacePath, manifest);
+}
