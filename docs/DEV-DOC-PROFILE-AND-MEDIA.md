@@ -3,10 +3,10 @@
 ## Profile identity
 The user profile is app-level and independent of workspaces and roleplay characters. It uses the existing PreferencesContext and is saved to the existing local preferences store. The profile card opens as a standalone floating card with mouse-reactive 3D tilt and a soft holographic highlight. It is read-only; **Edit profile** opens the canonical Settings → Profile editor.
 
-Profile fields: display name (required), title, motto, description, avatar image path, banner image path, and portrait frame style. The portrait uses a fixed 4:5 aspect ratio inside a rounded rectangle. The banner is wide and crops with `object-fit: cover`. The initial card uses an atmospheric BRD gradient if no banner is selected.
+Profile fields: display name (required), title, motto, description, avatar image path, banner image path, and portrait frame style. The portrait uses a fixed 4:5 aspect ratio inside a rounded rectangle. The banner is wide and crops with `object-fit: cover`. The initial card uses an atmospheric BRS gradient if no banner is selected.
 
 ## Image and GIF handling
-The shared `src/profile/profileMedia.ts` helper opens a native file picker and calls the Rust `import_profile_media` command. The backend copies supported images (PNG, JPG/JPEG, WebP, GIF; max 25 MiB) into BRD's application-data media folder, so the app does not depend on the original file remaining in place. The stored path is app-level, not workspace-level. Tauri's asset protocol is scoped to the app-data directory. GIFs remain original GIF files and animate naturally in the UI.
+The shared `src/profile/profileMedia.ts` helper opens a native file picker and calls the Rust `import_profile_media` command. The backend copies supported images (PNG, JPG/JPEG, WebP, GIF; max 25 MiB) into BRS's application-data media folder, so the app does not depend on the original file remaining in place. The stored path is app-level, not workspace-level. Tauri's asset protocol is scoped to the app-data directory. GIFs remain original GIF files and animate naturally in the UI.
 
 The media helper may be reused by future character and scene/resource workflows. Character records are not yet implemented, so the composer currently only supports selecting the built-in demo character or "You". When "You" is selected, the composer portrait is bound directly to the saved user profile avatar (including GIF animation). Character portrait selection is intentionally not exposed in the composer; character portraits will get their own workflow through character options later.
 
@@ -103,7 +103,7 @@ A small reusable effects system has been added under `src/effects/`:
 - `effects.css` contains effect styling and animation.
 - `README.md` documents how to use and extend it.
 
-The first effect is `particles`, used by the special-title badge in the sidebar. The host can set `--effect-color`; otherwise the effect falls back to the special-title tint and then the active theme accent. Effects are decorative, pointer-transparent, and must respect BRD's animation-off preference and `prefers-reduced-motion`. New effects should be added to the shared registry/layer instead of reimplementing one-off animations in feature-specific stylesheets.
+The first effect is `particles`, used by the special-title badge in the sidebar. The host can set `--effect-color`; otherwise the effect falls back to the special-title tint and then the active theme accent. Effects are decorative, pointer-transparent, and must respect BRS's animation-off preference and `prefers-reduced-motion`. New effects should be added to the shared registry/layer instead of reimplementing one-off animations in feature-specific stylesheets.
 
 ### Profile and holographic portrait maintenance
 
@@ -118,7 +118,7 @@ See `docs/LOCKED_HOLOGRAPHIC_PORTRAIT_TEMPLATE.md` for the canonical CSS require
 - **Character Expressions** is a view under **Characters**, not a tab in **Resources**.
 - **Resources** remains its own global-library destination.
 - The **Projects** entry currently displays a **Coming soon!** placeholder. It is only a placeholder, not a functioning project manager or evidence that project persistence is complete. The placeholder must not cover the sidebar or trap navigation; keep the normal app navigation accessible.
-- Styling for Expression Manager file inputs has been customized to match the active BRD theme, including focus and hover states.
+- Styling for Expression Manager file inputs has been customized to match the active BRS theme, including focus and hover states.
 
 ### Current boundaries and follow-up work
 
