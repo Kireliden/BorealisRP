@@ -108,6 +108,7 @@ function readCharacterDisplayDefaults(
       isBoolean,
       defaults.showExpression,
     ),
+    highlightOwnMessages: validOr(source.highlightOwnMessages, isBoolean, defaults.highlightOwnMessages),
     messageSpacing: validOr(
       source.messageSpacing,
       (value): value is CharacterDisplayPreferences["messageSpacing"] =>
@@ -137,6 +138,17 @@ function normalizeCharacterAvatarPaths(saved: unknown): Record<string, string | 
     }
   }
   return paths;
+}
+
+function normalizeSpecialTitleCodes(value: unknown): Record<string, string> {
+  if (!isRecord(value)) return {};
+  const codes: Record<string, string> = {};
+  for (const [id, code] of Object.entries(value)) {
+    if (/^[a-z0-9-]{1,80}$/.test(id) && isString(code) && code.length <= 2000) {
+      codes[id] = code;
+    }
+  }
+  return codes;
 }
 
 function normalizePreferences(saved: UnknownRecord): AppPreferences {
@@ -233,6 +245,12 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
         defaults.profile.title,
       ),
       showSpecialTitle: validOr(profile.showSpecialTitle, isBoolean, defaults.profile.showSpecialTitle),
+      specialTitleCodes: normalizeSpecialTitleCodes(profile.specialTitleCodes),
+      activeSpecialTitleId: validOr(
+        profile.activeSpecialTitleId,
+        (value): value is string | null => value === null || (isString(value) && /^[a-z0-9-]{1,80}$/.test(value)),
+        defaults.profile.activeSpecialTitleId,
+      ),
       motto: validOr(
         profile.motto,
         (value): value is string => isString(value) && value.length <= 160,
