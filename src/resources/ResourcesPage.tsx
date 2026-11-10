@@ -97,10 +97,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }
   function handleGridPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
+    suppressCardClick.current = false;
     const target = event.target;
     if (target instanceof Element && target.closest(".resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
-    event.currentTarget.setPointerCapture(event.pointerId);
   }
   function handleGridPointerMove(event: PointerEvent<HTMLDivElement>) {
     const drag = dragSelection.current;
