@@ -87,7 +87,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }, [selectedVisibleCount, allVisibleSelected]);
 
   function updateSelectionRect(clientX: number, clientY: number) {
-    const area = document.querySelector<HTMLElement>(".resources-library-content");
+    const area = document.querySelector<HTMLElement>(".resources-main");
     if (!area || !dragSelection.current) return;
     const bounds = area.getBoundingClientRect();
     const drag = dragSelection.current;
@@ -99,7 +99,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     if (event.button !== 0) return;
     suppressCardClick.current = false;
     const target = event.target;
-    if (target instanceof Element && target.closest(".resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
+    if (target instanceof Element && target.closest(".resource-inspector, .resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -128,6 +128,11 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       }).map((card) => card.dataset.resourceId).filter((id): id is string => Boolean(id));
       if (intersectingIds.length) setSelectedResourceIds((current) => [...new Set([...current, ...intersectingIds])]);
       if (drag.startedOnCard) suppressCardClick.current = true;
+    } else {
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest(".resource-card-shell, .resource-inspector, .resource-bulk-tools, .resource-select-all, .resource-controls, .resource-dropzone, .library-heading-row, .library-eyebrow, .library-tag-suggestions, .resource-grid button, button, input, select, textarea, label")) {
+        setSelectedResourceIds([]);
+      }
     }
     dragSelection.current = null;
     setSelectionRect(null);
@@ -245,8 +250,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       <button className="library-close" onClick={onClose} type="button" aria-label="Close Resources"><X size={18} /></button>
     </header>
     <main className="resources-layout">
-      <section className="resources-main">
-        <div className="resources-library-content" onPointerDown={handleGridPointerDown} onPointerMove={handleGridPointerMove} onPointerUp={handleGridPointerUp} onPointerCancel={handleGridPointerUp}>
+      <section className="resources-main" onPointerDown={handleGridPointerDown} onPointerMove={handleGridPointerMove} onPointerUp={handleGridPointerUp} onPointerCancel={handleGridPointerUp}>
+        <div className="resources-library-content">
         <div className="library-eyebrow">{workspacePath ? "WORKSPACE LIBRARY" : "GLOBAL ATELIER"} · {resources.length.toString().padStart(2, "0")} ASSETS</div>
         <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
@@ -260,7 +265,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <div className="resource-grid">{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
             <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } void openPreview(resource); }}>
-              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div></div>
+              <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
             </button>
           </div> )}</div>}
         {selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}
