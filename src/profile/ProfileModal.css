@@ -94,45 +94,49 @@
 .special-title-badge { position: relative; display: inline-flex; align-items: center; gap: 7px; width: fit-content; max-width: 100%; margin-top: 9px; padding: 6px 11px; overflow: visible; border: 1px solid color-mix(in srgb, var(--special-title-tint) 52%, transparent); border-radius: 999px; background: linear-gradient(115deg, color-mix(in srgb, var(--special-title-tint) 15%, var(--panel-bg)), color-mix(in srgb, var(--special-title-tint) 5%, var(--panel-bg)) 58%, color-mix(in srgb, white 7%, var(--panel-bg))); color: color-mix(in srgb, var(--ctp-text) 82%, var(--special-title-tint)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 9%), 0 2px 12px color-mix(in srgb, var(--special-title-tint) 10%, transparent); font-size: 11px; font-weight: 650; letter-spacing: .15px; white-space: nowrap; isolation: isolate; }
 .special-title-badge > :not(.special-title-particles) { position: relative; z-index: 1; }
 
-/* BRS special-title aura: a concentric outline that expands evenly in pixels
-   on every edge instead of stretching the capsule horizontally. */
+/* BRS special-title aura: a soft, diffused halo that expands evenly
+   around the capsule, without a sharp second outline at peak intensity. */
 .special-title-badge::before {
   content: "";
   position: absolute;
   z-index: 0;
   inset: -2px;
-  border: 1px solid color-mix(in srgb, var(--special-title-tint) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--special-title-tint) 40%, transparent);
   border-radius: 999px;
   box-shadow:
-    0 0 6px color-mix(in srgb, var(--special-title-tint) 17%, transparent),
-    0 0 14px color-mix(in srgb, var(--special-title-tint) 8%, transparent);
-  opacity: .23;
+    0 0 8px 2px color-mix(in srgb, var(--special-title-tint) 20%, transparent),
+    0 0 18px 5px color-mix(in srgb, var(--special-title-tint) 9%, transparent);
+  filter: blur(2.5px);
+  opacity: .28;
   pointer-events: none;
   animation: brs-special-title-aura 6.8s ease-in-out infinite;
 }
 @keyframes brs-special-title-aura {
   0%, 100% {
     inset: -2px;
-    opacity: .24;
+    opacity: .28;
+    filter: blur(2.5px);
     box-shadow:
-      0 0 5px color-mix(in srgb, var(--special-title-tint) 13%, transparent),
-      0 0 12px color-mix(in srgb, var(--special-title-tint) 7%, transparent);
+      0 0 8px 2px color-mix(in srgb, var(--special-title-tint) 20%, transparent),
+      0 0 18px 5px color-mix(in srgb, var(--special-title-tint) 9%, transparent);
   }
   50% {
     inset: -6px;
-    opacity: .72;
+    opacity: .82;
+    filter: blur(4px);
     box-shadow:
-      0 0 9px color-mix(in srgb, var(--special-title-tint) 35%, transparent),
-      0 0 22px color-mix(in srgb, var(--special-title-tint) 14%, transparent);
+      0 0 13px 3px color-mix(in srgb, var(--special-title-tint) 38%, transparent),
+      0 0 28px 8px color-mix(in srgb, var(--special-title-tint) 18%, transparent);
   }
 }
 :root[data-animations="off"] .special-title-badge::before {
   animation: none;
   inset: -3px;
+  filter: blur(3px);
   opacity: .3;
 }
 @media (prefers-reduced-motion: reduce) {
-  .special-title-badge::before { animation: none; inset: -3px; opacity: .3; }
+  .special-title-badge::before { animation: none; inset: -3px; filter: blur(3px); opacity: .3; }
 }
 
 .special-title-moon { --special-title-tint: #c4b5fd; }
