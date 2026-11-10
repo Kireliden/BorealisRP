@@ -8,7 +8,7 @@ export function profileMediaSource(path: string | null | undefined): string | nu
   return path ? convertFileSrc(path) : null;
 }
 
-/** Opens an image picker and copies the selected image into BRD's app-owned media folder. */
+/** Opens an image picker and copies the selected image into BRS's app-owned media folder. */
 export async function chooseProfileMedia(): Promise<string | null> {
   const selected = await open({
     multiple: false,
