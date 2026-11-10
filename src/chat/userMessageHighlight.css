@@ -1,0 +1,50 @@
+/* Optional, local-only emphasis for messages authored in You mode.
+   Keep the body readable and all controls unobstructed. */
+.message.message-user-highlight .message-body {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: 10px 15px 11px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-left: 2px solid color-mix(in srgb, var(--accent) 62%, var(--border));
+  border-radius: 10px;
+  background: linear-gradient(
+    105deg,
+    color-mix(in srgb, var(--accent) 7%, var(--app-bg)),
+    color-mix(in srgb, var(--accent) 2%, var(--app-bg)) 42%,
+    transparent 92%
+  );
+  box-shadow: inset 2px 0 9px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.message-user-highlight .message-meta,
+.message-user-highlight .message-rich-content,
+.message-user-highlight .message-narration-block {
+  position: relative;
+  z-index: 1;
+}
+.message-user-accent {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.message-user-accent .message-user-particles {
+  --effect-color: var(--accent);
+  inset: -4px 0 0;
+  opacity: .48;
+}
+.message-user-accent .message-user-particles i {
+  width: 2px;
+  height: 2px;
+  box-shadow: 0 0 5px var(--accent);
+}
+/* Still identifiable in reduced-motion mode: the accent edge stays visible. */
+:root[data-animations="off"] .message-user-accent .message-user-particles i {
+  animation: none;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .message-user-accent .message-user-particles i { animation: none; opacity: 0; }
+}
