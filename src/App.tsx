@@ -373,8 +373,8 @@ function sanitiseHtml(html: string) {
   const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "accessibility" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const activeSpecialTitle = useActiveSpecialTitle(preferences.profile);
   const { preferences } = usePreferences();
+  const activeSpecialTitle = useActiveSpecialTitle(preferences.profile);
 
 
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
