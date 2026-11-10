@@ -37,7 +37,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const selectAllRef = useRef<HTMLInputElement>(null);
   const suppressCardClick = useRef(false);
   const [bulkTagDraft, setBulkTagDraft] = useState("");
-  const [cardSize, setCardSize] = useState(190);
+  const [cardSize, setCardSize] = useState(240);
+  const [pendingDelete, setPendingDelete] = useState<ResourceRecord | null>(null);
+  const [deleteHasGlobalCopy, setDeleteHasGlobalCopy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -203,19 +206,34 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     await refresh();
     setSelected((current) => current ? { ...current, tags: tagDraft.split(",").map((tag) => tag.trim()).filter(Boolean) } : null);
   }
-  async function remove(resource: ResourceRecord) {
-    if (!window.confirm(`Delete “${resource.fileName}” from the resource library?`)) return;
+  async function requestDelete(resource: ResourceRecord) {
+    setDeleteHasGlobalCopy(false);
+    if (workspacePath) {
+      try {
+        const globalResources = await listResources();
+        setDeleteHasGlobalCopy(globalResources.some((item) => item.id === resource.id));
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : String(reason));
+      }
+    }
+    setPendingDelete(resource);
+  }
+  async function remove(resource: ResourceRecord, includeGlobalCopy = false) {
+    setDeleting(true);
     setError("");
     try {
       await deleteFile(resource.id);
+      if (workspacePath && includeGlobalCopy) await deleteResource(resource.id);
       await invalidateCachedResourceObjectUrl(workspacePath ?? "__global__", resource.id);
       if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
       setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
+      setPendingDelete(null);
       await refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
-      // The manifest may already have been updated if only physical-file cleanup failed.
       await refresh().catch(() => undefined);
+    } finally {
+      setDeleting(false);
     }
   }
   function toggleResourceSelection(id: string) {
@@ -258,13 +276,14 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
         <div className={`resource-dropzone ${dragging ? "is-dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); if (event.dataTransfer.files.length) void addFiles(event.dataTransfer.files); }}><Upload size={19} /><div><strong>Drop anything you want to keep close</strong><span>Images, audio, video and other files · stored in this app's local library</span></div><button type="button" onClick={() => inputRef.current?.click()}>Browse files</button></div>
         {error && <p className="resource-error">{error}</p>}
-        <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><select aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></select><label className="resource-size-control" title={`Thumbnail size: ${cardSize}px`}><span>View</span><input type="range" min="130" max="300" step="10" value={cardSize} onChange={(event) => setCardSize(Number(event.target.value))} aria-label="Thumbnail size" /></label></div>
+        <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><select aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></select><label className="resource-size-control" title={`Thumbnail size: ${cardSize}px`}><span>Size</span><input type="range" min="140" max="420" step="20" value={cardSize} onChange={(event) => setCardSize(Number(event.target.value))} aria-label="Thumbnail size" /><output>{cardSize}px</output></label></div>
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 10).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length > 0 && <label className="resource-select-all"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelectedResourceIds((current) => event.target.checked ? [...new Set([...current, ...filteredIds])] : current.filter((id) => !filteredIds.includes(id)))} /> Select all visible ({filtered.length})</label>}
         {selectedResourceIds.length > 0 && <div className="resource-bulk-tools"><div><strong>{selectedResourceIds.length} selected</strong><button type="button" onClick={() => setSelectedResourceIds([])}>Clear selection</button></div><label><Tag size={14} /><input value={bulkTagDraft} onChange={(event) => setBulkTagDraft(event.target.value)} placeholder="Add tags, comma separated" aria-label="Tags to add to selected resources" /></label><button type="button" className="library-primary" onClick={() => void addTagsToSelected()} disabled={!bulkTagDraft.split(",").some((tag) => tag.trim())}>Add tags</button></div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
           <div className="resource-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize}px, 1fr))` }}>{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
+            <button type="button" className="resource-card-delete" title={`Delete ${resource.fileName}`} aria-label={`Delete ${resource.fileName}`} onClick={(event) => { event.stopPropagation(); void requestDelete(resource); }}><Trash2 size={14} /></button>
             <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } void openPreview(resource); }}>
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
             </button>
@@ -276,8 +295,21 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <h2>{selected.name}</h2><p className="resource-file-name">{selected.fileName}</p><div className="resource-metadata"><span>Type</span><strong>{selected.mimeType || "Unknown"}</strong><span>Size</span><strong>{(selected.size / 1024 / 1024).toFixed(2)} MB</strong></div>
         <label className="character-field"><span>Tags · comma separated</span><input value={tagDraft} onChange={(event) => setTagDraft(event.target.value)} placeholder="Reference, Keira, Background" /></label>
         <button className="library-primary resource-save-tags" type="button" onClick={() => void saveTags()}>Save tags</button>
-        <button className="library-danger resource-delete" type="button" onClick={() => void remove(selected)}><Trash2 size={14} /> Delete resource</button>
+        <button className="library-danger resource-delete" type="button" onClick={() => void requestDelete(selected)}><Trash2 size={14} /> Delete resource</button>
       </aside>}
+
+      {pendingDelete && <div className="resource-delete-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !deleting) setPendingDelete(null); }}>
+        <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-delete-title">
+          <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
+          <h2 id="resource-delete-title">Delete resource?</h2>
+          <p><strong>{pendingDelete.fileName}</strong> will be permanently removed from the selected library location.</p>
+          {workspacePath ? <>
+            <button type="button" className="library-primary" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Only this workspace</button>
+            {deleteHasGlobalCopy && <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, true)}>This workspace and the app-wide library</button>}
+          </> : <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Delete from app-wide library</button>}
+          <button type="button" className="resource-delete-cancel" disabled={deleting} onClick={() => setPendingDelete(null)}>Cancel</button>
+        </section>
+      </div>}
       </section>
     </main>
   </div>;
