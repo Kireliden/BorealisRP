@@ -163,7 +163,7 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
                 <FolderPlus size={18} /><span><strong>Create workspace</strong><small>Choose a name and folder location</small></span>
               </button>
               <button type="button" className="workspace-action-secondary" onClick={() => void handleOpenWorkspace()} disabled={busy}>
-                <FolderOpen size={18} /><span><strong>Open workspace</strong><small>Select an existing BRD folder</small></span>
+                <FolderOpen size={18} /><span><strong>Open workspace</strong><small>Select an existing BRS folder</small></span>
               </button>
             </div>
             <div className="workspace-recent-heading"><span>RECENT WORKSPACES</span><span>{recent.length}</span></div>
@@ -181,14 +181,14 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
                 ))}
               </div>
             ) : (
-              <div className="workspace-empty"><FolderOpen size={24} /><strong>No recent workspaces yet</strong><span>Create one or open an existing BRD workspace folder.</span></div>
+              <div className="workspace-empty"><FolderOpen size={24} /><strong>No recent workspaces yet</strong><span>Create one or open an existing BRS workspace folder.</span></div>
             )}
           </>
         ) : (
           <form className="workspace-create-form" onSubmit={(event) => void handleCreateWorkspace(event)}>
             <label htmlFor="workspace-name">Workspace name</label>
             <input id="workspace-name" autoFocus value={workspaceName} onChange={(event) => setWorkspaceName(event.target.value)} placeholder="e.g. Neon Requiem" maxLength={80} disabled={busy} />
-            <p>Next, you’ll choose the parent folder. BRD will create a new folder named after this workspace inside it.</p>
+            <p>Next, you’ll choose the parent folder. BRS will create a new folder named after this workspace inside it.</p>
             <div className="workspace-form-actions">
               <button type="button" className="workspace-cancel-button" onClick={() => { setView("home"); setError(""); }} disabled={busy}>Back</button>
               <button type="submit" className="workspace-action-primary compact" disabled={busy || !workspaceName.trim()}>{busy ? "Creating…" : "Choose location"} <span aria-hidden="true">→</span></button>
