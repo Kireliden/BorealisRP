@@ -1,20 +1,31 @@
 /* Optional, local-only emphasis for messages authored in You mode.
-   Keep the body readable and all controls unobstructed. */
+   A diffuse aura instead of a geometric bordered chat bubble. */
 .message.message-user-highlight .message-body {
   position: relative;
   isolation: isolate;
   min-width: 0;
   padding: 10px 15px 11px;
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
-  border-left: 2px solid color-mix(in srgb, var(--accent) 62%, var(--border));
-  border-radius: 10px;
-  background: linear-gradient(
-    105deg,
-    color-mix(in srgb, var(--accent) 7%, var(--app-bg)),
-    color-mix(in srgb, var(--accent) 2%, var(--app-bg)) 42%,
-    transparent 92%
-  );
-  box-shadow: inset 2px 0 9px color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 0;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse 90% 115% at 5% 45%,
+      color-mix(in srgb, var(--accent) 11%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 48%,
+      transparent 100%),
+    radial-gradient(ellipse 65% 130% at 36% 65%,
+      color-mix(in srgb, var(--accent) 3%, transparent), transparent 100%);
+  box-shadow: none;
+}
+.message.message-user-highlight .message-body::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 5px 4px;
+  border-radius: 22px;
+  background: radial-gradient(ellipse 80% 90% at 12% 50%,
+    color-mix(in srgb, var(--accent) 9%, transparent), transparent 100%);
+  filter: blur(12px);
+  pointer-events: none;
 }
 .message-user-highlight .message-meta,
 .message-user-highlight .message-rich-content,
@@ -40,7 +51,7 @@
   height: 2px;
   box-shadow: 0 0 5px var(--accent);
 }
-/* Still identifiable in reduced-motion mode: the accent edge stays visible. */
+/* The soft colour wash remains visible when animation is disabled. */
 :root[data-animations="off"] .message-user-accent .message-user-particles i {
   animation: none;
   opacity: 0;
