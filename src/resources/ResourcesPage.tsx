@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ArrowLeft, FileAudio, FileImage, FileVideo, File as FileIcon, Search, Tag, Trash2, Upload, X } from "lucide-react";
@@ -94,7 +94,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     const top = Math.min(drag.startY, clientY) - bounds.top + grid.scrollTop;
     setSelectionRect({ left, top, width: Math.abs(clientX - drag.startX), height: Math.abs(clientY - drag.startY) });
   }
-  function handleGridPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+  function handleGridPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || event.target !== event.currentTarget) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false };
     event.currentTarget.setPointerCapture(event.pointerId);
