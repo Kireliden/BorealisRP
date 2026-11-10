@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type PointerEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { ArrowLeft, ChevronRight, Copy, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, Move, Search, Tag, Trash2, Upload, X } from "lucide-react";
+import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { ArrowLeft, ChevronRight, Copy, Eye, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, Info, Move, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { createResourceFolder, deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResourceFolders, listResources, organiseResources, updateResourceTags } from "./resources.storage";
 import { createWorkspaceResourceFolder, deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResourceFolders, listWorkspaceResources, migrateLegacyResources, organiseWorkspaceResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceBatchAction, ResourceFolder, ResourceRecord } from "./resources.types";
 import { getCachedResourceObjectUrl, invalidateCachedResourceObjectUrl } from "./resourceMediaCache";
+import ResourceFileViewer from "./ResourceFileViewer";
 import "./resources.css";
 
 type Props = { onClose: () => void; workspacePath?: string | null };
 type NativeDroppedFile = { fileName: string; bytes: number[] };
+type ResourceContextMenu = { x: number; y: number; resourceId?: string; folderId?: string };
 
 function mimeTypeFromName(fileName: string): string {
   const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
@@ -38,6 +41,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [kind, setKind] = useState("all");
   const [tagDraft, setTagDraft] = useState("");
   const [selected, setSelected] = useState<ResourceRecord | null>(null);
+  const [viewerResource, setViewerResource] = useState<ResourceRecord | null>(null);
+  const [contextMenu, setContextMenu] = useState<ResourceContextMenu | null>(null);
+  const [localDeletionBusy, setLocalDeletionBusy] = useState(false);
+  const [localDeletionNotice, setLocalDeletionNotice] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
@@ -83,6 +90,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setCurrentFolderId(null);
     setSelectedResourceIds([]);
     setSelected(null);
+    setViewerResource(null);
+    setContextMenu(null);
     setPreviewUrl(null);
     void refresh().catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
   }, [workspacePath]);
@@ -136,6 +145,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setCurrentFolderId(id);
     setSelectedResourceIds([]);
     setSelected(null);
+    setViewerResource(null);
+    setContextMenu(null);
     setPreviewUrl(null);
     setQuery("");
     setCreatingFolder(false);
@@ -167,6 +178,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       if (action === "delete") {
         await Promise.all(ids.map((id) => invalidateCachedResourceObjectUrl(workspacePath ?? "__global__", id)));
         if (selected && ids.includes(selected.id)) { setSelected(null); setPreviewUrl(null); }
+        if (viewerResource && ids.includes(viewerResource.id)) setViewerResource(null);
       }
       setSelectedResourceIds([]);
       setBulkDialog(null);
@@ -284,6 +296,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   }
   async function openPreview(resource: ResourceRecord) {
+    setContextMenu(null);
     setSelected(resource);
     setTagDraft(resource.tags.join(", "));
     const url = await getCachedResourceObjectUrl(
@@ -300,6 +313,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setSelected((current) => current ? { ...current, tags: tagDraft.split(",").map((tag) => tag.trim()).filter(Boolean) } : null);
   }
   async function requestDelete(resource: ResourceRecord) {
+    setContextMenu(null);
+    setLocalDeletionNotice("");
     setDeleteHasGlobalCopy(false);
     if (workspacePath) {
       try {
@@ -319,6 +334,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       if (workspacePath && includeGlobalCopy) await deleteResource(resource.id);
       await invalidateCachedResourceObjectUrl(workspacePath ?? "__global__", resource.id);
       if (selected?.id === resource.id) { setSelected(null); setPreviewUrl(null); }
+      if (viewerResource?.id === resource.id) setViewerResource(null);
       setSelectedResourceIds((current) => current.filter((id) => id !== resource.id));
       setPendingDelete(null);
       await refresh();
@@ -329,6 +345,69 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       setDeleting(false);
     }
   }
+  function openFileViewer(resource: ResourceRecord) {
+    setContextMenu(null);
+    setViewerResource(resource);
+  }
+
+  function showResourceContextMenu(event: MouseEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest(".resource-viewer-backdrop, .resource-delete-backdrop, .resource-context-menu")) return;
+    const resourceId = target.closest<HTMLElement>(".resource-card-shell")?.dataset.resourceId;
+    const folderId = target.closest<HTMLElement>(".resource-folder-card")?.dataset.folderId;
+    if (resourceId && !selectedResourceIds.includes(resourceId)) setSelectedResourceIds([resourceId]);
+    const width = 224;
+    const height = resourceId ? 292 : folderId ? 108 : 108;
+    setContextMenu({
+      x: Math.max(8, Math.min(event.clientX, window.innerWidth - width - 8)),
+      y: Math.max(8, Math.min(event.clientY, window.innerHeight - height - 8)),
+      resourceId,
+      folderId,
+    });
+  }
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setContextMenu(null);
+    }
+    window.addEventListener("keydown", dismissOnEscape);
+    return () => window.removeEventListener("keydown", dismissOnEscape);
+  }, [contextMenu]);
+
+  async function deleteMatchingLocalOriginal(resource: ResourceRecord) {
+    setLocalDeletionNotice("");
+    setError("");
+    setLocalDeletionBusy(true);
+    try {
+      const choice = await openFileDialog({
+        title: `Choose the original of "${resource.fileName}" to delete`,
+        multiple: false,
+        directory: false,
+      });
+      if (typeof choice !== "string") return;
+      const blob = await getBlob(resource.id);
+      if (!blob) throw new Error("BRD's copy of this resource could not be read.");
+      const bytes = await blob.arrayBuffer();
+      const fingerprint = await crypto.subtle.digest("SHA-256", bytes);
+      const expectedSha256 = Array.from(new Uint8Array(fingerprint), (value) => value.toString(16).padStart(2, "0")).join("");
+      if (!window.confirm(`Permanently delete this file from your device?\n\n${choice}\n\nBRD will verify that it matches the imported copy. The copy inside BRD will be kept.`)) return;
+      await invoke("delete_confirmed_original_resource_file", {
+        path: choice,
+        expectedFileName: resource.fileName,
+        expectedSize: resource.size,
+        expectedSha256,
+      });
+      setLocalDeletionNotice("Matching original deleted from your device. The copy in BRD is still available.");
+    } catch (reason) {
+      setLocalDeletionNotice(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setLocalDeletionBusy(false);
+    }
+  }
+
   function toggleResourceSelection(id: string) {
     setSelectedResourceIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   }
@@ -355,7 +434,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     return <FileIcon size={20} />;
   }
 
-  return <div className="library-overlay">
+  return <div className="library-overlay" onContextMenu={showResourceContextMenu}>
     <header className="library-topbar">
       <button className="library-back" onClick={onClose} type="button"><ArrowLeft size={16} /> Back to Workspace</button>
       <div className="library-brand"><strong>Resources</strong></div>
@@ -386,12 +465,12 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 10).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length > 0 && <label className="resource-select-all"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelectedResourceIds((current) => event.target.checked ? [...new Set([...current, ...filteredIds])] : current.filter((id) => !filteredIds.includes(id)))} /> Select all visible ({filtered.length})</label>}
         {selectedResourceIds.length > 0 && <div className="resource-bulk-tools"><div><strong>{selectedResourceIds.length} selected</strong><button type="button" onClick={() => setSelectedResourceIds([])}>Clear selection</button></div><label><Tag size={14} /><input value={bulkTagDraft} onChange={(event) => setBulkTagDraft(event.target.value)} placeholder="Add tags, comma separated" aria-label="Tags to add to selected resources" /></label><button type="button" className="library-primary" onClick={() => void addTagsToSelected()} disabled={!bulkTagDraft.split(",").some((tag) => tag.trim())}>Add tags</button><div className="resource-bulk-actions"><button type="button" onClick={() => showBulkDialog("move")}><Move size={14} /> Move</button><button type="button" onClick={() => showBulkDialog("copy")}><Copy size={14} /> Copy</button><button type="button" className="resource-bulk-delete" onClick={() => setConfirmBulkDelete(true)}><Trash2 size={14} /> Delete</button></div></div>}
-        {visibleFolders.length > 0 && <div className="resource-folders">{visibleFolders.map((folder) => <button type="button" className="resource-folder-card" key={folder.id} onClick={() => openFolder(folder.id)}><Folder size={27} /><span title={folder.name}>{folder.name}</span><ChevronRight size={15} /></button>)}</div>}
+        {visibleFolders.length > 0 && <div className="resource-folders">{visibleFolders.map((folder) => <button type="button" className="resource-folder-card" data-folder-id={folder.id} key={folder.id} onClick={() => openFolder(folder.id)}><Folder size={27} /><span title={folder.name}>{folder.name}</span><ChevronRight size={15} /></button>)}</div>}
         {filtered.length === 0 && visibleFolders.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
           filtered.length > 0 ? <div className="resource-grid" style={{ gridTemplateColumns: `repeat(auto-fill, minmax(min(${cardSize}px, 100%), 1fr))` }}>{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
             <button type="button" className="resource-card-delete" title={`Delete ${resource.fileName}`} aria-label={`Delete ${resource.fileName}`} onClick={(event) => { event.stopPropagation(); void requestDelete(resource); }}><Trash2 size={14} /></button>
-            <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } void openPreview(resource); }}>
+            <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } openFileViewer(resource); }}>
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
             </button>
           </div> )}</div> : null}
