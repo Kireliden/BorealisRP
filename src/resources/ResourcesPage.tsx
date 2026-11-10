@@ -95,7 +95,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     const top = Math.min(drag.startY, clientY) - bounds.top + area.scrollTop;
     setSelectionRect({ left, top, width: Math.abs(clientX - drag.startX), height: Math.abs(clientY - drag.startY) });
   }
-  function handleGridPointerDown(event: PointerEvent<HTMLDivElement>) {
+  function handleGridPointerDown(event: PointerEvent<HTMLElement>) {
     if (event.button !== 0) return;
     suppressCardClick.current = false;
     const target = event.target;
@@ -103,7 +103,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
-  function handleGridPointerMove(event: PointerEvent<HTMLDivElement>) {
+  function handleGridPointerMove(event: PointerEvent<HTMLElement>) {
     const drag = dragSelection.current;
     if (!drag) return;
     drag.currentX = event.clientX;
@@ -113,7 +113,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     event.preventDefault();
     updateSelectionRect(event.clientX, event.clientY);
   }
-  function handleGridPointerUp(event: PointerEvent<HTMLDivElement>) {
+  function handleGridPointerUp(event: PointerEvent<HTMLElement>) {
     const drag = dragSelection.current;
     if (!drag) return;
     if (drag.moved) {
