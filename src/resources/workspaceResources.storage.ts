@@ -1,11 +1,11 @@
-import type { ResourceRecord } from "./resources.types";
+import type { ResourceRecord, ResourceFolder, ResourceBatchAction } from "./resources.types";
 import { deleteWorkspaceFile, readWorkspaceFile, writeWorkspaceFile } from "../workspace/workspaceFiles";
 
 const MANIFEST_PATH = "Resources/manifest.json";
 const FILES_DIRECTORY = "Resources/Files";
 
 export type WorkspaceResourceRecord = ResourceRecord & { relativePath: string };
-export type WorkspaceResourceManifest = { schemaVersion: 1; resources: WorkspaceResourceRecord[] };
+export type WorkspaceResourceManifest = { schemaVersion: 1; resources: WorkspaceResourceRecord[]; folders?: ResourceFolder[] };
 
 function extensionFor(fileName: string): string {
   const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
@@ -25,11 +25,12 @@ async function loadManifest(workspacePath: string): Promise<WorkspaceResourceMan
     if (candidate.schemaVersion !== 1 || !Array.isArray(candidate.resources)) {
       throw new Error("The workspace resource manifest is invalid; it has not been changed.");
     }
+    if (candidate.folders !== undefined && !Array.isArray(candidate.folders)) throw new Error("The workspace folder index is invalid; no changes were made.");
     return candidate as WorkspaceResourceManifest;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/not found|no such file|os error 2|system cannot find the file/i.test(message)) {
-      return { schemaVersion: 1, resources: [] };
+      return { schemaVersion: 1, resources: [], folders: [] };
     }
     throw error;
   }
@@ -155,4 +156,68 @@ export async function migrateLegacyResources(
   if (copied) await saveManifest(workspacePath, manifest);
   localStorage.setItem(LEGACY_RESOURCE_MIGRATION_KEY, "completed");
   return copied;
+}
+
+
+/** Folders are logical groupings; binary assets continue to live under Resources/Files. */
+export async function listWorkspaceResourceFolders(workspacePath: string): Promise<ResourceFolder[]> {
+  return (await loadManifest(workspacePath)).folders ?? [];
+}
+
+export async function createWorkspaceResourceFolder(workspacePath: string, name: string, parentId: string | null): Promise<ResourceFolder> {
+  const trimmed = name.trim();
+  if (!trimmed || /[/\\]/.test(trimmed)) throw new Error("Choose a folder name without slashes.");
+  const manifest = await loadManifest(workspacePath);
+  const folders = manifest.folders ?? [];
+  if (parentId && !folders.some((folder) => folder.id === parentId)) throw new Error("Parent folder no longer exists.");
+  if (folders.some((folder) => folder.parentId === parentId && folder.name.toLocaleLowerCase() === trimmed.toLocaleLowerCase())) {
+    throw new Error("A folder with this name already exists here.");
+  }
+  const folder: ResourceFolder = { id: crypto.randomUUID(), name: trimmed, parentId, createdAt: new Date().toISOString() };
+  manifest.folders = [...folders, folder];
+  await saveManifest(workspacePath, manifest);
+  return folder;
+}
+
+export async function organiseWorkspaceResources(
+  workspacePath: string,
+  ids: string[],
+  action: ResourceBatchAction,
+  destinationFolderId: string | null = null,
+): Promise<void> {
+  if (!ids.length) return;
+  const manifest = await loadManifest(workspacePath);
+  if (action !== "delete" && destinationFolderId !== null && !(manifest.folders ?? []).some((f) => f.id === destinationFolderId)) {
+    throw new Error("Destination folder no longer exists.");
+  }
+  const selected = new Set(ids);
+  const matching = manifest.resources.filter((item) => selected.has(item.id));
+  if (action === "move") {
+    for (const item of matching) item.folderId = destinationFolderId;
+    await saveManifest(workspacePath, manifest);
+  } else if (action === "copy") {
+    const copies: WorkspaceResourceRecord[] = [];
+    try {
+      for (const item of matching) {
+        const copy = { ...item, id: crypto.randomUUID(), folderId: destinationFolderId, importedAt: new Date().toISOString() };
+        copy.relativePath = resourcePath(copy);
+        await writeWorkspaceFile(workspacePath, copy.relativePath, await readWorkspaceFile(workspacePath, item.relativePath));
+        copies.push(copy);
+      }
+    } catch (error) {
+      // Retain references to successfully copied files if a subsequent write fails.
+      if (copies.length) {
+        manifest.resources.push(...copies);
+        await saveManifest(workspacePath, manifest);
+      }
+      throw error;
+    }
+    manifest.resources.push(...copies);
+    await saveManifest(workspacePath, manifest);
+  } else {
+    manifest.resources = manifest.resources.filter((item) => !selected.has(item.id));
+    await saveManifest(workspacePath, manifest);
+    // Delete only BRD-managed copies, never their original import paths.
+    for (const item of matching) await deleteWorkspaceFile(workspacePath, item.relativePath);
+  }
 }
