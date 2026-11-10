@@ -1,6 +1,6 @@
 # Workspace storage
 
-The workspace folder is the authoritative home of workspace-owned content. BRD must not require a hidden application database or an AppData copy to recover it.
+The workspace folder is the authoritative home of workspace-owned content. BRS must not require a hidden application database or an AppData copy to recover it.
 
 ## Current foundation
 
