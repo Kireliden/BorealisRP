@@ -45,10 +45,10 @@ function createResourceRecord(file: File, tags: string[]): ResourceRecord & { bl
 }
 
 /** Import multiple resources in one IndexedDB transaction. */
-export async function importResources(files: File[], tags: string[] = []): Promise<ResourceRecord[]> {
+export async function importResources(files: File[], tags: string[] = [], folderId: string | null = null): Promise<ResourceRecord[]> {
   if (!files.length) return [];
   const db = await openResourceDb();
-  const records = files.map((file) => createResourceRecord(file, tags));
+  const records = files.map((file) => ({ ...createResourceRecord(file, tags), folderId }));
 
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
@@ -65,6 +65,7 @@ export async function importResources(files: File[], tags: string[] = []): Promi
         size: record.size,
         tags: record.tags,
         importedAt: record.importedAt,
+        folderId: record.folderId,
       })));
     };
     transaction.onerror = () => { db.close(); reject(transaction.error ?? new Error("Could not import resources.")); };
