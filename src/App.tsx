@@ -26,7 +26,7 @@ import { getResourceBlob } from "./resources/resources.storage";
 import { getWorkspaceResourceBlob } from "./resources/workspaceResources.storage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlob } from "./characters/workspaceCharacterExpressions.storage";
-import CharacterPortraitArt from "./characters/CharacterPortraitArt";
+import CharacterPortraitArt, { characterPortraitStyle } from "./characters/CharacterPortraitArt";
 import EffectLayer from "./effects/components/EffectLayer";
 import EmojiPicker from "./composer/EmojiPicker";
 import ResourcesPage from "./resources/ResourcesPage";
@@ -55,7 +55,7 @@ function charactersFromLibrary(): Character[] {
     description: item.subtitle || item.description,
     avatarAssetPath: null,
     portraitResourceId: item.portraitResourceId,
-    portraitFit: item.portraitFit ?? "cover",
+    portraitFit: item.portraitFit ?? "contain",
     portraitPositionX: item.portraitPositionX ?? 50,
     portraitPositionY: item.portraitPositionY ?? 50,
     portraitZoom: item.portraitZoom ?? 100,
@@ -442,7 +442,7 @@ function sanitiseHtml(html: string) {
           description: item.subtitle || item.description,
           avatarAssetPath: null,
           portraitResourceId: item.portraitResourceId,
-          portraitFit: item.portraitFit ?? "cover" as const,
+          portraitFit: item.portraitFit ?? "contain" as const,
           portraitPositionX: item.portraitPositionX ?? 50,
           portraitPositionY: item.portraitPositionY ?? 50,
           portraitZoom: item.portraitZoom ?? 100,
@@ -1782,7 +1782,7 @@ function sanitiseHtml(html: string) {
                   </div>
                 ) : previewCharacter.portraitResourceId && characterPortraitUrls[previewCharacter.portraitResourceId] ? (
                   <div className="avatar-preview-image-layer avatar-preview-image-layer-fade">
-                    <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={{ objectFit: previewCharacter.portraitFit ?? "contain", objectPosition: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%`, transform: `scale(${(previewCharacter.portraitZoom ?? 100) / 100})`, transformOrigin: `${previewCharacter.portraitPositionX ?? 50}% ${previewCharacter.portraitPositionY ?? 50}%` }} />
+                    <img className="avatar-preview-image" src={characterPortraitUrls[previewCharacter.portraitResourceId]} alt={previewCharacter.name} style={characterPortraitStyle({ fit: previewCharacter.portraitFit, positionX: previewCharacter.portraitPositionX, positionY: previewCharacter.portraitPositionY, zoom: previewCharacter.portraitZoom })} />
                   </div>
                 ) : previewCharacter.name === "Keira" ? (
                   <div className="avatar-preview-image-layer avatar-preview-image-layer-fade"><img className="avatar-preview-image" src={avatarPlaceholder} alt="Keira" /></div>
