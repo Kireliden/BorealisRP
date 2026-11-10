@@ -126,3 +126,6 @@
 .resource-delete-dialog .resource-delete-original-warning{margin:-2px 0 2px;color:var(--muted);font-size:10px;line-height:1.5}
 .resource-delete-dialog .resource-local-delete-notice{padding:9px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--ctp-text);font-size:10px;overflow-wrap:anywhere}
 @media(max-width:700px){.resource-viewer{height:min(95vh,100%)}.resource-viewer-content{padding:8px}.resource-viewer-header{padding:7px 9px}.resource-viewer-actions button,.resource-viewer-actions a{width:28px;height:28px}}
+
+.resource-original-confirm-backdrop{z-index:135}
+.resource-original-path{display:block;width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ctp-subtext1);font-size:10px;line-height:1.6;overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
