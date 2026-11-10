@@ -51,3 +51,17 @@
 .expression-manager input[type="file"]:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .expression-upload { gap:10px; }
 .expression-upload input[type="file"] { text-align:left; }
+
+/* Pick existing vault images without losing the direct file upload path. */
+.expression-source-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch;margin:20px 0}
+.expression-source-options .expression-vault-button,.expression-source-options .expression-upload{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:155px;margin:0;padding:18px;border:1px solid color-mix(in srgb,var(--accent) 48%,var(--border));border-radius:12px;background:color-mix(in srgb,var(--accent) 7%,var(--sidebar-bg));color:var(--ctp-text);text-align:center;box-sizing:border-box}
+.expression-source-options .expression-vault-button:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--sidebar-bg))}
+.expression-source-options .expression-vault-button svg,.expression-source-options .expression-upload svg{color:var(--accent)}
+.expression-source-options .expression-vault-button b,.expression-source-options .expression-upload b{font-size:12px}
+.expression-source-options .expression-vault-button span{max-width:230px;color:var(--ctp-subtext1);font-size:10px;line-height:1.6}
+.expression-source-options .expression-upload input[type=file]{width:100%;margin:2px 0 0}
+.expression-review-card .expression-replace-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.expression-review-card .expression-replace-actions>button{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:8px;border:1px solid color-mix(in srgb,var(--accent) 50%,var(--border));border-radius:7px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--ctp-text);font-size:10px}
+.expression-review-card .expression-replace-actions>button:hover{border-color:var(--accent)}
+.expression-review-card .expression-replace-actions>label{display:flex;flex-direction:column;gap:6px;margin:0;color:var(--ctp-subtext1);font-size:10px}
+@media(max-width:750px){.expression-source-options{grid-template-columns:1fr}.expression-source-options .expression-vault-button,.expression-source-options .expression-upload{min-height:120px}}
