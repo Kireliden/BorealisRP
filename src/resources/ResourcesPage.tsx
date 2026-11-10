@@ -268,8 +268,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div><div className="resource-card-info"><strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
             </button>
           </div> )}</div>}
-        {selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}
         </div>
+        {selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}
       {selected && <aside className="resource-inspector"><div className="character-editor-top"><span>RESOURCE DETAILS</span><button type="button" onClick={() => { setSelected(null); setPreviewUrl(null); }} aria-label="Close resource details"><X size={16} /></button></div>
         <div className="resource-preview-large">{previewUrl && selected.kind === "image" ? <img src={previewUrl} alt={selected.fileName} /> : previewUrl && selected.kind === "audio" ? <audio controls src={previewUrl} /> : previewUrl && selected.kind === "video" ? <video controls src={previewUrl} /> : iconFor(selected)}</div>
         <h2>{selected.name}</h2><p className="resource-file-name">{selected.fileName}</p><div className="resource-metadata"><span>Type</span><strong>{selected.mimeType || "Unknown"}</strong><span>Size</span><strong>{(selected.size / 1024 / 1024).toFixed(2)} MB</strong></div>
