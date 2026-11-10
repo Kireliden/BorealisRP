@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AppPreferences } from "../preferences/types";
-import { SPECIAL_TITLES, verifySpecialTitleCode, type SpecialTitle, type SpecialTitleId } from "./specialTitles";
+import { SPECIAL_TITLES, verifySpecialTitleCode, type SpecialTitle } from "./specialTitles";
 
 type Profile = AppPreferences["profile"];
 
