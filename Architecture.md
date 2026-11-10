@@ -1,4 +1,4 @@
-# Borealis Roleplay Den — Architecture
+# Borealis Roleplay Studio — Architecture
 
 **Last updated:** 16 October 2026  
 **Status:** Current known frontend architecture plus planned boundaries. Verify the repository before treating this as a complete inventory.
