@@ -45,6 +45,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [contextMenu, setContextMenu] = useState<ResourceContextMenu | null>(null);
   const [localDeletionBusy, setLocalDeletionBusy] = useState(false);
   const [localDeletionNotice, setLocalDeletionNotice] = useState("");
+  const [pendingOriginalDeletion, setPendingOriginalDeletion] = useState<{ path: string; fileName: string; size: number; fingerprint: string } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
@@ -398,15 +399,35 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       const bytes = await blob.arrayBuffer();
       const fingerprint = await crypto.subtle.digest("SHA-256", bytes);
       const expectedSha256 = Array.from(new Uint8Array(fingerprint), (value) => value.toString(16).padStart(2, "0")).join("");
-      if (!window.confirm(`Permanently delete this file from your device?\n\n${choice}\n\nBRD will verify that it matches the imported copy. The copy inside BRD will be kept.`)) return;
-      await invoke("delete_confirmed_original_resource_file", {
+      setPendingOriginalDeletion({
         path: choice,
-        expectedFileName: resource.fileName,
-        expectedSize: resource.size,
-        expectedSha256,
+        fileName: resource.fileName,
+        size: resource.size,
+        fingerprint: expectedSha256,
       });
+    } catch (reason) {
+      setLocalDeletionNotice(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setLocalDeletionBusy(false);
+    }
+  }
+
+  async function confirmDeleteLocalOriginal() {
+    const candidate = pendingOriginalDeletion;
+    if (!candidate || localDeletionBusy) return;
+    setLocalDeletionBusy(true);
+    setLocalDeletionNotice("");
+    try {
+      await invoke("delete_confirmed_original_resource_file", {
+        path: candidate.path,
+        expectedFileName: candidate.fileName,
+        expectedSize: candidate.size,
+        expectedSha256: candidate.fingerprint,
+      });
+      setPendingOriginalDeletion(null);
       setLocalDeletionNotice("Matching original deleted from your device. The copy in BRD is still available.");
     } catch (reason) {
+      setPendingOriginalDeletion(null);
       setLocalDeletionNotice(reason instanceof Error ? reason.message : String(reason));
     } finally {
       setLocalDeletionBusy(false);
@@ -529,6 +550,16 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <p>These files will be removed from {workspacePath ? "this workspace library" : "the app-wide library"}. Other workspaces and your original files on the PC will not be affected.</p>
           <button type="button" className="library-danger" disabled={bulkBusy} onClick={() => void applyBulk("delete")}><Trash2 size={14} /> Delete selected files</button>
           <button type="button" className="resource-delete-cancel" disabled={bulkBusy} onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+        </section>
+      </div>}
+      {pendingOriginalDeletion && <div className="resource-delete-backdrop resource-original-confirm-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget && !localDeletionBusy) setPendingOriginalDeletion(null); }}>
+        <section className="resource-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="resource-delete-original-title">
+          <div className="resource-delete-dialog-icon"><Trash2 size={18} /></div>
+          <h2 id="resource-delete-original-title">Permanently delete this local file?</h2>
+          <p>This will delete the selected original on your computer, not the copy stored in BRD. The file will be verified first; if its contents differ, nothing will be deleted.</p>
+          <p className="resource-original-path">{pendingOriginalDeletion.path}</p>
+          <button type="button" className="library-danger" disabled={localDeletionBusy} onClick={() => void confirmDeleteLocalOriginal()}>Delete original permanently</button>
+          <button type="button" className="resource-delete-cancel" disabled={localDeletionBusy} onClick={() => setPendingOriginalDeletion(null)}>Cancel</button>
         </section>
       </div>}
       </section>
