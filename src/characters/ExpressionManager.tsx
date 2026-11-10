@@ -33,7 +33,7 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
   setSlots(blank());
   setSaved(false);
   setEditing(null);
-  if (!characterId) return;
+  if (!characterId) { setLoadingExpressions(false); return; }
   setLoadingExpressions(true);
   setError("");
   void (async () => {
@@ -91,7 +91,9 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
     const blob=await new Promise<Blob>((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error("Could not create crop.")),"image/png"));
     return {...s,blob,fileName:s.key+".png",url:URL.createObjectURL(blob)};
    }));
-   URL.revokeObjectURL(url);setSlots(next);setSaved(false);setError("");setStep("review");
+   URL.revokeObjectURL(url);
+   slots.forEach((slot)=>{ if (slot.url) URL.revokeObjectURL(slot.url); });
+   setSlots(next);setSaved(false);setError("");setStep("review");
   } catch(e){setError(e instanceof Error?e.message:String(e));}
  }
  async function chooseVaultResources(selected: ResourceRecord[]) {
@@ -151,5 +153,5 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
  />}
  </div>;
 }
-function assignSingle(key:CharacterExpressionKey,file:File|undefined,slots:Slot[],setSlots:(v:Slot[])=>void,setEditing:(v:CharacterExpressionKey|null)=>void){if(!file||!file.type.startsWith("image/"))return;setSlots(slots.map(s=>s.key===key?{...s,blob:file,fileName:file.name,url:URL.createObjectURL(file)}:s));setEditing(null);}
+function assignSingle(key:CharacterExpressionKey,file:File|undefined,slots:Slot[],setSlots:(v:Slot[])=>void,setEditing:(v:CharacterExpressionKey|null)=>void){if(!file||!file.type.startsWith("image/"))return;setSlots(slots.map(s=>{if(s.key!==key)return s;if(s.url)URL.revokeObjectURL(s.url);return {...s,blob:file,fileName:file.name,url:URL.createObjectURL(file)};}));setEditing(null);}
 function downloadTemplate(sheet:boolean){const w=sheet?1536:512,h=sheet?1280:640;const labels=CHARACTER_EXPRESSION_SLOTS.map((s,i)=>'<g transform="translate('+(sheet?(i%3)*512:0)+','+(sheet?Math.floor(i/3)*640:0)+')"><rect width="512" height="640" fill="#292b3b" stroke="#b4befe" stroke-width="4"/><text x="256" y="320" fill="#cdd6f4" font-size="28" text-anchor="middle">'+(sheet?s.label:"Draw expression here")+'</text></g>').join("");const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'+labels+'</svg>';const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));const a=document.createElement("a");a.href=url;a.download=sheet?"BRD-Expression-Sheet-Template.svg":"BRD-Individual-Expression-Template.svg";a.click();URL.revokeObjectURL(url);}
