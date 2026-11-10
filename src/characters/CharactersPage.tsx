@@ -8,9 +8,10 @@ import CharacterPortraitArt from "./CharacterPortraitArt";
 import RelationshipMap from "./RelationshipMap";
 import ExpressionManager from "./ExpressionManager";
 import { getResourceBlob, listResources, exportResourcesForMigration } from "../resources/resources.storage";
-import { getWorkspaceResourceBlob, listWorkspaceResources, migrateLegacyResources } from "../resources/workspaceResources.storage";
+import { getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, listWorkspaceResources, migrateLegacyResources } from "../resources/workspaceResources.storage";
 import { loadWorkspaceCharacters, loadWorkspaceRelationshipKinds, saveWorkspaceCharacters, saveWorkspaceRelationshipKinds } from "./workspaceCharacters.storage";
 import type { ResourceRecord } from "../resources/resources.types";
+import { getCachedResourceObjectUrl } from "../resources/resourceMediaCache";
 
 type Props = { onClose: () => void; workspacePath?: string | null };
 
@@ -40,8 +41,10 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
     void Promise.all([
       loadWorkspaceCharacters(workspacePath),
       (async () => {
-        const legacyResources = await exportResourcesForMigration();
-        await migrateLegacyResources(workspacePath, legacyResources);
+        if (!hasCompletedLegacyResourceMigration()) {
+          const legacyResources = await exportResourcesForMigration();
+          await migrateLegacyResources(workspacePath, legacyResources);
+        }
         return listWorkspaceResources(workspacePath);
       })(),
       loadWorkspaceRelationshipKinds(workspacePath),
@@ -74,12 +77,22 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
   }, [workspacePath]);
   useEffect(() => {
     let cancelled = false;
-    const urls: Record<string, string> = {};
+    const scope = workspacePath ?? "__global__";
     void Promise.all(imageResources.map(async (resource) => {
-      const blob = await (workspacePath ? getWorkspaceResourceBlob(workspacePath, resource.id) : getResourceBlob(resource.id)).catch(() => null);
-      if (blob) urls[resource.id] = URL.createObjectURL(blob);
-    })).then(() => { if (cancelled) Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); else setPortraitUrls(urls); });
-    return () => { cancelled = true; Object.values(urls).forEach((url) => URL.revokeObjectURL(url)); };
+      const url = await getCachedResourceObjectUrl(scope, resource.id, () =>
+        workspacePath ? getWorkspaceResourceBlob(workspacePath, resource.id) : getResourceBlob(resource.id)
+      );
+      return url ? [resource.id, url] as const : null;
+    })).then((created) => {
+      if (cancelled) return;
+      setPortraitUrls((current) => ({
+        ...current,
+        ...Object.fromEntries(created.flatMap((item) => item ? [item] : [])),
+      }));
+    }).catch((reason) => {
+      if (!cancelled) setStorageError(reason instanceof Error ? reason.message : String(reason));
+    });
+    return () => { cancelled = true; };
   }, [imageResources, workspacePath]);
   const selected = characters.find((character) => character.id === selectedId) ?? null;
   const allTags = useMemo(() => [...new Set(characters.flatMap((character) => character.tags))].sort(), [characters]);
