@@ -137,7 +137,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
       initials: character.initials ?? "",
       accent: character.accent ?? "#b4befe",
       portraitResourceId: character.portraitResourceId ?? null,
-      portraitFit: "contain",
+      portraitFit: character.portraitFit ?? "contain",
       portraitPositionX: character.portraitPositionX ?? 50,
       portraitPositionY: character.portraitPositionY ?? 50,
       portraitZoom: character.portraitZoom ?? 100,
@@ -256,7 +256,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 8).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">✦</div><h2>{query ? "No matching characters" : "Your cast begins here"}</h2><p>{query ? "Try another name or tag." : "Create your first character and build a cast you can reuse across every Roleplay Space."}</p>{!query && <button type="button" className="library-primary" onClick={startCreate}><Plus size={16} /> Create a character</button>}</div> :
           <div className="character-grid">{filtered.map((character) => <button type="button" key={character.id} className={`character-card ${selectedId === character.id ? "is-selected" : ""}`} style={{ "--character-accent": characterAccentColor(character.accent) } as React.CSSProperties} onClick={() => openCharacter(character)}>
-            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit="contain" positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} fadeEdges /><small>CHARACTER FILE</small></div>
+            <div className="character-card-art"><CharacterPortraitArt initials={character.initials || character.name.slice(0, 2).toUpperCase()} imageSrc={character.portraitResourceId ? portraitUrls[character.portraitResourceId] : null} alt={character.name} fit={character.portraitFit ?? "contain"} positionX={character.portraitPositionX ?? 50} positionY={character.portraitPositionY ?? 50} zoom={character.portraitZoom ?? 100} fadeEdges /><small>CHARACTER FILE</small></div>
             <div className="character-card-copy"><strong>{character.name}</strong><span className={character.subtitle ? "" : "is-empty"}>{character.subtitle || "\u00a0"}</span><div className="character-card-tags">{character.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div></div>
           </button>)}</div>}
       </section>}
