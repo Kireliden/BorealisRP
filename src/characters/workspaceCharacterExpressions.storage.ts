@@ -24,7 +24,7 @@ function emptyManifest(): WorkspaceExpressionManifest {
 
 function isMissingFile(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
-  return /not found|no such file|os error 2|system cannot find the file/i.test(message);
+  return /not found|no such file|os error [23]|system cannot find the (?:file|path) specified/i.test(message);
 }
 
 async function readManifest(workspacePath: string): Promise<WorkspaceExpressionManifest> {
