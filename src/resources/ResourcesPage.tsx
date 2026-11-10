@@ -99,7 +99,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
-  function handleGridPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+  function handleGridPointerMove(event: PointerEvent<HTMLDivElement>) {
     const drag = dragSelection.current;
     if (!drag) return;
     drag.currentX = event.clientX;
@@ -108,7 +108,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     drag.moved = true;
     updateSelectionRect(event.clientX, event.clientY);
   }
-  function handleGridPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+  function handleGridPointerUp(event: PointerEvent<HTMLDivElement>) {
     const drag = dragSelection.current;
     if (!drag) return;
     if (drag.moved) {
