@@ -28,7 +28,7 @@ export function renameWorkspace(path: string, name: string): Promise<WorkspaceIn
 const WORKSPACE_PREFERENCES_FILE = "recent-workspaces.json";
 const LAST_WORKSPACE_KEY = "lastActiveWorkspacePath";
 
-/** Returns the path of the workspace most recently active in BRD. */
+/** Returns the path of the workspace most recently active in BRS. */
 export async function getLastWorkspacePath(): Promise<string | null> {
   const store = await load(WORKSPACE_PREFERENCES_FILE, { autoSave: false });
   const path = await store.get<unknown>(LAST_WORKSPACE_KEY);
