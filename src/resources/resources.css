@@ -119,3 +119,7 @@
 .resource-delete-dialog .library-danger{display:flex;align-items:center;padding:10px 12px;border:1px solid color-mix(in srgb,var(--ctp-red) 45%,var(--border));border-radius:7px;color:var(--ctp-red);font-size:11px}
 .resource-delete-cancel{padding:9px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:11px}
 .resource-delete-dialog button:disabled{opacity:.5;cursor:wait}
+
+/* Keep the type chip clear of the card-level delete action. */
+.resource-card-preview>span{top:auto;right:6px;bottom:6px}
+.resource-card-delete{top:7px;right:7px}
