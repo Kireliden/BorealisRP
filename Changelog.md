@@ -1,9 +1,17 @@
-# Borealis Roleplay Den — Changelog
+# Borealis Roleplay Studio — Changelog
 
 This changelog records meaningful project changes, not every Git commit. Dates are approximate where an exact implementation date was not recorded. Completed code and user-confirmed behavior are distinguished from work that still needs broader testing.
 
 **Current development status (10 November 2026):** internal Alpha, work in progress. The repository's package and Tauri configuration currently declare `0.1.0`. The retrospective `v0.0.x` milestones and proposed `v0.1.0-alpha.1` label below are **historical/organizational labels only**; they were not necessarily published, built, or tagged in Git. No official releases are implied.
 
+
+## 2026-11-10 — Studio naming, scene rename and visual polish
+
+- Replaced remaining visible **Roleplay Den** branding with **Roleplay Studio** across dialogs, character tools, profile cards, workspace UI and documentation.
+- Kept the legacy workspace-format identifier unchanged for backwards compatibility with existing files.
+- Replaced the browser's **Rename scene** prompt with a native-styled Borealis modal and inline duplicate-name validation.
+- Added a low-intensity, slow-breathing border glow to unlocked Moon/Star developer title capsules, respecting reduced-motion settings.
+- Replaced the hard-bordered You-message highlight with an unobtrusive diffused lavender-accent gradient while retaining soft particles.
 
 ## Retrospective milestone calendar (unofficial)
 
