@@ -35,6 +35,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [selectionRect, setSelectionRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const dragSelection = useRef<{ startX: number; startY: number; currentX: number; currentY: number; moved: boolean } | null>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
+  const suppressCardClick = useRef(false);
   const [bulkTagDraft, setBulkTagDraft] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,16 +87,18 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   }, [selectedVisibleCount, allVisibleSelected]);
 
   function updateSelectionRect(clientX: number, clientY: number) {
-    const grid = document.querySelector<HTMLElement>(".resource-grid");
-    if (!grid || !dragSelection.current) return;
-    const bounds = grid.getBoundingClientRect();
+    const area = document.querySelector<HTMLElement>(".resources-library-content");
+    if (!area || !dragSelection.current) return;
+    const bounds = area.getBoundingClientRect();
     const drag = dragSelection.current;
-    const left = Math.min(drag.startX, clientX) - bounds.left + grid.scrollLeft;
-    const top = Math.min(drag.startY, clientY) - bounds.top + grid.scrollTop;
+    const left = Math.min(drag.startX, clientX) - bounds.left + area.scrollLeft;
+    const top = Math.min(drag.startY, clientY) - bounds.top + area.scrollTop;
     setSelectionRect({ left, top, width: Math.abs(clientX - drag.startX), height: Math.abs(clientY - drag.startY) });
   }
   function handleGridPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    if (event.button !== 0) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest(".resource-select, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -116,12 +119,13 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         left: Math.min(drag.startX, drag.currentX), right: Math.max(drag.startX, drag.currentX),
         top: Math.min(drag.startY, drag.currentY), bottom: Math.max(drag.startY, drag.currentY),
       };
-      const grid = event.currentTarget;
-      const intersectingIds = Array.from(grid.querySelectorAll<HTMLElement>(".resource-card-shell")).filter((card) => {
+      const area = event.currentTarget;
+      const intersectingIds = Array.from(area.querySelectorAll<HTMLElement>(".resource-card-shell")).filter((card) => {
         const rect = card.getBoundingClientRect();
         return rect.left < selection.right && rect.right > selection.left && rect.top < selection.bottom && rect.bottom > selection.top;
       }).map((card) => card.dataset.resourceId).filter((id): id is string => Boolean(id));
       if (intersectingIds.length) setSelectedResourceIds((current) => [...new Set([...current, ...intersectingIds])]);
+      suppressCardClick.current = true;
     }
     dragSelection.current = null;
     setSelectionRect(null);
@@ -240,7 +244,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     </header>
     <main className="resources-layout">
       <section className="resources-main">
-        <div className="resources-library-content">
+        <div className="resources-library-content" onPointerDown={handleGridPointerDown} onPointerMove={handleGridPointerMove} onPointerUp={handleGridPointerUp} onPointerCancel={handleGridPointerUp}>
         <div className="library-eyebrow">{workspacePath ? "WORKSPACE LIBRARY" : "GLOBAL ATELIER"} · {resources.length.toString().padStart(2, "0")} ASSETS</div>
         <div className="library-heading-row"><div><h1>Resources</h1><p>One visual library for every story, scene and character.</p></div><div className="resource-heading-actions"><button className="library-primary" type="button" onClick={() => inputRef.current?.click()}><Upload size={16} /> Import files</button></div></div>
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
@@ -251,9 +255,9 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         {filtered.length > 0 && <label className="resource-select-all"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelectedResourceIds((current) => event.target.checked ? [...new Set([...current, ...filteredIds])] : current.filter((id) => !filteredIds.includes(id)))} /> Select all visible ({filtered.length})</label>}
         {selectedResourceIds.length > 0 && <div className="resource-bulk-tools"><div><strong>{selectedResourceIds.length} selected</strong><button type="button" onClick={() => setSelectedResourceIds([])}>Clear selection</button></div><label><Tag size={14} /><input value={bulkTagDraft} onChange={(event) => setBulkTagDraft(event.target.value)} placeholder="Add tags, comma separated" aria-label="Tags to add to selected resources" /></label><button type="button" className="library-primary" onClick={() => void addTagsToSelected()} disabled={!bulkTagDraft.split(",").some((tag) => tag.trim())}>Add tags</button></div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
-          <div className="resource-grid" onPointerDown={handleGridPointerDown} onPointerMove={handleGridPointerMove} onPointerUp={handleGridPointerUp} onPointerCancel={handleGridPointerUp}>{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
+          <div className="resource-grid">{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
-            <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => void openPreview(resource)}>
+            <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => { if (suppressCardClick.current) { suppressCardClick.current = false; return; } void openPreview(resource); }}>
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
               <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
             </button>
