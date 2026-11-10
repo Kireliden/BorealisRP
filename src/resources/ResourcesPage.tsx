@@ -32,6 +32,9 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
+  const [selectionRect, setSelectionRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const dragSelection = useRef<{ startX: number; startY: number; currentX: number; currentY: number; moved: boolean } | null>(null);
+  const selectAllRef = useRef<HTMLInputElement>(null);
   const [bulkTagDraft, setBulkTagDraft] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +78,54 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
 
   const allTags = useMemo(() => [...new Set(resources.flatMap((resource) => resource.tags))].sort(), [resources]);
   const filtered = resources.filter((resource) => (kind === "all" || resource.kind === kind) && [resource.name, resource.fileName, ...resource.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+  const filteredIds = filtered.map((resource) => resource.id);
+  const selectedVisibleCount = filteredIds.filter((id) => selectedResourceIds.includes(id)).length;
+  const allVisibleSelected = filteredIds.length > 0 && selectedVisibleCount === filteredIds.length;
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected;
+  }, [selectedVisibleCount, allVisibleSelected]);
+
+  function updateSelectionRect(clientX: number, clientY: number) {
+    const grid = document.querySelector<HTMLElement>(".resource-grid");
+    if (!grid || !dragSelection.current) return;
+    const bounds = grid.getBoundingClientRect();
+    const drag = dragSelection.current;
+    const left = Math.min(drag.startX, clientX) - bounds.left + grid.scrollLeft;
+    const top = Math.min(drag.startY, clientY) - bounds.top + grid.scrollTop;
+    setSelectionRect({ left, top, width: Math.abs(clientX - drag.startX), height: Math.abs(clientY - drag.startY) });
+  }
+  function handleGridPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.button !== 0 || event.target !== event.currentTarget) return;
+    dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function handleGridPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = dragSelection.current;
+    if (!drag) return;
+    drag.currentX = event.clientX;
+    drag.currentY = event.clientY;
+    if (Math.abs(drag.currentX - drag.startX) + Math.abs(drag.currentY - drag.startY) < 5) return;
+    drag.moved = true;
+    updateSelectionRect(event.clientX, event.clientY);
+  }
+  function handleGridPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    const drag = dragSelection.current;
+    if (!drag) return;
+    if (drag.moved) {
+      const selection = {
+        left: Math.min(drag.startX, drag.currentX), right: Math.max(drag.startX, drag.currentX),
+        top: Math.min(drag.startY, drag.currentY), bottom: Math.max(drag.startY, drag.currentY),
+      };
+      const grid = event.currentTarget;
+      const intersectingIds = Array.from(grid.querySelectorAll<HTMLElement>(".resource-card-shell")).filter((card) => {
+        const rect = card.getBoundingClientRect();
+        return rect.left < selection.right && rect.right > selection.left && rect.top < selection.bottom && rect.bottom > selection.top;
+      }).map((card) => card.dataset.resourceId).filter((id): id is string => Boolean(id));
+      if (intersectingIds.length) setSelectedResourceIds((current) => [...new Set([...current, ...intersectingIds])]);
+    }
+    dragSelection.current = null;
+    setSelectionRect(null);
+  }
 
   async function addNativePaths(paths: string[]) {
     setError("");
@@ -197,15 +248,16 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         {error && <p className="resource-error">{error}</p>}
         <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><select aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></select></div>
         {allTags.length > 0 && <div className="library-tag-suggestions"><Tag size={13} />{allTags.slice(0, 10).map((tag) => <button type="button" key={tag} onClick={() => setQuery(tag)}>{tag}</button>)}</div>}
+        {filtered.length > 0 && <label className="resource-select-all"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} onChange={(event) => setSelectedResourceIds((current) => event.target.checked ? [...new Set([...current, ...filteredIds])] : current.filter((id) => !filteredIds.includes(id)))} /> Select all visible ({filtered.length})</label>}
         {selectedResourceIds.length > 0 && <div className="resource-bulk-tools"><div><strong>{selectedResourceIds.length} selected</strong><button type="button" onClick={() => setSelectedResourceIds([])}>Clear selection</button></div><label><Tag size={14} /><input value={bulkTagDraft} onChange={(event) => setBulkTagDraft(event.target.value)} placeholder="Add tags, comma separated" aria-label="Tags to add to selected resources" /></label><button type="button" className="library-primary" onClick={() => void addTagsToSelected()} disabled={!bulkTagDraft.split(",").some((tag) => tag.trim())}>Add tags</button></div>}
         {filtered.length === 0 ? <div className="library-empty"><div className="library-empty-mark">▧</div><h2>{query ? "No matching resources" : "A home for your creative assets"}</h2><p>{query ? "Try a different search or filter." : "Drop files here to build your reusable library. Everything stays available across your Roleplay Spaces."}</p></div> :
-          <div className="resource-grid">{filtered.map((resource) => <div key={resource.id} className="resource-card-shell">
+          <div className="resource-grid" onPointerDown={handleGridPointerDown} onPointerMove={handleGridPointerMove} onPointerUp={handleGridPointerUp} onPointerCancel={handleGridPointerUp}>{filtered.map((resource) => <div key={resource.id} data-resource-id={resource.id} className="resource-card-shell">
             <label className="resource-select" title={`Select ${resource.fileName}`}><input type="checkbox" checked={selectedResourceIds.includes(resource.id)} onChange={() => toggleResourceSelection(resource.id)} aria-label={`Select ${resource.fileName}`} /></label>
             <button type="button" className={`resource-card resource-${resource.kind} ${selected?.id === resource.id ? "is-selected" : ""}`} onClick={() => void openPreview(resource)}>
               <div className="resource-card-preview">{resource.kind === "image" && thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`] ? <img src={thumbnailUrls[`${workspacePath ?? "__global__"}::${resource.id}`]} alt="" /> : iconFor(resource)}<span>{resource.kind.toUpperCase()}</span></div>
               <strong title={resource.fileName}>{resource.name}</strong><small>{(resource.size / 1024 / 1024).toFixed(2)} MB</small><div className="resource-card-tags">{resource.tags.slice(0, 3).map((tag) => <i key={tag}>{tag}</i>)}</div>
             </button>
-          </div>)}</div>}
+          </div>)}{selectionRect && <div className="resource-selection-rectangle" style={selectionRect} />}</div>}
         </div>
       {selected && <aside className="resource-inspector"><div className="character-editor-top"><span>RESOURCE DETAILS</span><button type="button" onClick={() => { setSelected(null); setPreviewUrl(null); }} aria-label="Close resource details"><X size={16} /></button></div>
         <div className="resource-preview-large">{previewUrl && selected.kind === "image" ? <img src={previewUrl} alt={selected.fileName} /> : previewUrl && selected.kind === "audio" ? <audio controls src={previewUrl} /> : previewUrl && selected.kind === "video" ? <video controls src={previewUrl} /> : iconFor(selected)}</div>
