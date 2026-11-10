@@ -15,7 +15,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search } from "lucide-react";
+import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -345,6 +345,7 @@ function sanitiseHtml(html: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [workspaceError, setWorkspaceError] = useState("");
+  const [showWorkspaceNotice, setShowWorkspaceNotice] = useState(true);
   const [draftHtml, setDraftHtml] = useState("");
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
@@ -1496,7 +1497,7 @@ function sanitiseHtml(html: string) {
         <section className="main-panel">
           <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
           <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button></div></div>
-          <div className="demo-notice"><span className="notice-icon">i</span><span><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span></div>
+          {(showWorkspaceNotice || Boolean(workspaceError)) && <div className="demo-notice" role={workspaceError ? "alert" : "status"}><span className="notice-icon" aria-hidden="true">i</span><span className="demo-notice-text"><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span><button type="button" className="demo-notice-close" onClick={() => setShowWorkspaceNotice(false)} aria-label="Dismiss workspace notice" title="Dismiss notice"><X size={15} /></button></div>}
 
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
