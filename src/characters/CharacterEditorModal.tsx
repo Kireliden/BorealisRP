@@ -150,7 +150,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
           </div>
           <div className="studio-identity">
             <span className="studio-kicker">CHARACTER IDENTITY</span>
-            <label className="studio-field studio-name-field"><span>Character name <b>*</b></span><input autoFocus value={draft.name} onChange={(event) => patch({ name: event.target.value, initials: draft.initials || event.target.value.slice(0, 2).toUpperCase() })} placeholder="e.g. Keira Voss" /><small>“You” is reserved for your personal profile.</small></label>
+            <label className="studio-field studio-name-field"><span>Character name <b>*</b></span><input autoFocus value={draft.name} onChange={(event) => patch({ name: event.target.value, initials: event.target.value.trim().slice(0, 2).toUpperCase() })} placeholder="e.g. Keira Voss" /><small>“You” is reserved for your personal profile.</small></label>
             <div className="studio-field-grid">
               <TextField label="Nickname / title" value={draft.subtitle} onChange={(value) => patch({ subtitle: value })} placeholder="The Pale Star" />
               <TextField label="Age" value={draft.age} onChange={(value) => patch({ age: value })} placeholder="Age or age range" />
