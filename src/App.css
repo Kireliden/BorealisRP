@@ -2582,3 +2582,12 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
 /* Special title capsule visibility across light and dark themes */
 .sidebar-profile-trigger .sidebar-special-title { box-shadow:0 2px 7px color-mix(in srgb,var(--ctp-crust) 24%,transparent), inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent); }
 .sidebar-profile-trigger .special-title-particles { opacity:1; filter:drop-shadow(0 0 2px color-mix(in srgb,var(--accent) 75%,white)) drop-shadow(0 0 4px color-mix(in srgb,var(--accent) 45%,transparent)); }
+
+/* Scene rename modal: keep validation beside the name field. */
+.clean-confirmation-dialog .scene-rename-error {
+  margin: 9px 0 0;
+  color: var(--ctp-red);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
