@@ -367,5 +367,5 @@
 .characters-layout{flex-direction:column}
 .characters-view-switch{display:flex;width:100%;flex:0 0 auto;align-self:stretch;box-sizing:border-box;margin:0;padding:0 20px;border-bottom:1px solid var(--border);gap:0}
 .characters-view-switch button{flex:1;justify-content:center;border-radius:0;padding:14px 12px}
-.characters-expressions-view{flex:1;min-width:0;min-height:0;overflow:auto}
-.characters-expressions-view .expression-manager{min-height:100%;height:auto}
+.characters-expressions-view{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
+.characters-expressions-view .expression-manager{flex:1;min-height:0;height:100%;max-height:100%}
