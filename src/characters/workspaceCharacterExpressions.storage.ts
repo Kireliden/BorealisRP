@@ -116,6 +116,18 @@ export async function ensureWorkspaceCharacterExpressions(
   }
 }
 
+/** Metadata for previously saved expression slots, used to reopen the editor. */
+export async function listWorkspaceCharacterExpressions(
+  workspacePath: string,
+  characterId: string,
+): Promise<SavedCharacterExpression[]> {
+  const manifest = await readManifest(workspacePath);
+  return manifest.expressions
+    .filter((entry) => entry.characterId === characterId)
+    .map(({ path: _path, ...metadata }) => metadata)
+    .sort((a, b) => CHARACTER_EXPRESSION_SLOTS.findIndex((slot) => slot.key === a.key) - CHARACTER_EXPRESSION_SLOTS.findIndex((slot) => slot.key === b.key));
+}
+
 export async function getWorkspaceCharacterExpressionBlob(
   workspacePath: string,
   characterId: string,
