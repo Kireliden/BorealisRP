@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Plus, Search, Tag, X, GitFork, LayoutGrid, Sparkles } from "lucide-react";
 import { loadCharacters, saveCharacters } from "./characters.storage";
 import { characterAccentColor, createEmptyCharacterDraft, makeCharacterRecord, type CharacterDraft, type CharacterRecord } from "./characters.types";
@@ -27,6 +27,7 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name-asc" | "name-desc" | "updated">("newest");
   const [draft, setDraft] = useState<CharacterDraft>(createEmptyCharacterDraft());
   const [isCreating, setIsCreating] = useState(false);
+  const pendingCharacterSave = useRef<Promise<void>>(Promise.resolve());
   const [viewMode, setViewMode] = useState<"characters" | "expressions" | "map">("characters");
   useEffect(() => {
     let cancelled = false;
@@ -107,9 +108,22 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
   function persist(next: CharacterRecord[]) {
     setCharacters(next);
     if (workspacePath) {
-      void saveWorkspaceCharacters(workspacePath, next).then(() => setStorageError("")).catch((reason) => setStorageError(reason instanceof Error ? reason.message : String(reason)));
+      // Serialise workspace saves; closing the library must not race the last edit.
+      const pending = pendingCharacterSave.current.catch(() => undefined)
+        .then(() => saveWorkspaceCharacters(workspacePath, next));
+      pendingCharacterSave.current = pending;
+      void pending.then(() => setStorageError(""))
+        .catch((reason) => setStorageError(reason instanceof Error ? reason.message : String(reason)));
     } else {
       saveCharacters(next);
+    }
+  }
+  async function closePage() {
+    try {
+      await pendingCharacterSave.current;
+      onClose();
+    } catch (reason) {
+      setStorageError(reason instanceof Error ? reason.message : String(reason));
     }
   }
   function openCharacter(character: CharacterRecord) {
@@ -227,9 +241,9 @@ export default function CharactersPage({ onClose, workspacePath }: Props) {
 
   return <div className="library-overlay">
     <header className="library-topbar">
-      <button className="library-back" onClick={onClose} type="button"><ArrowLeft size={16} /> Back to Workspace</button>
+      <button className="library-back" onClick={() => void closePage()} type="button"><ArrowLeft size={16} /> Back to Workspace</button>
       <div className="library-brand"><strong>Characters</strong></div>
-      <button className="library-close" onClick={onClose} type="button" aria-label="Close Characters"><X size={18} /></button>
+      <button className="library-close" onClick={() => void closePage()} type="button" aria-label="Close Characters"><X size={18} /></button>
     </header>
     <main className="characters-layout">
       <div className="characters-view-switch" role="tablist" aria-label="Character views"><button type="button" role="tab" aria-selected={viewMode === "characters"} className={viewMode === "characters" ? "active" : ""} onClick={() => setViewMode("characters")}><LayoutGrid size={15}/> Characters</button><button type="button" role="tab" aria-selected={viewMode === "expressions"} className={viewMode === "expressions" ? "active" : ""} onClick={() => setViewMode("expressions")}><Sparkles size={15}/> Character Expressions</button><button type="button" role="tab" aria-selected={viewMode === "map"} className={viewMode === "map" ? "active" : ""} onClick={() => setViewMode("map")}><GitFork size={15}/> Mental Map</button></div>
