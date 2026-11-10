@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type PointerEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
-import { ArrowLeft, ChevronRight, Copy, Eye, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, GripVertical, Info, Move, Pencil, Search, Tag, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Copy, Eye, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, Info, Move, Pencil, Search, Tag, Trash2, Upload, X } from "lucide-react";
 import { createResourceFolder, deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResourceFolders, listResources, organiseResources, removeResourceFolder, renameResourceFolder, updateResourceTags } from "./resources.storage";
 import { createWorkspaceResourceFolder, deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResourceFolders, listWorkspaceResources, migrateLegacyResources, organiseWorkspaceResources, removeWorkspaceResourceFolder, renameWorkspaceResourceFolder, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceBatchAction, ResourceFolder, ResourceRecord } from "./resources.types";
@@ -36,6 +36,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [folderRenameDraft, setFolderRenameDraft] = useState("");
   const [folderBusy, setFolderBusy] = useState(false);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [draggedFilePreview, setDraggedFilePreview] = useState<{ x: number; y: number; count: number; label: string } | null>(null);
   const draggedResourceIds = useRef<string[]>([]);
   const [bulkDialog, setBulkDialog] = useState<"move" | "copy" | null>(null);
   const [bulkTargetId, setBulkTargetId] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const [dragging, setDragging] = useState(false);
   const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([]);
   const [selectionRect, setSelectionRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
-  const dragSelection = useRef<{ startX: number; startY: number; currentX: number; currentY: number; moved: boolean; startedOnCard: boolean } | null>(null);
+  const dragSelection = useRef<{ startX: number; startY: number; currentX: number; currentY: number; moved: boolean; startedOnCard: boolean; resourceId: string | null } | null>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
   const suppressCardClick = useRef(false);
   const [bulkTagDraft, setBulkTagDraft] = useState("");
@@ -253,35 +254,24 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     }
   }
 
-  function beginResourceDrag(event: DragEvent<HTMLButtonElement>, resourceId: string) {
-    // Drag a checked group together; otherwise move only the card under the handle.
-    const ids = selectedResourceIds.includes(resourceId) ? [...selectedResourceIds] : [resourceId];
-    draggedResourceIds.current = ids;
-    event.dataTransfer.setData("application/x-brd-resource-ids", JSON.stringify(ids));
-    event.dataTransfer.effectAllowed = "move";
-    setDragOverFolder(null);
+  /** Pointer-based dragging works in the Tauri webview without relying on HTML5
+   * dragstart (which conflicts with the image and with selection marquee). */
+  function dropDestinationAt(x: number, y: number): string | null | undefined {
+    const element = document.elementFromPoint(x, y);
+    const folder = element?.closest<HTMLElement>(".resource-folder-shell");
+    if (folder?.dataset.folderId) return folder.dataset.folderId;
+    if (element?.closest(".resource-library-root-drop")) return null;
+    return undefined;
   }
 
-  function hoverFolderDrop(event: DragEvent<HTMLElement>, id: string | null) {
-    if (!draggedResourceIds.current.length) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = "move";
-    setDragOverFolder(id ?? "__root__");
-  }
-
-  async function dropIntoFolder(event: DragEvent<HTMLElement>, id: string | null) {
-    if (!draggedResourceIds.current.length) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const ids = [...draggedResourceIds.current];
-    draggedResourceIds.current = [];
-    setDragOverFolder(null);
+  async function moveToResourceFolder(ids: string[], destinationId: string | null) {
+    const changed = ids.filter((id) => (resources.find((item) => item.id === id)?.folderId ?? null) !== destinationId);
+    if (!changed.length) return;
     setError("");
     try {
-      if (workspacePath) await organiseWorkspaceResources(workspacePath, ids, "move", id);
-      else await organiseResources(ids, "move", id);
-      setSelectedResourceIds([]);
+      if (workspacePath) await organiseWorkspaceResources(workspacePath, changed, "move", destinationId);
+      else await organiseResources(changed, "move", destinationId);
+      setSelectedResourceIds((current) => current.filter((id) => !changed.includes(id)));
       await refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -302,44 +292,84 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     suppressCardClick.current = false;
     const target = event.target;
     if (target instanceof Element && target.closest(".resource-inspector, .resource-select, .resource-folder-navigation, .resource-create-folder, .resource-folders, .resource-bulk-tools, .resource-delete-backdrop, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
-    dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
-    // Do not capture normal clicks: doing so prevents mouse clicks reaching resource buttons.
+    const resourceId = target instanceof Element ? target.closest<HTMLElement>(".resource-card-shell")?.dataset.resourceId ?? null : null;
+    dragSelection.current = {
+      startX: event.clientX, startY: event.clientY,
+      currentX: event.clientX, currentY: event.clientY,
+      moved: false, startedOnCard: Boolean(resourceId), resourceId,
+    };
+    draggedResourceIds.current = resourceId
+      ? (selectedResourceIds.includes(resourceId) ? [...selectedResourceIds] : [resourceId])
+      : [];
+    // Capture only after crossing the drag threshold so an ordinary click opens Preview.
   }
+
   function handleGridPointerMove(event: PointerEvent<HTMLElement>) {
     const drag = dragSelection.current;
     if (!drag) return;
     drag.currentX = event.clientX;
     drag.currentY = event.clientY;
-    if (Math.abs(drag.currentX - drag.startX) + Math.abs(drag.currentY - drag.startY) < 5) return;
+    if (!drag.moved && Math.abs(drag.currentX - drag.startX) + Math.abs(drag.currentY - drag.startY) < 7) return;
     if (!drag.moved) {
       drag.moved = true;
       event.currentTarget.setPointerCapture(event.pointerId);
     }
     event.preventDefault();
-    updateSelectionRect(event.clientX, event.clientY);
+    if (drag.resourceId) {
+      const file = resources.find((item) => item.id === drag.resourceId);
+      setDraggedFilePreview({
+        x: event.clientX, y: event.clientY,
+        count: draggedResourceIds.current.length,
+        label: file?.fileName ?? "Resource",
+      });
+      const destination = dropDestinationAt(event.clientX, event.clientY);
+      setDragOverFolder(destination === undefined ? null : destination ?? "__root__");
+      setSelectionRect(null);
+    } else {
+      updateSelectionRect(event.clientX, event.clientY);
+    }
   }
+
   function handleGridPointerUp(event: PointerEvent<HTMLElement>) {
     const drag = dragSelection.current;
     if (!drag) return;
-    if (drag.moved) {
+    if (drag.moved && drag.resourceId) {
+      suppressCardClick.current = true;
+      const destination = dropDestinationAt(event.clientX, event.clientY);
+      if (destination !== undefined && draggedResourceIds.current.length > 0) {
+        void moveToResourceFolder([...draggedResourceIds.current], destination);
+      }
+    } else if (drag.moved) {
       const selection = {
         left: Math.min(drag.startX, drag.currentX), right: Math.max(drag.startX, drag.currentX),
         top: Math.min(drag.startY, drag.currentY), bottom: Math.max(drag.startY, drag.currentY),
       };
-      const area = event.currentTarget;
-      const intersectingIds = Array.from(area.querySelectorAll<HTMLElement>(".resource-card-shell")).filter((card) => {
+      const intersectingIds = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(".resource-card-shell")).filter((card) => {
         const rect = card.getBoundingClientRect();
         return rect.left < selection.right && rect.right > selection.left && rect.top < selection.bottom && rect.bottom > selection.top;
       }).map((card) => card.dataset.resourceId).filter((id): id is string => Boolean(id));
       if (intersectingIds.length) setSelectedResourceIds((current) => [...new Set([...current, ...intersectingIds])]);
-      if (drag.startedOnCard) suppressCardClick.current = true;
     } else {
       const target = event.target;
       if (!drag.startedOnCard && (!(target instanceof Element) || !target.closest(".resource-card-shell, .resource-folders, .resource-folder-navigation, .resource-create-folder, .resource-inspector, .resource-bulk-tools, .resource-select-all, .resource-controls, .resource-dropzone, .library-heading-row, .library-eyebrow, .library-tag-suggestions, .resource-grid button, button, input, select, textarea, label"))) {
         setSelectedResourceIds([]);
       }
     }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     dragSelection.current = null;
+    draggedResourceIds.current = [];
+    setDraggedFilePreview(null);
+    setDragOverFolder(null);
+    setSelectionRect(null);
+  }
+
+  function handleGridPointerCancel(event: PointerEvent<HTMLElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    dragSelection.current = null;
+    draggedResourceIds.current = [];
+    suppressCardClick.current = true;
+    setDraggedFilePreview(null);
+    setDragOverFolder(null);
     setSelectionRect(null);
   }
 
