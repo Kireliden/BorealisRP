@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent, type MouseEvent, type PointerEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
-import { ArrowLeft, ChevronRight, Copy, Eye, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, Info, Move, Search, Tag, Trash2, Upload, X } from "lucide-react";
-import { createResourceFolder, deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResourceFolders, listResources, organiseResources, updateResourceTags } from "./resources.storage";
-import { createWorkspaceResourceFolder, deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResourceFolders, listWorkspaceResources, migrateLegacyResources, organiseWorkspaceResources, updateWorkspaceResourceTags } from "./workspaceResources.storage";
+import { ArrowLeft, ChevronRight, Copy, Eye, FileAudio, FileImage, FileVideo, File as FileIcon, Folder, FolderPlus, GripVertical, Info, Move, Pencil, Search, Tag, Trash2, Upload, X } from "lucide-react";
+import { createResourceFolder, deleteResource, exportResourcesForMigration, getResourceBlob, importResources, listResourceFolders, listResources, organiseResources, removeResourceFolder, renameResourceFolder, updateResourceTags } from "./resources.storage";
+import { createWorkspaceResourceFolder, deleteWorkspaceResource, getWorkspaceResourceBlob, hasCompletedLegacyResourceMigration, importWorkspaceResources, listWorkspaceResourceFolders, listWorkspaceResources, migrateLegacyResources, organiseWorkspaceResources, removeWorkspaceResourceFolder, renameWorkspaceResourceFolder, updateWorkspaceResourceTags } from "./workspaceResources.storage";
 import type { ResourceBatchAction, ResourceFolder, ResourceRecord } from "./resources.types";
 import { getCachedResourceObjectUrl, invalidateCachedResourceObjectUrl } from "./resourceMediaCache";
 import ResourceFileViewer from "./ResourceFileViewer";
@@ -32,6 +32,11 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const currentFolderRef = useRef<string | null>(null);
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [folderName, setFolderName] = useState("");
+  const [folderToEdit, setFolderToEdit] = useState<{ folder: ResourceFolder; action: "rename" | "delete" } | null>(null);
+  const [folderRenameDraft, setFolderRenameDraft] = useState("");
+  const [folderBusy, setFolderBusy] = useState(false);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const draggedResourceIds = useRef<string[]>([]);
   const [bulkDialog, setBulkDialog] = useState<"move" | "copy" | null>(null);
   const [bulkTargetId, setBulkTargetId] = useState<string | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
@@ -151,6 +156,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     setSelected(null);
     setViewerResource(null);
     setContextMenu(null);
+    setDragOverFolder(null);
     setPreviewUrl(null);
     setQuery("");
     setCreatingFolder(false);
@@ -199,6 +205,89 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     }
   }
 
+  function editFolder(folder: ResourceFolder, action: "rename" | "delete") {
+    setContextMenu(null);
+    setFolderToEdit({ folder, action });
+    setFolderRenameDraft(folder.name);
+  }
+
+  function folderContents(folderId: string) {
+    const descendantIds = new Set<string>([folderId]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const folder of folders) {
+        if (folder.parentId && descendantIds.has(folder.parentId) && !descendantIds.has(folder.id)) {
+          descendantIds.add(folder.id);
+          changed = true;
+        }
+      }
+    }
+    return {
+      subfolders: descendantIds.size - 1,
+      files: resources.filter((item) => item.folderId && descendantIds.has(item.folderId)).length,
+    };
+  }
+
+  async function confirmFolderEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!folderToEdit || folderBusy) return;
+    const { folder, action } = folderToEdit;
+    setFolderBusy(true);
+    setError("");
+    try {
+      if (action === "rename") {
+        if (workspacePath) await renameWorkspaceResourceFolder(workspacePath, folder.id, folderRenameDraft);
+        else await renameResourceFolder(folder.id, folderRenameDraft);
+      } else {
+        if (workspacePath) await removeWorkspaceResourceFolder(workspacePath, folder.id);
+        else await removeResourceFolder(folder.id);
+        if (currentFolderId === folder.id) openFolder(folder.parentId);
+      }
+      setFolderToEdit(null);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    } finally {
+      setFolderBusy(false);
+    }
+  }
+
+  function beginResourceDrag(event: DragEvent<HTMLButtonElement>, resourceId: string) {
+    // Drag a checked group together; otherwise move only the card under the handle.
+    const ids = selectedResourceIds.includes(resourceId) ? [...selectedResourceIds] : [resourceId];
+    draggedResourceIds.current = ids;
+    event.dataTransfer.setData("application/x-brd-resource-ids", JSON.stringify(ids));
+    event.dataTransfer.effectAllowed = "move";
+    setDragOverFolder(null);
+  }
+
+  function hoverFolderDrop(event: DragEvent<HTMLElement>, id: string | null) {
+    if (!draggedResourceIds.current.length) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "move";
+    setDragOverFolder(id ?? "__root__");
+  }
+
+  async function dropIntoFolder(event: DragEvent<HTMLElement>, id: string | null) {
+    if (!draggedResourceIds.current.length) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const ids = [...draggedResourceIds.current];
+    draggedResourceIds.current = [];
+    setDragOverFolder(null);
+    setError("");
+    try {
+      if (workspacePath) await organiseWorkspaceResources(workspacePath, ids, "move", id);
+      else await organiseResources(ids, "move", id);
+      setSelectedResourceIds([]);
+      await refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  }
+
   function updateSelectionRect(clientX: number, clientY: number) {
     const area = document.querySelector<HTMLElement>(".resources-main");
     if (!area || !dragSelection.current) return;
@@ -214,7 +303,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     const target = event.target;
     if (target instanceof Element && target.closest(".resource-inspector, .resource-select, .resource-folder-navigation, .resource-create-folder, .resource-folders, .resource-bulk-tools, .resource-delete-backdrop, input, select, textarea, a, [contenteditable=true], button:not(.resource-card)")) return;
     dragSelection.current = { startX: event.clientX, startY: event.clientY, currentX: event.clientX, currentY: event.clientY, moved: false, startedOnCard: target instanceof Element && Boolean(target.closest(".resource-card")) };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    // Do not capture normal clicks: doing so prevents mouse clicks reaching resource buttons.
   }
   function handleGridPointerMove(event: PointerEvent<HTMLElement>) {
     const drag = dragSelection.current;
@@ -222,7 +311,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     drag.currentX = event.clientX;
     drag.currentY = event.clientY;
     if (Math.abs(drag.currentX - drag.startX) + Math.abs(drag.currentY - drag.startY) < 5) return;
-    drag.moved = true;
+    if (!drag.moved) {
+      drag.moved = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     event.preventDefault();
     updateSelectionRect(event.clientX, event.clientY);
   }
