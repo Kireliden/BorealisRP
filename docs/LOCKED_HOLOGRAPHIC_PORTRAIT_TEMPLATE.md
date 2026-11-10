@@ -1,7 +1,7 @@
 # 🔒 BRD — Holographic Character Portrait Template (LOCKED)
 
 **Status:** Approved / DO NOT regress  
-**Project:** Borealis Roleplay Den (BorealisRP)
+**Project:** Borealis Roleplay Studio (BorealisRP)
 
 > This is the user-approved visual template. Preserve it in future work. Do not simplify, replace, or redesign it without asking first.
 
