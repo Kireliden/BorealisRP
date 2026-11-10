@@ -114,6 +114,8 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
   const filtered = resources.filter((resource) => (resource.folderId ?? null) === currentFolderId && (kind === "all" || resource.kind === kind) && [resource.name, resource.fileName, ...resource.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
   const visibleFolders = folders.filter((folder) => folder.parentId === currentFolderId).sort((a, b) => a.name.localeCompare(b.name));
   const sortedFolders = [...folders].sort((a, b) => folderLabel(a.id).localeCompare(folderLabel(b.id)));
+  const contextResource = contextMenu?.resourceId ? resources.find((item) => item.id === contextMenu.resourceId) : undefined;
+  const contextFolder = contextMenu?.folderId ? folders.find((item) => item.id === contextMenu.folderId) : undefined;
   const breadcrumbs: ResourceFolder[] = [];
   let breadcrumbId = currentFolderId;
   for (let index = 0; index < folders.length && breadcrumbId; index++) {
@@ -493,7 +495,12 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
             <button type="button" className="library-primary" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Only this workspace</button>
             {deleteHasGlobalCopy && <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, true)}>This workspace and the app-wide library</button>}
           </> : <button type="button" className="library-danger" disabled={deleting} onClick={() => void remove(pendingDelete, false)}>Delete from app-wide library</button>}
-          <button type="button" className="resource-delete-cancel" disabled={deleting} onClick={() => setPendingDelete(null)}>Cancel</button>
+          <button type="button" className="resource-local-delete-button" disabled={deleting || localDeletionBusy} onClick={() => void deleteMatchingLocalOriginal(pendingDelete)}>
+            <Trash2 size={14} /> Delete matching original from device…
+          </button>
+          <p className="resource-delete-original-warning">Choose the original file on your computer. It will be checked against the imported copy before permanent deletion. The BRD copy stays safe.</p>
+          {localDeletionNotice && <p className="resource-local-delete-notice" role="status">{localDeletionNotice}</p>}
+          <button type="button" className="resource-delete-cancel" disabled={deleting || localDeletionBusy} onClick={() => setPendingDelete(null)}>Cancel</button>
         </section>
       </div>}
 
@@ -523,5 +530,36 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
       </div>}
       </section>
     </main>
+    {viewerResource && <ResourceFileViewer
+      key={`${workspacePath ?? "__global__"}::${viewerResource.id}`}
+      resource={viewerResource}
+      scope={workspacePath ?? "__global__"}
+      getBlob={getBlob}
+      onClose={() => setViewerResource(null)}
+      onDetails={() => { const item = viewerResource; setViewerResource(null); void openPreview(item); }}
+      onDelete={() => { const item = viewerResource; setViewerResource(null); void requestDelete(item); }}
+    />}
+    {contextMenu && <div className="resource-context-backdrop" role="presentation" onPointerDown={() => setContextMenu(null)}>
+      <div className="resource-context-menu" role="menu" style={{ top: contextMenu.y, left: contextMenu.x }} onPointerDown={(event) => event.stopPropagation()}>
+        {contextResource ? <>
+          <button type="button" role="menuitem" onClick={() => openFileViewer(contextResource)}><Eye size={15} /> Preview file</button>
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); void openPreview(contextResource); }}><Info size={15} /> Resource details</button>
+          <button type="button" role="menuitem" onClick={() => { toggleResourceSelection(contextResource.id); setContextMenu(null); }}><FileIcon size={15} /> {selectedResourceIds.includes(contextResource.id) ? "Deselect file" : "Select file"}</button>
+          <div className="resource-context-separator" />
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); showBulkDialog("move"); }}><Move size={15} /> Move {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); showBulkDialog("copy"); }}><Copy size={15} /> Copy {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
+          <button type="button" role="menuitem" className="resource-context-danger" onClick={() => { setContextMenu(null); if (selectedResourceIds.length > 1) setConfirmBulkDelete(true); else void requestDelete(contextResource); }}><Trash2 size={15} /> Delete {selectedResourceIds.length > 1 ? `(${selectedResourceIds.length})` : ""}</button>
+          <div className="resource-context-separator" />
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); void deleteMatchingLocalOriginal(contextResource); }}><Trash2 size={15} /> Delete local original…</button>
+        </> : contextFolder ? <>
+          <button type="button" role="menuitem" onClick={() => openFolder(contextFolder.id)}><Folder size={15} /> Open folder</button>
+          <button type="button" role="menuitem" onClick={() => { openFolder(contextFolder.id); setCreatingFolder(true); setContextMenu(null); }}><FolderPlus size={15} /> New subfolder</button>
+        </> : <>
+          <button type="button" role="menuitem" onClick={() => { setCreatingFolder(true); setContextMenu(null); }}><FolderPlus size={15} /> New folder</button>
+          <button type="button" role="menuitem" onClick={() => { setContextMenu(null); inputRef.current?.click(); }}><Upload size={15} /> Import files</button>
+          {selectedResourceIds.length > 0 && <button type="button" role="menuitem" onClick={() => { setSelectedResourceIds([]); setContextMenu(null); }}><X size={15} /> Clear selection</button>}
+        </>}
+      </div>
+    </div>}
   </div>;
 }
