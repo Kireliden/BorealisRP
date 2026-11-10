@@ -71,7 +71,7 @@ These milestones are a *retrospective narrative*, not the exact Git history or a
 - Added folder rename/delete through the right-click context menu. Removing a logical folder keeps its contained assets and relocates them to the parent.
 - Added a dedicated right-click menu for files and folders, plus blurred file previews for images, text, PDFs (where supported), audio and video.
 - Added moving resources by dragging thumbnails onto folders and breadcrumb targets; retained marquee selection from empty space.
-- Added an explicitly confirmed native flow to delete a selected *original file on disk*: require a file-picker selection and verify its name, size and SHA-256 against the BRD copy before deleting. Normal library deletion does not delete originals.
+- Added an explicitly confirmed native flow to delete a selected *original file on disk*: require a file-picker selection and verify its name, size and SHA-256 against the BRS copy before deleting. Normal library deletion does not delete originals.
 
 ### Fixed / improved
 - Kept resource captions hidden until hover/focus, as an overlay **inside** the thumbnail rather than an expanding footer below it.
