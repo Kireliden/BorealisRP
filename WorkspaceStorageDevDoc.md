@@ -1,4 +1,4 @@
-# BRD — Workspace Storage & User-Owned Data
+# BRS — Workspace Storage & User-Owned Data
 ## Developer Document
 
 **Status:** Approved architectural decision  
@@ -10,24 +10,24 @@
 
 ## 1. Purpose
 
-Borealis Roleplay Studio (BRD) must treat a user's workspace folder as the authoritative home of that workspace's content. BRD is an editor and manager for the user's data; it must not own that data through an opaque application-only storage system.
+Borealis Roleplay Studio (BRS) must treat a user's workspace folder as the authoritative home of that workspace's content. BRS is an editor and manager for the user's data; it must not own that data through an opaque application-only storage system.
 
 This is inspired by the user experience of Obsidian vaults: users choose where a workspace lives, can open existing workspace folders on demand, and retain direct access to the underlying files independently of the application.
 
-The folder is the workspace. BRD is the tool used to work with it.
+The folder is the workspace. BRS is the tool used to work with it.
 
 ## 2. Non-negotiable principles
 
 1. **User chooses the location.** When creating a workspace, the user selects its destination. It may be anywhere they can write to: Documents, another drive, a removable drive, OneDrive, or another ordinary folder.
 2. **Workspace content does not live in AppData by default.** Character/story/chat content and workspace resources must not be silently stored in an application-managed location. Do not require AppData, the install directory, or a hidden application database to recover a workspace.
-3. **The workspace folder is the source of truth.** BRD reads and writes workspace content directly in that folder. It must not maintain an indispensable hidden duplicate elsewhere.
+3. **The workspace folder is the source of truth.** BRS reads and writes workspace content directly in that folder. It must not maintain an indispensable hidden duplicate elsewhere.
 4. **Files remain user-accessible.** Users must be able to inspect, copy, back up and move workspace contents using their operating system's file manager or other compatible tools.
 5. **Prefer open, documented formats.** Use human-readable, documented formats where appropriate (for example JSON for structured metadata and Markdown for suitable text), and keep original media files in normal image/audio formats. No proprietary container or undocumented format may be required to recover user content.
 6. **Portable references.** Internal links between workspace data and assets must use workspace-relative paths or stable workspace-relative identifiers, not absolute machine-specific paths.
-7. **Moving or reinstalling BRD must not destroy workspaces.** Application installation and workspace storage are separate concerns.
+7. **Moving or reinstalling BRS must not destroy workspaces.** Application installation and workspace storage are separate concerns.
 8. **Multiple workspaces are first-class.** Users can create, register, open and switch between independent workspace folders.
 9. **Backups must be recoverable.** A complete backup must contain everything needed to reconstruct the workspace, including its metadata and referenced assets.
-10. **No forced cloud integration.** Cloud-sync folders are ordinary user-selected folders. BRD does not need a provider-specific integration just to use a workspace stored in OneDrive or another synced directory.
+10. **No forced cloud integration.** Cloud-sync folders are ordinary user-selected folders. BRS does not need a provider-specific integration just to use a workspace stored in OneDrive or another synced directory.
 
 ## 3. Workspace lifecycle and My Workspace
 
@@ -36,10 +36,10 @@ The existing **My Workspace** interface should become the workspace manager.
 ### Required actions
 
 - **Create Workspace** — choose a display name and destination folder; create the workspace structure and its required manifest.
-- **Open Workspace** — select an existing BRD workspace folder and validate it before loading.
+- **Open Workspace** — select an existing BRS workspace folder and validate it before loading.
 - **Add Existing Workspace** — make an existing workspace available in the recent-workspaces list without moving or copying its files.
 - **Switch Workspace** — change the active workspace without merging content from another workspace.
-- **Remove from List** — remove a workspace from BRD's recent list without deleting its folder or data.
+- **Remove from List** — remove a workspace from BRS's recent list without deleting its folder or data.
 - **Show in File Manager** — open the active workspace location in the system file manager where supported.
 - **Workspace Settings** — manage settings that belong to that workspace.
 - **Backup / Restore** — create a complete archive or restore a workspace from a supported backup.
@@ -55,7 +55,7 @@ Each workspace owns its own characters, stories, scenes, chats, assets and works
 The exact schema and directory names will be finalized during implementation. The following is a proposed starting point, not a claim about the current repository or a fixed compatibility contract:
 
 ```text
-BRD - Neon Requiem/
+BRS - Neon Requiem/
 ├── workspace.json
 ├── Settings/
 │   ├── workspace.json
@@ -85,13 +85,13 @@ BRD - Neon Requiem/
     └── Other/
 ```
 
-The schema should be designed around stable IDs rather than assuming a display name is a permanent identifier. The manifest should identify the workspace, state the format/schema version and provide enough metadata for BRD to recognize and validate the folder.
+The schema should be designed around stable IDs rather than assuming a display name is a permanent identifier. The manifest should identify the workspace, state the format/schema version and provide enough metadata for BRS to recognize and validate the folder.
 
 ### Initial manifest contract (schema version 1)
 
 The initial implementation uses a root `workspace.json` with these fields:
 
-- `format`: `borealis-roleplay-den-workspace`, used to identify BRD workspace folders. **Keep this legacy on-disk value unchanged** so existing workspaces stay readable after the Studio rebrand.
+- `format`: `borealis-roleplay-den-workspace`, used to identify BRS workspace folders. **Keep this legacy on-disk value unchanged** so existing workspaces stay readable after the Studio rebrand.
 - `schemaVersion`: integer `1`; unsupported versions are rejected rather than silently rewritten.
 - `id`: stable UUID generated once when the workspace is created.
 - `name`: display name chosen by the user.
@@ -122,7 +122,7 @@ Do not place every setting in one global file if it belongs to an individual wor
 - Do not use base64 blobs inside JSON as the normal way to store image/audio assets.
 - Do not make the workspace dependent on a local database hidden outside its folder.
 - A database may only be considered as a disposable performance cache or index if the workspace files remain sufficient to reconstruct the data. The cache must be safely rebuildable and must not become a second source of truth.
-- Document the schema and versioning rules so third-party tools can inspect or process workspace content without reverse-engineering BRD.
+- Document the schema and versioning rules so third-party tools can inspect or process workspace content without reverse-engineering BRS.
 
 JSON is a suitable default for structured metadata, but it is not a mandate to force every kind of content into JSON. Markdown should be considered for suitable prose; media should remain media files.
 
@@ -141,21 +141,21 @@ The same workspace should be movable between supported systems without rewriting
 
 ## 7. Cloud-synced and user-managed folders
 
-A workspace may be created directly inside a user-selected OneDrive, Dropbox, or other synchronized folder. From BRD's perspective, this is a normal folder selected by the user; provider-specific APIs are not required for the basic feature.
+A workspace may be created directly inside a user-selected OneDrive, Dropbox, or other synchronized folder. From BRS's perspective, this is a normal folder selected by the user; provider-specific APIs are not required for the basic feature.
 
-BRD must not silently redirect such a workspace into AppData or another internal location. It must operate on the selected workspace path and preserve the ordinary files that the sync client manages.
+BRS must not silently redirect such a workspace into AppData or another internal location. It must operate on the selected workspace path and preserve the ordinary files that the sync client manages.
 
-Cloud synchronization itself is outside BRD's storage layer. The core requirement is that workspace content is stored in the selected folder in a portable, inspectable form.
+Cloud synchronization itself is outside BRS's storage layer. The core requirement is that workspace content is stored in the selected folder in a portable, inspectable form.
 
 ## 8. Backup and restore
 
-A workspace folder should be directly copyable as a manual backup. In addition, BRD should provide a ZIP-based full backup and restore workflow.
+A workspace folder should be directly copyable as a manual backup. In addition, BRS should provide a ZIP-based full backup and restore workflow.
 
 ### Full backup
 
 The ZIP should contain the complete workspace structure, including its manifest, metadata, user assets, settings and all files required to reconstruct the workspace. It must preserve relative paths.
 
-A backup should include a format/version marker and enough manifest information for BRD to validate it before restoration. The archive format and manifest should be documented.
+A backup should include a format/version marker and enough manifest information for BRS to validate it before restoration. The archive format and manifest should be documented.
 
 ### Restore requirements
 
@@ -178,12 +178,12 @@ Full-workspace backup is the first priority. Individual character/story export o
 Workspace formats will evolve. Every workspace manifest and versioned data schema must have a documented versioning policy.
 
 - Validate a workspace before opening it.
-- Support explicit migrations when a newer BRD version changes a schema.
+- Support explicit migrations when a newer BRS version changes a schema.
 - Never silently discard fields or assets that the current version does not understand.
 - Preserve a backup or recovery path before applying a migration that modifies user files.
 - Keep migrations repeatable and testable; report failures without leaving the workspace in an ambiguous half-migrated state.
 - Where possible, migrations should update files in place while retaining the original assets and keeping relative references valid.
-- An older BRD version may not understand a workspace created by a newer version; communicate that limitation rather than rewriting it destructively.
+- An older BRS version may not understand a workspace created by a newer version; communicate that limitation rather than rewriting it destructively.
 
 ## 10. Failure handling and data safety
 
@@ -191,9 +191,9 @@ The storage layer must handle unavailable folders, permissions errors, full disk
 
 - Never report a save as successful until the write has succeeded.
 - Use safe write patterns (for example, write a temporary file and replace the target where supported) for critical metadata.
-- Keep IDs and references stable when renaming display names or folders through BRD.
+- Keep IDs and references stable when renaming display names or folders through BRS.
 - Missing media should not make the entire workspace unreadable; show a recoverable missing-asset state.
-- Do not delete files that BRD does not recognize during normal open/save operations.
+- Do not delete files that BRS does not recognize during normal open/save operations.
 - Workspace removal from the recent list must not delete workspace files.
 - Any destructive action must be explicit and understandable.
 
@@ -232,7 +232,7 @@ The architecture and implementation should satisfy these checks:
 - [ ] Multiple workspaces can be opened and switched between without cross-contamination.
 - [ ] Removing a workspace from the recent list does not delete its folder.
 - [ ] Moving a workspace root does not break its internal asset references.
-- [ ] Reinstalling or moving BRD does not remove or invalidate workspace files.
+- [ ] Reinstalling or moving BRS does not remove or invalidate workspace files.
 - [ ] A full ZIP backup includes all workspace data and referenced assets.
 - [ ] A ZIP can be validated and restored without relying on hidden local state.
 - [ ] Restore does not overwrite existing data without explicit confirmation.
@@ -243,6 +243,6 @@ The architecture and implementation should satisfy these checks:
 
 ## 13. Decision summary
 
-**Approved direction:** BRD uses user-owned, folder-based workspaces inspired by Obsidian vaults. The workspace folder is the authoritative, portable and inspectable source of truth. Users choose its location, can open multiple workspaces from **My Workspace**, and can back up or restore the complete workspace through ordinary folder copying or a documented ZIP archive.
+**Approved direction:** BRS uses user-owned, folder-based workspaces inspired by Obsidian vaults. The workspace folder is the authoritative, portable and inspectable source of truth. Users choose its location, can open multiple workspaces from **My Workspace**, and can back up or restore the complete workspace through ordinary folder copying or a documented ZIP archive.
 
 Implementation must follow this architecture from the first persistence features onward, even though backup/restore and all workspace content types will be delivered incrementally.
