@@ -3,6 +3,8 @@ import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { usePreferences } from "./preferences/PreferencesContext";
 import ProfileModal from "./profile/ProfileModal";
+import SpecialTitleBadge from "./profile/SpecialTitleBadge";
+import { useActiveSpecialTitle } from "./profile/useActiveSpecialTitle";
 import { getSidebarAvatarThumbnailPath, profileMediaSource } from "./profile/profileMedia";
 import "./themes/themes.css";
 import "./App.css";
@@ -371,6 +373,7 @@ function sanitiseHtml(html: string) {
   const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "accessibility" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const activeSpecialTitle = useActiveSpecialTitle(preferences.profile);
   const { preferences } = usePreferences();
 
 
@@ -1408,7 +1411,7 @@ function sanitiseHtml(html: string) {
     </div>
     <div className="profile-copy">
       <span className="profile-name">{preferences.profile.displayName || "Your profile"}</span>
-      <span className="profile-status">{preferences.profile.showSpecialTitle ? <span className={`special-title-badge sidebar-special-title ${preferences.profile.displayName.trim().toLocaleLowerCase() === "zero" ? "special-title-star" : "special-title-moon"}`}><span className="special-title-symbol" aria-hidden="true">{preferences.profile.displayName.trim().toLocaleLowerCase() === "zero" ? "✦" : <svg className="special-title-moon-icon" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/></svg>}</span><span>{preferences.profile.displayName.trim().toLocaleLowerCase() === "zero" ? "Star Developer" : "Moon Developer"}</span><EffectLayer effect="particles" intensity="bold" particleCount={12} className="special-title-particles" /></span> : preferences.profile.title || "Personal profile"}</span>
+      <span className="profile-status">{activeSpecialTitle ? <SpecialTitleBadge title={activeSpecialTitle} compact /> : preferences.profile.title || "Personal profile"}</span>
     </div>
   </button>
 
