@@ -37,10 +37,10 @@ export default function ResourceImagePicker({
     let cancelled = false;
     setLoading(true);
     setError("");
-    void Promise.all(workspacePath
-      ? [listWorkspaceResources(workspacePath), listWorkspaceResourceFolders(workspacePath)]
-      : [listResources(), listResourceFolders()])
-      .then(([files, directories]) => {
+    const loadLibrary = workspacePath
+      ? Promise.all([listWorkspaceResources(workspacePath), listWorkspaceResourceFolders(workspacePath)])
+      : Promise.all([listResources(), listResourceFolders()]);
+    void loadLibrary.then(([files, directories]) => {
         if (cancelled) return;
         setResources(files.filter((item) => item.kind === "image"));
         setFolders(directories);
@@ -100,7 +100,7 @@ export default function ResourceImagePicker({
 
   function toggle(id: string) {
     setSelectedIds((current) => multiple
-      ? current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+      ? current.includes(id) ? current.filter((item) => item !== id) : current.length >= 6 ? current : [...current, id]
       : [id]);
   }
 
@@ -137,7 +137,7 @@ export default function ResourceImagePicker({
             {visible.map((resource) => {
               const selected = selectedIds.includes(resource.id);
               return <button type="button" className={`resource-image-picker-tile ${selected ? "is-selected" : ""}`} key={resource.id}
-                aria-pressed={selected} onClick={() => toggle(resource.id)} onDoubleClick={() => { if (!multiple) void onChoose([resource]); }} title={resource.fileName}>
+                aria-pressed={selected} onClick={() => toggle(resource.id)} title={resource.fileName}>
                 <span className="resource-image-picker-image">{thumbnails[resource.id] ? <img src={thumbnails[resource.id]} alt="" loading="lazy" /> : <ImageIcon size={26} />}
                   {selected && <i><Check size={14} /></i>}
                 </span>
