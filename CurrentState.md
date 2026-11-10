@@ -1,4 +1,4 @@
-# Borealis Roleplay Den — Current State
+# Borealis Roleplay Studio — Current State
 
 **Last updated:** 16 October 2026  
 **Status:** Working development baseline; verify against the current source before relying on every item.
