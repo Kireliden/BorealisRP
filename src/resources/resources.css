@@ -19,107 +19,74 @@
 .resource-select-all{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--ctp-subtext1);font-size:10px;cursor:pointer;user-select:none}.resource-select-all input{width:14px;height:14px;margin:0;accent-color:var(--accent);cursor:pointer}.resource-grid{position:relative;user-select:none}.resource-grid:has(.resource-selection-rectangle){cursor:crosshair}.resource-selection-rectangle{position:absolute;z-index:4;pointer-events:none;border:1px solid var(--accent);border-radius:3px;background:color-mix(in srgb,var(--accent) 16%,transparent)}
 
 
-/* Gallery presentation: reveal controls and metadata only on hover. */
-.resources-library-content{position:relative}
+
+/* Resources is a file gallery: never let captions change card geometry. */
+.resources-library-content{position:static}
+.resources-main{position:relative;user-select:none;-webkit-user-select:none}
+.resources-main input,.resources-main textarea,.resources-main select,.resources-main [contenteditable="true"]{user-select:text;-webkit-user-select:text}
+.resources-main:has(.resource-selection-rectangle){cursor:crosshair}
+.resource-selection-rectangle{z-index:20;pointer-events:none}
+
+.resource-card-shell{align-self:start}
+.resource-card{position:relative;display:block;width:100%;height:auto;padding:0;overflow:hidden;cursor:pointer}
+.resource-card-preview{aspect-ratio:1.25;isolation:isolate}
+.resource-card-preview>span{z-index:1;top:6px;right:6px;bottom:auto;transition:opacity .15s ease}
+.resource-card-shell:hover .resource-card-preview>span{opacity:0}
+
+/* Solid caption slides over the bottom of the picture, with zero reserved height. */
+.resource-card-info{position:absolute;inset:auto 0 0;z-index:2;display:flex;flex-direction:column;box-sizing:border-box;max-height:100%;gap:4px;margin:0;padding:9px 10px 10px;background:var(--sidebar-bg);text-align:left;transform:translateY(101%);opacity:0;visibility:hidden;pointer-events:none;transition:transform .16s ease,opacity .16s ease,visibility .16s ease}
+.resource-card:hover .resource-card-info,
+.resource-card:focus-visible .resource-card-info{transform:translateY(0);opacity:1;visibility:visible}
+.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.resource-card-info>small{margin:0;color:var(--muted);font-size:9px}
+.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0;padding:0}
+.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
+
+/* Secondary gallery actions stay invisible until hover, focus or selection. */
 .resource-select{opacity:0;pointer-events:none;transition:opacity .15s ease}
 .resource-card-shell:hover .resource-select,
 .resource-card-shell:focus-within .resource-select,
 .resource-card-shell:has(.resource-select input:checked) .resource-select{opacity:1;pointer-events:auto}
-.resource-card>strong,
-.resource-card>small,
-.resource-card-tags{visibility:hidden;opacity:0;transition:opacity .15s ease,visibility .15s ease}
-.resource-card:hover>strong,
-.resource-card:hover>small,
-.resource-card:hover .resource-card-tags,
-.resource-card:focus-visible>strong,
-.resource-card:focus-visible>small,
-.resource-card:focus-visible .resource-card-tags{visibility:visible;opacity:1}
-.resources-library-content:has(.resource-selection-rectangle){cursor:crosshair}
-.resource-selection-rectangle{z-index:8}
-@media(hover:none){
-  .resource-select{opacity:1;pointer-events:auto}
-  .resource-card>strong,
-  .resource-card>small,
-  .resource-card-tags{visibility:visible;opacity:1}
-}
-
-
-/* Keep file details inside the thumbnail, revealed as one gallery caption. */
-.resource-card-preview{isolation:isolate}
-.resource-card-info{position:absolute;inset:auto 0 0;z-index:2;display:flex;flex-direction:column;gap:4px;padding:24px 9px 9px;background:linear-gradient(transparent,color-mix(in srgb,var(--ctp-crust) 94%,transparent));text-align:left;opacity:0;visibility:hidden;transition:opacity .16s ease,visibility .16s ease;pointer-events:none}
-.resource-card:hover .resource-card-info,
-.resource-card:focus-visible .resource-card-info{opacity:1;visibility:visible}
-.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
-.resource-card-info>small{margin:0;color:var(--ctp-subtext1);font-size:9px}
-.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
-.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
-.resource-card-preview>span{z-index:3;top:6px;right:6px;bottom:auto}
-@media(hover:none){.resource-card-info{opacity:1;visibility:visible}}
-
-
-/* Resource selection spans the whole content panel, not just the thumbnail grid. */
-.resources-main{position:relative;user-select:none;-webkit-user-select:none}
-.resources-main input,.resources-main textarea,.resources-main select,[contenteditable="true"]{user-select:text;-webkit-user-select:text}
-.resources-library-content{position:static}
-.resources-main:has(.resource-selection-rectangle){cursor:crosshair}
-.resource-selection-rectangle{z-index:20;pointer-events:none}
-
-/* Restore the solid footer on hover/focus or selection, without stretching neighbouring cards. */
-.resource-card-shell{align-self:start}
-.resource-card{height:auto;align-self:start;padding:0;background:var(--sidebar-bg)}
-.resource-card-preview{aspect-ratio:1.25}
-.resource-card-info{position:static;display:none;gap:5px;padding:9px 10px 10px;background:var(--sidebar-bg);text-align:left;opacity:1;visibility:visible;pointer-events:none}
-.resource-card:hover .resource-card-info,
-.resource-card:focus-visible .resource-card-info,
-.resource-card-shell:has(.resource-select input:checked) .resource-card-info{display:flex}
-.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
-.resource-card-info>small{margin:0;color:var(--muted);font-size:9px}
-.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
-.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
-.resource-card-preview>span{z-index:3;top:6px;right:6px;bottom:auto}
-@media(hover:none){.resource-card-info{display:none}.resource-card-shell:has(.resource-select input:checked) .resource-card-info{display:flex}}
-.resource-card{padding:0;background:var(--sidebar-bg)}
-.resource-card-preview{aspect-ratio:1.25}
-.resource-card-info{position:static;display:none;gap:5px;padding:9px 10px 10px;background:var(--sidebar-bg);text-align:left;opacity:1;visibility:visible;pointer-events:none}
-.resource-card-shell:has(.resource-select input:checked) .resource-card-info{display:flex}
-.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
-.resource-card-info>small{margin:0;color:var(--muted);font-size:9px}
-.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
-.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
-.resource-card-preview>span{z-index:3;top:6px;right:6px;bottom:auto}
-@media(hover:none){.resource-card-info{display:none}}
-
-
-/* Stable in-card caption: reserve its space and reveal it without changing card geometry. */
-.resource-card{height:auto;align-self:start;padding:0;background:var(--sidebar-bg);overflow:hidden}
-.resource-card-preview{aspect-ratio:1.25}
-.resource-card-info{position:static;display:flex;min-height:68px;box-sizing:border-box;gap:5px;padding:9px 10px 10px;background:var(--sidebar-bg);text-align:left;opacity:0;visibility:hidden;transition:opacity .14s ease,visibility .14s ease;pointer-events:none}
-.resource-card:hover .resource-card-info,
-.resource-card:focus-visible .resource-card-info,
-.resource-card-shell:has(.resource-select input:checked) .resource-card-info{opacity:1;visibility:visible}
-.resource-card-info>strong{display:block;overflow:hidden;margin:0;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
-.resource-card-info>small{margin:0;color:var(--muted);font-size:9px}
-.resource-card-info .resource-card-tags{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 0}
-.resource-card-info .resource-card-tags i{padding:3px 6px;font-size:8px}
-@media(hover:none){.resource-card-info{opacity:0;visibility:hidden}.resource-card-shell:has(.resource-select input:checked) .resource-card-info{opacity:1;visibility:visible}}
-
-.resource-size-control{display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:10px;white-space:nowrap}
-.resource-size-control input{width:105px;accent-color:var(--accent)}
-.resource-size-control output{min-width:34px;color:var(--ctp-subtext1);font-variant-numeric:tabular-nums}
 .resource-card-delete{position:absolute;z-index:3;top:7px;right:7px;display:grid;width:25px;height:25px;place-items:center;border:1px solid color-mix(in srgb,var(--border) 65%,transparent);border-radius:6px;background:color-mix(in srgb,var(--ctp-crust) 90%,transparent);color:var(--ctp-text);opacity:0;pointer-events:none;transition:opacity .14s ease,color .14s ease}
 .resource-card-shell:hover .resource-card-delete,.resource-card-shell:focus-within .resource-card-delete{opacity:1;pointer-events:auto}
 .resource-card-delete:hover{color:var(--ctp-red)}
+@media(hover:none){.resource-select{opacity:1;pointer-events:auto}.resource-card:focus-visible .resource-card-info{opacity:1;visibility:visible;transform:translateY(0)}}
+
+/* Folder hierarchy and breadcrumb controls. */
+.resource-new-folder-button{display:inline-flex;align-items:center;gap:7px;margin-right:8px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ctp-text);font-size:11px}
+.resource-new-folder-button:hover{border-color:var(--accent)}
+.resource-folder-navigation{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 11px;color:var(--muted);font-size:10px}
+.resource-breadcrumbs{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0}
+.resource-breadcrumbs>span{display:inline-flex;align-items:center;gap:4px}
+.resource-breadcrumbs button{padding:4px 6px;border:0;border-radius:5px;background:transparent;color:var(--ctp-subtext1);font-size:11px}
+.resource-breadcrumbs button:hover{background:var(--surface);color:var(--accent)}
+.resource-folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 16px}
+.resource-folder-card{display:flex;align-items:center;gap:10px;min-width:0;padding:13px 12px;border:1px solid var(--border);border-radius:10px;background:var(--sidebar-bg);color:var(--accent);text-align:left}
+.resource-folder-card:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--sidebar-bg))}
+.resource-folder-card span{overflow:hidden;flex:1;color:var(--ctp-text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.resource-folder-card svg:last-child{color:var(--muted)}
+.resource-create-folder{display:flex;align-items:center;gap:9px;margin:0 0 14px;padding:10px 11px;border:1px solid var(--border);border-radius:9px;background:var(--sidebar-bg);color:var(--accent)}
+.resource-create-folder input{min-width:0;flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--app-bg);color:var(--ctp-text);font-size:11px}
+.resource-create-folder button{padding:8px 11px;font-size:10px}
+
+/* Resizable gallery, bulk file organisation and confirmation dialogs. */
+.resource-size-control{display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:10px;white-space:nowrap}
+.resource-size-control input{width:105px;accent-color:var(--accent)}
+.resource-size-control output{min-width:34px;color:var(--ctp-subtext1);font-variant-numeric:tabular-nums}
+.resource-bulk-tools .resource-bulk-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:7px;width:100%;margin:5px 0 0;padding-top:9px;border-top:1px solid var(--border)}
+.resource-bulk-actions button{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--ctp-text);font-size:10px}
+.resource-bulk-actions button:hover{border-color:var(--accent)}
+.resource-bulk-actions .resource-bulk-delete{border-color:color-mix(in srgb,var(--ctp-red) 35%,var(--border));color:var(--ctp-red)}
 .resource-delete-backdrop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:color-mix(in srgb,var(--ctp-crust) 72%,transparent);backdrop-filter:blur(5px)}
 .resource-delete-dialog{display:flex;width:min(360px,100%);flex-direction:column;gap:10px;padding:22px;border:1px solid var(--border);border-radius:14px;background:var(--sidebar-bg);box-shadow:0 18px 60px #0005}
 .resource-delete-dialog-icon{display:grid;width:36px;height:36px;place-items:center;border-radius:9px;background:color-mix(in srgb,var(--ctp-red) 14%,var(--surface));color:var(--ctp-red)}
 .resource-delete-dialog h2{margin:2px 0 0;color:var(--ctp-text);font-size:16px}
 .resource-delete-dialog p{margin:0 0 5px;color:var(--muted);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
 .resource-delete-dialog p strong{color:var(--ctp-text)}
-.resource-delete-dialog>button{width:100%;justify-content:center}
-.resource-delete-dialog .library-danger{display:flex;align-items:center;padding:10px 12px;border:1px solid color-mix(in srgb,var(--ctp-red) 45%,var(--border));border-radius:7px;color:var(--ctp-red);font-size:11px}
+.resource-delete-dialog>button{display:flex;align-items:center;justify-content:center;gap:7px;width:100%}
+.resource-delete-dialog .library-danger{padding:10px 12px;border:1px solid color-mix(in srgb,var(--ctp-red) 45%,var(--border));border-radius:7px;color:var(--ctp-red);font-size:11px}
 .resource-delete-cancel{padding:9px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:11px}
 .resource-delete-dialog button:disabled{opacity:.5;cursor:wait}
-
-/* Keep the type chip clear of the card-level delete action. */
-.resource-card-preview>span{top:auto;right:6px;bottom:6px}
-.resource-card-delete{top:7px;right:7px}
+.resource-dialog-folder-label{display:flex;flex-direction:column;gap:8px;margin:2px 0 5px;color:var(--ctp-subtext1);font-size:10px}
+.resource-dialog-folder-label select{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:7px;background:var(--app-bg);color:var(--ctp-text);font-size:11px}
+@media(max-width:720px){.resource-controls{flex-wrap:wrap}.resource-size-control{min-height:36px}.resource-folder-navigation{flex-wrap:wrap}.resource-create-folder{flex-wrap:wrap}.resource-new-folder-button{margin-right:0}}
