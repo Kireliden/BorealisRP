@@ -101,6 +101,7 @@ export default function ChatSettings() {
         <label><input type="checkbox" checked={display.showAvatar} onChange={(event) => updateDisplay({ showAvatar: event.target.checked })} /><span><strong>Show avatars</strong><small>Display each character portrait beside their message.</small></span></label>
         <label><input type="checkbox" checked={display.showRoleLabel} onChange={(event) => updateDisplay({ showRoleLabel: event.target.checked })} /><span><strong>Show role labels</strong><small>Show Narration or Dialogue next to the author.</small></span></label>
         <label><input type="checkbox" checked={display.showExpression} onChange={(event) => updateDisplay({ showExpression: event.target.checked })} /><span><strong>Show character expressions</strong><small>Show the selected expression beside character names.</small></span></label>
+        <label><input type="checkbox" checked={display.highlightOwnMessages} onChange={(event) => updateDisplay({ highlightOwnMessages: event.target.checked })} /><span><strong>Highlight my messages</strong><small>Add a soft accent edge and a few subtle particles to messages sent as You. Only changes your local chat view.</small></span></label>
       </div>
     </section>
   );
