@@ -19,6 +19,17 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 These milestones are a *retrospective narrative*, not the exact Git history or a promise of SemVer-compatible releases. Only create a release/tag when there is a tested build to preserve.
 
+## 2026-11-10 — Signed special titles and optional You message emphasis
+
+### Implemented (runtime verification pending)
+- Replaced name-only special-title switching with a central title registry (`src/profile/specialTitles.ts`) and Ed25519 signed redemption codes.
+- Reserved **Moon Developer** for the `Kire` display name and **Star Developer** for `Zero`. A matching name alone no longer grants the title: a valid signature-bound unlock code is also required.
+- Added an offline code-issuing utility for future titles. Only the public verification key lives in source control; signing keys and issued codes must remain private.
+- Added profile settings to redeem and select previously unlocked titles. Invalid or mismatched codes are not rendered in the preview, profile card or sidebar.
+- Added a **Settings → Chat → Highlight my messages** preference (off by default), which gently accents locally displayed messages authored in **You** mode with a themed edge and a small reusable particle effect.
+- Honoured reduced-motion / animations-off settings and preserved unmodified chat data. Existing users with the older, unrestricted developer-title toggle need to redeem their corresponding title code.
+- **Security note:** local/offline signed codes prevent casual unlocking but cannot establish a globally unique user identity or stop someone modifying their own copy of the application.
+
 ## 2026-11-10 — Expressions, portrait consistency and interface polish
 
 ### Added
