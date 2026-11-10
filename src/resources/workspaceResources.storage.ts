@@ -64,6 +64,7 @@ export async function importWorkspaceResources(
   workspacePath: string,
   files: File[],
   tags: string[] = [],
+  folderId: string | null = null,
 ): Promise<ResourceRecord[]> {
   if (!files.length) return [];
 
@@ -72,7 +73,7 @@ export async function importWorkspaceResources(
 
   try {
     for (const file of files) {
-      const record = createWorkspaceResourceRecord(file, tags);
+      const record = { ...createWorkspaceResourceRecord(file, tags), folderId };
       const relativePath = resourcePath(record);
       await writeWorkspaceFile(workspacePath, relativePath, new Uint8Array(await file.arrayBuffer()));
       manifest.resources.push({ ...record, relativePath });
