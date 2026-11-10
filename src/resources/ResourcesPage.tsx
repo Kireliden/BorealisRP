@@ -461,7 +461,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
     const folderId = target.closest<HTMLElement>(".resource-folder-shell")?.dataset.folderId;
     if (resourceId && !selectedResourceIds.includes(resourceId)) setSelectedResourceIds([resourceId]);
     const width = 224;
-    const height = resourceId ? 292 : folderId ? 108 : 108;
+    const height = resourceId ? 292 : folderId ? 208 : 108;
     setContextMenu({
       x: Math.max(8, Math.min(event.clientX, window.innerWidth - width - 8)),
       y: Math.max(8, Math.min(event.clientY, window.innerHeight - height - 8)),
