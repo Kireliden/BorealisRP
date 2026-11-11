@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Holographic GIF alpha-frame correction
+
+- Fixed the animated collectible viewer so GIFs do not use a separately decoded CSS `mask-image` that may display a different frame from the artwork (visible as a detached oval/foil plate during rotation).
+- For `.gif` stickers, the **same rendered image** is now processed through a native SVG filter; iridescent colour noise and pointer-reactive glare are composited using the image's live `SourceAlpha`. Every GIF frame therefore brings its own changing silhouette into the holographic calculation without manual frame extraction.
+- The PNG/static artwork path keeps its existing holographic masked gradients, sparkles, tilt and mouse interactions unchanged.
+- No new animation decoder, timers, or per-frame JavaScript updates were introduced; the filter is native to the WebView. If SVG filtering is not supported by a platform, the artwork still displays unfiltered rather than with an incorrect fixed silhouette.
+- **Pending verification:** `npm run build` and live visual/performance tests with `ee_003.gif` in Windows WebView2 and Linux WebKitGTK, especially for higher-frame-count future animated stickers.
+
 ## 2026-11-11 — Easter egg 003: THE LAMBDA
 
 ### First cinematic pass (build/runtime verification pending)
