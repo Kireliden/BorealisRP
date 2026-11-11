@@ -17,6 +17,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
+import LambdaEgg from "./easter-eggs/LambdaEgg";
 import { Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, FileDown, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
@@ -2277,6 +2278,7 @@ function sanitiseHtml(html: string) {
         onToggleMessage={(sceneId, messageId) => { void toggleFavourite(sceneId, messageId); }}
       />}
       {isGlobalSearchOpen && <GlobalSearch workspacePath={activeWorkspace?.path ?? null} onClose={() => setIsGlobalSearchOpen(false)} onOpenCharacters={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("characters"); }} onOpenResources={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("resources"); }} />}
+      <LambdaEgg />
     </main>
   );
 }
