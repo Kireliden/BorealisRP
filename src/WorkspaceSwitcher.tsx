@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { load } from "@tauri-apps/plugin-store";
 import { Check, ChevronDown, FolderOpen, Plus } from "lucide-react";
 import { inspectWorkspace } from "./workspace/workspaceStorage";
@@ -60,6 +61,18 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
   const [busyPath, setBusyPath] = useState<string | null>(null);
   const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 296 });
+  const positionMenu = () => {
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(330, window.innerWidth - 16);
+    setMenuPosition({
+      top: Math.min(rect.bottom + 6, window.innerHeight - 70),
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
+      width,
+    });
+  };
 
   async function refreshRecent() {
     try {
@@ -76,16 +89,18 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
   useEffect(() => {
     if (!open) return;
     function handlePointerDown(event: MouseEvent) {
-      if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false);
+      if (event.target instanceof Node && !rootRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) setOpen(false);
     }
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", positionMenu);
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", positionMenu);
     };
   }, [open]);
 
@@ -116,7 +131,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
       <button
         className="workspace-button"
         type="button"
-        onClick={() => { const nextOpen = !open; setOpen(nextOpen); setError(""); if (nextOpen) void refreshRecent(); }}
+        onClick={() => { const nextOpen = !open; if (nextOpen) positionMenu(); setOpen(nextOpen); setError(""); if (nextOpen) void refreshRecent(); }}
         aria-label="Choose workspace"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -126,8 +141,10 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
         <ChevronDown className={open ? "workspace-switcher-chevron open" : "workspace-switcher-chevron"} size={16} />
       </button>
 
-      {open && (
-        <div className="workspace-switcher-menu" role="menu" aria-label="Choose workspace">
+      {open && createPortal(
+        <div ref={menuRef} className="workspace-switcher-menu" role="menu" aria-label="Choose workspace"
+          style={{ position: "fixed", top: menuPosition.top, left: menuPosition.left,
+            width: menuPosition.width, maxHeight: "min(70vh, 500px)", overflowY: "auto", zIndex: 32000 }}>
           <div className="workspace-switcher-heading">YOUR WORKSPACES</div>
           {recent.length ? recent.map((item) => (
             <button
@@ -155,7 +172,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
             <Plus size={16} />
             <span>Add new...</span>
           </button>
-        </div>
+        </div>, document.body,
       )}
     </div>
   );
