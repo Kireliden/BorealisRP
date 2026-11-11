@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Preserve composer text colours in sent messages
+
+- Fixed colour formatting being lost when a rich-text composer passage was sent to chat. WebView's `execCommand("foreColor")` emits `<font color="...">` runs, but the composer-to-Markdown source converter previously flattened the `FONT` tag and discarded its colour before sanitisation.
+- The conversion now normalises valid `FONT color` and `SPAN style.color` runs into safe `<span style="color: ...">` nodes. The existing HTML sanitizer, chat message renderer and Obsidian Markdown exporter already support this format; no new storage schema or CSS is necessary.
+- Shared the existing colour-value allowlist between conversion and sanitisation. Nested bold, italic, underlined text and explicit Markdown are still processed as before, including when recolouring a saved message.
+- This fixes **newly sent and re-edited passages**. Colours already discarded by previously saved messages cannot be recovered automatically.
+- **Pending validation:** `npm run build` and live tests: apply a colour to a selected phrase, send it, edit it, save again, switch scenes/reopen workspace, and export to Obsidian.
+
 ## 2026-11-11 — Composer text-colour picker regression fix
 
 - Fixed the rich-text composer colour control after replacing browser-native popovers: a legacy `.colour-picker > span { pointer-events: none }` rule had disabled mouse interaction on the new `AppColorPicker` wrapper.
