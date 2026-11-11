@@ -1,3 +1,4 @@
+import AppSelect from "../ui/AppSelect";
 import { useEffect, useState } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import type { AppPreferences } from "../preferences/types";
@@ -156,10 +157,10 @@ export default function ProfileSettings({ workspacePath }: { workspacePath?: str
                   <span><strong>Show special title</strong><small>Use an unlocked title instead of your regular profile title.</small></span>
                 </label>
                 <label className="profile-title-choice">Unlocked title
-                  <select value={activeTitle?.id ?? ""} onChange={(event) => update({ activeSpecialTitleId: event.target.value || null })}>
+                  <AppSelect value={activeTitle?.id ?? ""} onChange={(event) => update({ activeSpecialTitleId: event.target.value || null })}>
                     <option value="">Select a title…</option>
                     {unlockedTitles.map((title) => <option value={title.id} key={title.id}>{title.label}</option>)}
-                  </select>
+                  </AppSelect>
                 </label>
                 {draft.showSpecialTitle && activeTitle && <div className="profile-special-title-preview"><SpecialTitleBadge title={activeTitle} /></div>}
               </> : <small>No special titles are unlocked for this display name.</small>}
@@ -175,11 +176,11 @@ export default function ProfileSettings({ workspacePath }: { workspacePath?: str
             <textarea maxLength={1000} rows={4} value={draft.description} onChange={(event) => update({ description: event.target.value })} placeholder="Tell a little story about yourself…" />
           </label>
           <label className="profile-field-label">Portrait frame
-            <select value={draft.frameStyle} onChange={(event) => update({ frameStyle: event.target.value as Profile["frameStyle"] })}>
+            <AppSelect value={draft.frameStyle} onChange={(event) => update({ frameStyle: event.target.value as Profile["frameStyle"] })}>
               <option value="none">Minimal</option>
               <option value="lavender">Theme Outline</option>
               <option value="ornate">Ornate glow</option>
-            </select>
+            </AppSelect>
           </label>
           <div className="profile-settings-note">Portraits use a 4:5 frame with adjustable position and zoom. Animated GIFs stay animated. Supported formats: GIF, PNG, JPG and WebP (up to 25 MiB).</div>
         </div>
