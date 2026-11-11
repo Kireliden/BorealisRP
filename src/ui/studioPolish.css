@@ -1,69 +1,46 @@
 /* BRS workspace/chat polish: small overrides kept outside the legacy App.css. */
 
-/* The two-tier workspace header follows the annotated layout:
-   a compact switcher capsule, then the prominent icon/title and collapse icon. */
+/* Single workspace header: centred editable icon, actual active workspace name,
+   and the compact sidebar toggle. No duplicate switcher capsule. */
 .sidebar .workspace-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: block;
   min-width: 0;
-  gap: 11px;
-  padding: 4px 3px 17px;
-}
-.sidebar .workspace-selector-row {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-}
-.sidebar .brand-workspace-switcher {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.sidebar .brand-workspace-switcher .workspace-button {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  width: 100%;
-  min-height: 42px;
-  padding: 7px 10px;
-  border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--accent) 7%, var(--sidebar-bg));
-  color: var(--ctp-text);
-  font-size: 12px;
-  font-weight: 720;
-}
-.brand-workspace-switcher .workspace-button:hover {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 13%, var(--sidebar-bg));
-}
-.brand-workspace-switcher .studio-icon-image,
-.brand-workspace-switcher .studio-icon-emoji {
-  width: 22px; height: 22px; flex-basis: 22px; font-size: 21px;
+  padding: 5px 3px 19px;
 }
 .sidebar .workspace-header-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-width: 0;
-  padding-left: 5px;
 }
 .sidebar .workspace-hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 47px;
   width: 47px;
   height: 47px;
+  margin: 0;
+  padding: 0;
 }
 .sidebar .workspace-hero-icon .studio-icon-trigger.is-compact {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  flex: 0 0 47px;
   width: 47px;
   height: 47px;
-  padding: 5px;
+  margin: 0;
+  padding: 0;
   border: 1px solid color-mix(in srgb, var(--accent) 57%, var(--border));
   border-radius: 12px;
   background: linear-gradient(145deg,
     color-mix(in srgb, var(--accent) 18%, var(--surface)),
     color-mix(in srgb, var(--accent) 9%, var(--sidebar-bg)));
   box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 12%, transparent);
+  line-height: 1;
 }
 .sidebar .workspace-hero-icon .studio-icon-trigger:hover {
   border-color: var(--accent);
@@ -71,10 +48,20 @@
 }
 .sidebar .workspace-hero-icon .studio-icon-image,
 .sidebar .workspace-hero-icon .studio-icon-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   width: 32px;
   height: 32px;
-  flex-basis: 32px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
   font-size: 30px;
+  line-height: 1;
+  text-align: center;
+  transform: none;
 }
 .sidebar .workspace-header-label {
   min-width: 0;
@@ -98,6 +85,13 @@
 }
 .sidebar-collapse-button:hover { color: var(--accent); background: var(--surface-hover); }
 .sidebar-collapse-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sidebar .workspace-switcher-host {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
 
 /* Taller user photo + footer, without losing access to Settings/Collections. */
 .sidebar .sidebar-footer {
@@ -120,27 +114,22 @@
   padding: 13px 6px 8px;
 }
 .app-shell.sidebar-is-collapsed .sidebar .workspace-brand {
+  padding: 5px 0 12px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .workspace-header-row {
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 4px 0 11px;
+  gap: 7px;
 }
-.app-shell.sidebar-is-collapsed .sidebar .workspace-selector-row { width: 100%; }
-.app-shell.sidebar-is-collapsed .sidebar .brand-workspace-switcher { flex: 0 0 auto; width: 100%; }
-.app-shell.sidebar-is-collapsed .sidebar .workspace-button {
-  width: 100%; justify-content: center; padding: 8px 0; min-height: 43px;
+.app-shell.sidebar-is-collapsed .sidebar .workspace-hero-icon {
+  display: inline-flex;
+  flex: 0 0 47px;
 }
-.app-shell.sidebar-is-collapsed .sidebar .workspace-button-name,
-.app-shell.sidebar-is-collapsed .sidebar .workspace-switcher-chevron,
-.app-shell.sidebar-is-collapsed .sidebar .workspace-hero-icon,
-.app-shell.sidebar-is-collapsed .sidebar .workspace-header-label { display: none; }
-.app-shell.sidebar-is-collapsed .sidebar .workspace-header-row {
-  justify-content: center;
-  width: 100%;
-  padding: 0;
+.app-shell.sidebar-is-collapsed .sidebar .workspace-header-label {
+  display: none;
 }
 .app-shell.sidebar-is-collapsed .sidebar .sidebar-collapse-button {
-  flex: 0 0 100%;
+  flex: 0 0 32px;
   width: 100%;
   max-width: 54px;
   margin: 0;
