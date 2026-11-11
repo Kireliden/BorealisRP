@@ -6,6 +6,16 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Emerald theme rewards and theme collections
+
+- Added two visual themes inspired by THE PLUMBOB's emerald-green Skip button: **Emerald Glade** (light: sage/ivory/jade) and **Emerald Nocturne** (dark: deep forest/illuminated mint).
+- Added both complete palettes in `src/themes/themes.css`, and extended the theme ID type, saved-preference validation and light/dark lists so they work with Manual selection, **Follow system**, and the chat's automatic light/dark overlay.
+- Refactored theme metadata into `src/settings/themeCatalog.ts`, grouped into **Catppuccin Collection** (4), **Moonlight Collection** (2), **Borealis Originals** (3), and the secret **Emerald Collection** (2). The collections remain extensible for new theme packs.
+- Emerald cards appear visibly **locked** before discovering the `the-plumbob` easter egg. The cards cannot be selected and the themes are excluded from Follow system selectors until unlocked.
+- The Collections storage now emits a change notification when a discovery is saved; Themes listens and immediately unlocks the entire Emerald pair when `the-plumbob` is discovered. Existing discovery records stay valid.
+- Changed the word that triggers Plumbob egg #004 from `tiranipeuti` to **`sims`** (case-insensitive whole word), keeping the original discovery ID and artwork.
+- **Pending validation:** `npm run build`, manual/system mode, persistence, collection unlock timing, light/dark overlay, and full theme contrast checks across Windows/Linux.
+
 ## 2026-11-11 — Holographic sticker aspect-ratio alignment
 
 - Fixed visible holographic foil/glare leakage to either side of tall, narrow stickers (notably the Plumbob PNG) caused by the foil mask covering the full-width card while `object-fit: contain` letterboxed the artwork.
