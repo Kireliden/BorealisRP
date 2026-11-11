@@ -230,6 +230,157 @@ fn save_workspace_content(path: String, content: serde_json::Value) -> Result<()
     Ok(())
 }
 
+/// Data for a portable, Obsidian-friendly Markdown export.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MarkdownExportAttachment {
+    source_relative_path: String,
+    target_file_name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MarkdownSceneExport {
+    name: String,
+    markdown: String,
+    attachments: Vec<MarkdownExportAttachment>,
+}
+
+fn safe_markdown_export_name(name: &str) -> String {
+    let cleaned = name
+        .trim()
+        .chars()
+        .map(|ch| if ch.is_control() || "/\\\\:*?\\"<>|".contains(ch) { '-' } else { ch })
+        .take(72)
+        .collect::<String>();
+    let trimmed = cleaned.trim().trim_matches('.').trim().to_string();
+    if trimmed.is_empty() {
+        return "Untitled scene".into();
+    }
+    let reserved = [
+        "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5",
+        "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4",
+        "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    ];
+    if reserved.contains(&trimmed.to_ascii_uppercase().as_str()) {
+        format!("{trimmed} - BRS")
+    } else {
+        trimmed
+    }
+}
+
+/// Exports one or more scenes to a NEW directory selected by the user.
+/// Never modifies the workspace or overwrites existing Obsidian notes.
+#[tauri::command]
+fn export_workspace_markdown(
+    path: String,
+    destination: String,
+    collection_name: String,
+    scenes: Vec<MarkdownSceneExport>,
+) -> Result<String, String> {
+    if scenes.is_empty() || scenes.len() > 500 {
+        return Err("Choose between 1 and 500 scenes to export.".into());
+    }
+    let workspace = read_workspace(Path::new(&path))?;
+    let workspace_root = fs::canonicalize(&workspace.path)
+        .map_err(|error| format!("Cannot resolve workspace folder: {error}"))?;
+    let selected_folder = fs::canonicalize(&destination)
+        .map_err(|error| format!("Cannot find the selected export folder: {error}"))?;
+    if !selected_folder.is_dir() {
+        return Err("Select a destination folder for the Markdown export.".into());
+    }
+
+    let mut total_assets = 0_usize;
+    // Inspect every referenced attachment before creating an export directory.
+    for scene in &scenes {
+        if scene.markdown.len() > 100 * 1024 * 1024 {
+            return Err("One scene's Markdown exceeds the export safety limit.".into());
+        }
+        total_assets += scene.attachments.len();
+        if total_assets > 10_000 {
+            return Err("Too many image attachments to export at once.".into());
+        }
+        for attachment in &scene.attachments {
+            if !attachment.source_relative_path.starts_with("Chats/Images/") {
+                return Err("The export contains an invalid chat image reference.".into());
+            }
+            if attachment.target_file_name.len() > 100
+                || !attachment.target_file_name.chars().all(|ch| {
+                    ch.is_ascii_alphanumeric() || ch == '.' || ch == '-'
+                })
+                || !["png", "jpg", "jpeg", "webp", "gif"].contains(
+                    &attachment.target_file_name.rsplit('.').next().unwrap_or("").to_ascii_lowercase().as_str()
+                )
+            {
+                return Err("The export contains an invalid image filename.".into());
+            }
+            let source = workspace_file_path(&workspace.path, &attachment.source_relative_path)?;
+            let canonical = fs::canonicalize(source)
+                .map_err(|error| format!("Could not find an image in this chat: {error}"))?;
+            if !canonical.starts_with(&workspace_root) {
+                return Err("A chat image points outside the workspace.".into());
+            }
+            let metadata = fs::metadata(canonical)
+                .map_err(|error| format!("Cannot inspect chat image: {error}"))?;
+            if !metadata.is_file() || metadata.len() > 100 * 1024 * 1024 {
+                return Err("An image is invalid or exceeds 100 MiB.".into());
+            }
+        }
+    }
+
+    let base = safe_markdown_export_name(&collection_name);
+    let mut target = None;
+    for n in 1..=1000 {
+        let folder_name = if n == 1 { base.clone() } else { format!("{base} ({n})") };
+        let candidate = selected_folder.join(folder_name);
+        match fs::create_dir(&candidate) {
+            Ok(()) => { target = Some(candidate); break; }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(format!("Cannot create the export folder: {error}")),
+        }
+    }
+    let target = target.ok_or_else(|| "Too many exports with this name in the selected folder.".to_string())?;
+    let export_result = (|| -> Result<(), String> {
+        let assets_dir = target.join("assets");
+        if total_assets > 0 {
+            fs::create_dir(&assets_dir)
+                .map_err(|error| format!("Could not create the attachments folder: {error}"))?;
+        }
+        let multiple = scenes.len() > 1;
+        let mut index_links = Vec::new();
+
+        for (index, scene) in scenes.iter().enumerate() {
+            let name = safe_markdown_export_name(&scene.name);
+            let stem = if multiple { format!("{:02} - {name}", index + 1) } else { name };
+            let note_path = target.join(format!("{stem}.md"));
+            fs::write(&note_path, scene.markdown.as_bytes())
+                .map_err(|error| format!("Could not write the Markdown note: {error}"))?;
+            if multiple {
+                index_links.push(format!("- [[{stem}]]"));
+            }
+            for attachment in &scene.attachments {
+                let source = workspace_file_path(&workspace.path, &attachment.source_relative_path)?;
+                fs::copy(&source, assets_dir.join(&attachment.target_file_name))
+                    .map_err(|error| format!("Could not copy an image into the export: {error}"))?;
+            }
+        }
+        if multiple {
+            let title = collection_name.replace(['\r', '\n'], " ");
+            let index_text = format!("# {}\\n\\n{}\\n", title, index_links.join("\\n"));
+            fs::write(target.join("00 - Index.md"), index_text)
+                .map_err(|error| format!("Could not write the export index: {error}"))?;
+        }
+        Ok(())
+    })();
+
+    if let Err(error) = export_result {
+        // This directory was created by this call, so removing an incomplete export is safe.
+        let _ = fs::remove_dir_all(&target);
+        return Err(error);
+    }
+    Ok(target.to_string_lossy().into_owned())
+}
+
 /// Resolve a workspace-relative file path without allowing traversal outside the workspace.
 fn workspace_file_path(workspace_path: &str, relative_path: &str) -> Result<PathBuf, String> {
     let workspace = read_workspace(Path::new(workspace_path))?;
@@ -537,6 +688,7 @@ pub fn run() {
             inspect_workspace,
             load_workspace_content,
             save_workspace_content,
+            export_workspace_markdown,
             read_workspace_file,
             write_workspace_file,
             delete_workspace_file,
