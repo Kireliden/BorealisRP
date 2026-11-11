@@ -9,6 +9,12 @@ type Props = {
   onChange: (event: { target: { value: string } }) => void;
   "aria-label"?: string;
   disabled?: boolean;
+  /** Composer button: display a colour-underlined A instead of a swatch. */
+  variant?: "swatch" | "text";
+  /** Capture the rich-text selection before moving focus into the picker. */
+  onBeforeOpen?: () => void;
+  /** The rich-text editor may be re-focused while choosing colours. */
+  closeOnFocusOutside?: boolean;
 };
 const SWATCHES = [
   "#babbf1", "#ca9ee6", "#777bd1", "#8588ed", "#ff91a4", "#d94f70",
@@ -52,7 +58,11 @@ function hslHex(h: number, s: number, l: number): string {
 }
 
 /** App-rendered replacement for browser's platform-dependent input[type=color] dialog. */
-export default function AppColorPicker({ value, defaultValue = "#babbf1", onChange, "aria-label": ariaLabel = "Choose colour", disabled }: Props) {
+export default function AppColorPicker({
+  value, defaultValue = "#babbf1", onChange,
+  "aria-label": ariaLabel = "Choose colour", disabled,
+  variant = "swatch", onBeforeOpen, closeOnFocusOutside = true,
+}: Props) {
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const currentValue = value ?? uncontrolledValue;
   const [open, setOpen] = useState(false);
@@ -98,27 +108,35 @@ export default function AppColorPicker({ value, defaultValue = "#babbf1", onChan
           !panelRef.current?.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener("pointerdown", outside, true);
-    document.addEventListener("focusin", focusOutside, true);
+    if (closeOnFocusOutside) document.addEventListener("focusin", focusOutside, true);
     window.addEventListener("keydown", esc, true);
     window.addEventListener("scroll", scroll, true);
     window.addEventListener("resize", placement);
     return () => {
       document.removeEventListener("pointerdown", outside, true);
-      document.removeEventListener("focusin", focusOutside, true);
+      if (closeOnFocusOutside) document.removeEventListener("focusin", focusOutside, true);
       window.removeEventListener("keydown", esc, true);
       window.removeEventListener("scroll", scroll, true);
       window.removeEventListener("resize", placement);
     };
-  }, [open]);
+  }, [open, closeOnFocusOutside]);
 
   return (
-    <span className="app-color-picker">
-      <button type="button" className="app-color-trigger" ref={triggerRef}
+    <span className={"app-color-picker" + (variant === "text" ? " app-color-picker--text" : "")}>
+      <button type="button" className={"app-color-trigger" + (variant === "text" ? " app-color-trigger--text" : "")} ref={triggerRef}
         disabled={disabled} aria-label={ariaLabel} title={ariaLabel}
         aria-haspopup="dialog" aria-expanded={open}
-        onClick={() => { if (open) setOpen(false); else { placement(); setOpen(true); } }}>
-        <span style={{ background: safeHex(currentValue) }} />
-        <Palette size={11} aria-hidden="true" />
+        onPointerDown={() => { if (!open) onBeforeOpen?.(); }}
+        onClick={() => {
+          if (open) setOpen(false);
+          else { onBeforeOpen?.(); placement(); setOpen(true); }
+        }}>
+        {variant === "text"
+          ? <span className="app-color-letter" style={{ "--app-text-color": safeHex(currentValue) } as CSSProperties}>A</span>
+          : <>
+              <span style={{ background: safeHex(currentValue) }} />
+              <Palette size={11} aria-hidden="true" />
+            </>}
       </button>
       {open && createPortal(
         <div ref={panelRef} className="app-color-panel" role="dialog" aria-label={ariaLabel}
