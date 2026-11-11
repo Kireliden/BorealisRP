@@ -235,6 +235,10 @@ pub(crate) struct RestorePreview {
 pub(crate) struct RestoreResult {
     restored_count: usize,
     safety_backup_path: String,
+    // Files restored via tauri-plugin-store need their native cache reloaded
+    // before the webview can reload in development mode.
+    restored_store_names: Vec<String>,
+    reload_webview: bool,
 }
 
 struct ValidatedBackup {
@@ -555,6 +559,12 @@ fn restore_settings_backup_sync(app: &AppHandle, source: &str) -> Result<Restore
         Ok(RestoreResult {
             restored_count: backup.info.file_count,
             safety_backup_path: safety_backup.to_string_lossy().into_owned(),
+            restored_store_names: backup.files.iter()
+                .filter_map(|(name, _)| name.strip_prefix("AppData/"))
+                .filter(|name| STORE_FILES.contains(name))
+                .map(str::to_string)
+                .collect(),
+            reload_webview: cfg!(debug_assertions),
         })
     })();
 
@@ -565,14 +575,19 @@ fn restore_settings_backup_sync(app: &AppHandle, source: &str) -> Result<Restore
     result
 }
 
-/// Validates again and restores only allowlisted AppData files. Restarts the
-/// application to discard cached plugin-store/in-memory settings immediately.
+/// Validates and restores app settings. A production installer can restart its
+/// executable normally; a debug `tauri dev` process must not restart, because
+/// doing so terminates the Tauri CLI and the Vite server (localhost:1420).
+/// Instead the frontend refreshes plugin-store caches and reloads its webview.
 #[tauri::command]
 pub(crate) async fn restore_settings_backup(app: AppHandle, path: String) -> Result<RestoreResult, String> {
     let backup_app = app.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
         restore_settings_backup_sync(&backup_app, &path)
     }).await.map_err(|error| format!("Could not complete the settings restoration: {error}"))??;
+
+    #[cfg(not(debug_assertions))]
     app.request_restart();
+
     Ok(result)
 }
