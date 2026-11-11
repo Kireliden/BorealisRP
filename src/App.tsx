@@ -24,6 +24,7 @@ import LambdaEgg from "./easter-eggs/LambdaEgg";
 import PlumbobEgg from "./easter-eggs/PlumbobEgg";
 import { PanelLeftClose, PanelLeftOpen, Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, FileDown, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
+import { commandQuery, resolveExpressionCommand, EXPRESSION_COMMANDS } from "./composer/expressionCommands";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
@@ -397,6 +398,7 @@ function sanitiseHtml(html: string) {
   const [selectedCharacter, setSelectedCharacter] = useState("Keira");
   const [selectedRole, setSelectedRole] = useState<Role>("Narration");
   const [selectedExpression, setSelectedExpression] = useState<string>(defaultExpression.emoji);
+  const [expressionSlashQuery, setExpressionSlashQuery] = useState<string | null>(null);
   const [customExpressionUrls, setCustomExpressionUrls] = useState<Record<string, string>>({});
   const [showExpressions, setShowExpressions] = useState(false);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
@@ -1569,6 +1571,7 @@ function sanitiseHtml(html: string) {
     setImageSourceOpen(false);
     setSystemImageToSave(null);
     setDraftHtml("");
+    setExpressionSlashQuery(null);
     if (editorRef.current) editorRef.current.innerHTML = "";
     setEditingMessageId(null);
     setWorkspaceError("");
@@ -1583,7 +1586,36 @@ function sanitiseHtml(html: string) {
     }
   }
 
+  function applyExpressionCommand(command: string): boolean {
+    const expression = resolveExpressionCommand(command);
+    if (!expression || editingMessageId !== null) return false;
+    setSelectedExpression(expression.emoji);
+    setShowExpressions(false);
+    setExpressionSlashQuery(null);
+    const editor = editorRef.current;
+    if (editor) {
+      editor.innerHTML = "";
+      editor.focus();
+    }
+    handleDraftInput("");
+    return true;
+  }
+
   function handleDraftInput(html: string) {
+    const text = editorRef.current?.textContent ?? "";
+    if (editingMessageId === null) {
+      const expression = resolveExpressionCommand(text);
+      // Typing a space after a complete command applies it immediately.
+      if (expression && /\s$/.test(text)) {
+        setSelectedExpression(expression.emoji);
+        setShowExpressions(false);
+        setExpressionSlashQuery(null);
+        if (editorRef.current) editorRef.current.innerHTML = "";
+        html = "";
+      } else {
+        setExpressionSlashQuery(commandQuery(text));
+      }
+    } else setExpressionSlashQuery(null);
     setDraftHtml(html);
     if (!activeWorkspace || !activeSceneId || editingMessageId !== null || workspaceLoading) return;
     if (draftSaveTimerRef.current) clearTimeout(draftSaveTimerRef.current);
