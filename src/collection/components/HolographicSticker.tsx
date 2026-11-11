@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import "./HolographicSticker.css";
 
@@ -25,6 +25,14 @@ export default function HolographicSticker({
 }: HolographicStickerProps) {
   const [pointer, setPointer] =
     useState<PointerPosition>(INITIAL_POSITION);
+
+  // A separate CSS mask-image URL can use a different GIF frame from the
+  // displayed <img>. Animated stickers instead filter SourceAlpha on the
+  // actual rendered frame: there is only one animation timeline to follow.
+  const isAnimatedSticker = /\.gif(?:$|[?#])/i.test(imageSrc);
+  const animatedFilterId = `holographic-animated-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const animatedGlareColor = pointer.x < 34 ? "#b6e6ff"
+    : pointer.x > 66 ? "#ffd3a8" : "#efc6ff";
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -83,30 +91,60 @@ export default function HolographicSticker({
           onPointerMove={handlePointerMove}
           onPointerLeave={resetPointer}
         >
-          <div className="holographic-card" style={stickerStyle}>
+          <div className={`holographic-card${isAnimatedSticker ? " holographic-card--animated" : ""}`} style={stickerStyle}>
+            {isAnimatedSticker && (
+              <svg className="holographic-animated-filter-defs" aria-hidden="true" focusable="false">
+                <defs>
+                  <filter id={animatedFilterId} x="0" y="0" width="100%" height="100%"
+                    colorInterpolationFilters="sRGB">
+                    {/* SourceAlpha belongs to the animated IMAGE ITSELF, rather than
+                        an independent CSS mask with a possibly desynchronised frame. */}
+                    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.047"
+                      numOctaves="1" seed="8" result="holo-noise" />
+                    <feColorMatrix in="holo-noise" type="matrix"
+                      values={`1.5 -0.6 0 0 0.1
+                               -0.3 1.5 -0.3 0 0.14
+                               0.1 -0.6 1.6 0 0.15
+                               0 0 0 0 0.28`}
+                      result="holo-colour" />
+                    <feComposite in="holo-colour" in2="SourceAlpha"
+                      operator="in" result="holo-shaped" />
+                    <feBlend in="SourceGraphic" in2="holo-shaped"
+                      mode="screen" result="holo-art" />
+                    <feFlood floodColor={animatedGlareColor} floodOpacity="0.12" result="holo-glare" />
+                    <feComposite in="holo-glare" in2="SourceAlpha"
+                      operator="in" result="holo-glare-shaped" />
+                    <feBlend in="holo-art" in2="holo-glare-shaped" mode="screen" />
+                  </filter>
+                </defs>
+              </svg>
+            )}
             <div className="holographic-art">
-              <img src={imageSrc} alt={alt} draggable={false} />
+              <img src={imageSrc} alt={alt} draggable={false}
+                style={isAnimatedSticker ? { filter: `url("#${animatedFilterId}")` } : undefined} />
             </div>
 
-            <div className="holographic-foil" aria-hidden="true" />
-            <div className="holographic-glare" aria-hidden="true" />
-            
-<div className="holographic-sparkles" aria-hidden="true">
-  {Array.from({ length: 18 }, (_, i) => (
-    <span
-      key={i}
-      className={`potato-glint potato-glint--${(i % 6) + 1}`}
-      style={{
-        left: `${8 + ((i * 37 + 13) % 84)}%`,
-        top: `${8 + ((i * 53 + 29) % 84)}%`,
-        animationDelay: `${-((i * 1.73) % 7)}s`,
-        animationDuration: `${2.1 + ((i * 1.37) % 4.5)}s`,
-        "--glint-size": `${3 + ((i * 7) % 7)}px`,
-      } as React.CSSProperties}
-    />
-  ))}
-</div>
-
+            {!isAnimatedSticker && (
+              <>
+                <div className="holographic-foil" aria-hidden="true" />
+                <div className="holographic-glare" aria-hidden="true" />
+                <div className="holographic-sparkles" aria-hidden="true">
+                  {Array.from({ length: 18 }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`potato-glint potato-glint--${(i % 6) + 1}`}
+                      style={{
+                        left: `${8 + ((i * 37 + 13) % 84)}%`,
+                        top: `${8 + ((i * 53 + 29) % 84)}%`,
+                        animationDelay: `${-((i * 1.73) % 7)}s`,
+                        animationDuration: `${2.1 + ((i * 1.37) % 4.5)}s`,
+                        "--glint-size": `${3 + ((i * 7) % 7)}px`,
+                      } as CSSProperties}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
