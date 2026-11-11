@@ -108,12 +108,19 @@ export default function AppSelect({
       if (menuRef.current?.contains(event.target as Node)) return;
       setOpen(false);
     };
+    const focusOutside = (event: FocusEvent) => {
+      if (triggerRef.current?.contains(event.target as Node) ||
+          menuRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
     document.addEventListener("pointerdown", outside, true);
+    document.addEventListener("focusin", focusOutside, true);
     window.addEventListener("keydown", escape, true);
     window.addEventListener("scroll", scroll, true);
     window.addEventListener("resize", measure);
     return () => {
       document.removeEventListener("pointerdown", outside, true);
+      document.removeEventListener("focusin", focusOutside, true);
       window.removeEventListener("keydown", escape, true);
       window.removeEventListener("scroll", scroll, true);
       window.removeEventListener("resize", measure);
