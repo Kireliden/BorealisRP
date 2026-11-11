@@ -6,6 +6,17 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Shared Lucide icon support and composer insertion corrections
+
+- Extended `StudioIconPicker` with a **third Lucide tab**, joining OpenMoji and system emoji. The shared `src/ui/lucideCatalogue.ts` validates icon names and provides searchable, paged choices; workspace icon values use `lucide:<name>` in the existing `workspace-icons.json` store. Existing icon values continue to work.
+- Normalised the main Workspace hero icon artwork: OpenMoji, system emojis and Lucide now use the same **32px layout box** (system glyph font size tuned separately). The Workspace selector's Lucide preview was enlarged to match OpenMoji more closely.
+- Added a **fourth Lucide style** to the composer emoji picker (Color, Linework, System, Lucide) with search and source-specific recent history. The picker uses the official Lucide icons instead of a separate icon dependency.
+- Fixed initially **invisible inline Lucide icons**: abandoned intermediate SVG-mask generation and render actual `DynamicIcon` SVGs through `src/composer/lucideInline.ts`. Message data stores only a validated `data-lucide-icon` name; sanitised send/edit/paste paths preserve the marker.
+- Fixed icon-only passages: `Send passage` and the send handler recognise an inline Lucide marker as valid content, and picker insertion updates composer draft state directly. Inline icon visuals follow text colour.
+- Removed icon-customisation **controls** from Roleplay Space folders and scenes after UI feedback, including overlapping scene buttons. Existing stored folder/scene icon fields and visible scene icons were preserved; the **Workspace** icon editor remains available.
+- **User-confirmed in running app:** Workspace icon selection/sizing and composer inline Lucide display and sending now work; the overlapping Roleplay Space icon controls are gone. **Not yet verified:** full fresh build/package, restart/recovery regression, Markdown export fallback for Lucide-only messages, and clean installer/runtime testing.
+- Milestone is an **internal alpha candidate**, not a tagged or shipped alpha release. Release gates documented in `docs/ALPHA-READINESS.md`.
+
 ## 2026-11-11 — Clean rich-text pastes and extend chat header fade
 
 - Fixed unwanted background/highlight blocks appearing in the rich-text composer after pasting text copied from the chat or an external app. The composer now intercepts **HTML clipboard paste** and inserts only the result of the existing `sanitiseHtml` allowlist: inline text colours, basic formatting and supported emoji survive, while pasted background colours and unsupported styles are removed.
