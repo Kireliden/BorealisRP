@@ -12,11 +12,16 @@ const FADE_OUT_MS = 1500;
 const MAX_VOLUME = 0.65;
 
 /**
- * Optional, user-provided excerpt. Put the clip in
- * public/easter-eggs/path_of_borealis_clip.mp3 (10 seconds or less).
- * Keep the visual egg functional even when that file isn't present.
+ * Optional, locally supplied soundtrack alongside the other easter egg assets.
+ * Vite's asset glob is empty when the clip hasn't been added yet, so the
+ * visual effect still builds and runs without a soundtrack.
  */
-const LAMBDA_AUDIO_URL = `${import.meta.env.BASE_URL}easter-eggs/path_of_borealis_clip.mp3`;
+const LAMBDA_AUDIO_ASSETS = import.meta.glob<string>("./assets/*.mp3", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+const LAMBDA_AUDIO_URL = LAMBDA_AUDIO_ASSETS["./assets/path_of_borealis_clip.mp3"];
 
 type WordPosition = { x: number; y: number; fontSize: number };
 
@@ -131,8 +136,8 @@ export default function LambdaEgg() {
   }, [endSequence]);
 
   useEffect(() => {
-    const audio = new Audio(LAMBDA_AUDIO_URL);
-    audio.preload = "none";
+    const audio = LAMBDA_AUDIO_URL ? new Audio(LAMBDA_AUDIO_URL) : null;
+    if (audio) audio.preload = "none";
     audioRef.current = audio;
 
     const onInput = (event: Event) => {
@@ -151,7 +156,7 @@ export default function LambdaEgg() {
       document.removeEventListener("input", onInput);
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
       if (fadeFrameRef.current !== null) window.cancelAnimationFrame(fadeFrameRef.current);
-      audio.pause();
+      audio?.pause();
       audioRef.current = null;
       activeRef.current = false;
     };
