@@ -6,6 +6,15 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Dark, Light and Custom scene overlays
+
+- Added **Dark / Light / Custom** overlay colours in the per-scene Background editor. Custom uses the system colour picker and displays its hexadecimal value.
+- The overlay strength slider now applies to the selected tint and to its gradient vignette, including the editor's live preview.
+- Light and bright custom colours switch foreground text to darker ink for readability, including message content, narration, the scene heading and the composer context capsule.
+- Existing backgrounds keep the original **Dark** preset automatically; per-scene mode and custom colour are saved alongside the other background settings.
+- Adjustments stay in the modular chat files; existing workspace media copies and chat attachments are unchanged.
+- **Pending validation:** TypeScript/Vite build, Tauri runtime check, custom tint rendering and contrast across Latte, Frappé and other light/dark palettes.
+
 ## 2026-11-11 — Responsive chat reading width and composer context
 
 - Let the message column, narration cards, date separator and composer grow proportionally with the main window, preserving side margins and a comfortable width cap on ultrawide monitors.
