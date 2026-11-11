@@ -1,6 +1,7 @@
 
 import { usePreferences } from "../preferences/PreferencesContext";
 import type { CatppuccinFlavor } from "../preferences/types";
+import { isLightTheme } from "../preferences/themeMode";
 import "./ThemesSettings.css";
 import type { CSSProperties } from "react";
 
@@ -169,16 +170,23 @@ const themes: ThemeDefinition[] = [
 ];
 
 export default function ThemesSettings() {
-  const { preferences, updatePreferences } = usePreferences();
-  const selectedTheme = preferences.appearance.theme;
+  const { preferences, resolvedTheme, systemIsDark, updatePreferences } = usePreferences();
+  const appearance = preferences.appearance;
+  const selectedTheme = resolvedTheme;
 
   function selectTheme(theme: CatppuccinFlavor) {
     updatePreferences((current) => ({
       ...current,
-      appearance: {
-        ...current.appearance,
-        theme,
-      },
+      appearance: current.appearance.themeMode === "system"
+        ? { ...current.appearance, [isLightTheme(theme) ? "systemLightTheme" : "systemDarkTheme"]: theme }
+        : { ...current.appearance, theme },
+    }));
+  }
+
+  function setMode(mode: "manual" | "system") {
+    updatePreferences((current) => ({
+      ...current,
+      appearance: { ...current.appearance, themeMode: mode },
     }));
   }
 
@@ -198,9 +206,49 @@ export default function ThemesSettings() {
         <span className="themes-count">09 THEMES</span>
       </div>
 
+      <section className="themes-schedule" aria-label="Theme mode">
+        <div className="themes-schedule-heading">
+          <div><strong>Theme switching</strong>
+            <p>Choose a fixed palette, or follow the light and dark setting of your operating system.</p>
+          </div>
+          <div className="themes-mode-switch" role="group" aria-label="Theme switching mode">
+            <button type="button" aria-pressed={appearance.themeMode === "manual"}
+              className={appearance.themeMode === "manual" ? "active" : ""} onClick={() => setMode("manual")}>Manual</button>
+            <button type="button" aria-pressed={appearance.themeMode === "system"}
+              className={appearance.themeMode === "system" ? "active" : ""} onClick={() => setMode("system")}>Follow system</button>
+          </div>
+        </div>
+        {appearance.themeMode === "system" && <>
+          <div className="themes-schedule-slots">
+            <label className="themes-schedule-slot">
+              <span>☀ Light theme</span>
+              <select value={appearance.systemLightTheme}
+                onChange={(event) => selectTheme(event.target.value as CatppuccinFlavor)}>
+                {themes.filter((theme) => isLightTheme(theme.id)).map((theme) =>
+                  <option key={theme.id} value={theme.id}>{theme.name}</option>)}
+              </select>
+            </label>
+            <label className="themes-schedule-slot">
+              <span>☾ Dark theme</span>
+              <select value={appearance.systemDarkTheme}
+                onChange={(event) => selectTheme(event.target.value as CatppuccinFlavor)}>
+                {themes.filter((theme) => !isLightTheme(theme.id)).map((theme) =>
+                  <option key={theme.id} value={theme.id}>{theme.name}</option>)}
+              </select>
+            </label>
+          </div>
+          <p className="themes-schedule-current">
+            System currently reports <strong>{systemIsDark ? "Dark" : "Light"}</strong>.
+            BRS is showing <strong>{themes.find((theme) => theme.id === resolvedTheme)?.name ?? resolvedTheme}</strong>.
+            The choice updates when the system changes.
+          </p>
+        </>}
+      </section>
       <div className="themes-grid">
         {themes.map((theme) => {
-          const isSelected = selectedTheme === theme.id;
+          const isDayChoice = appearance.themeMode === "system" && appearance.systemLightTheme === theme.id;
+          const isNightChoice = appearance.themeMode === "system" && appearance.systemDarkTheme === theme.id;
+          const isSelected = appearance.themeMode === "system" ? (isDayChoice || isNightChoice) : selectedTheme === theme.id;
 
           return (
             <button
@@ -208,6 +256,7 @@ export default function ThemesSettings() {
               type="button"
               className={`themes-card ${isSelected ? "selected" : ""}`}
               aria-pressed={isSelected}
+              title={appearance.themeMode === "system" ? `Use ${theme.name} when the system is ${isLightTheme(theme.id) ? "light" : "dark"}` : `Apply ${theme.name}`}
               onClick={() => selectTheme(theme.id)}
               style={{
                 "--theme-base": theme.colors.base,
@@ -242,7 +291,9 @@ export default function ThemesSettings() {
                   </span>
                 </span>
                 <span className="themes-card-check">
-                  {isSelected ? "✓" : ""}
+                  {appearance.themeMode === "system"
+                    ? isDayChoice ? "☀" : isNightChoice ? "☾" : ""
+                    : isSelected ? "✓" : ""}
                 </span>
               </div>
             </button>
