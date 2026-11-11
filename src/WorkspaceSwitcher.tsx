@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { load } from "@tauri-apps/plugin-store";
 import { Check, ChevronDown, Plus } from "lucide-react";
@@ -23,6 +23,9 @@ type Props = {
   compact?: boolean;
   /** Increment to open the existing workspace list from an external menu. */
   openRequest?: number;
+  /** Anchors the menu to the sidebar header when its capsule is hidden. */
+  menuAnchorRef?: RefObject<HTMLElement | null>;
+  hideTrigger?: boolean;
 };
 
 const RECENTS_FILE = "recent-workspaces.json";
@@ -58,7 +61,7 @@ async function rememberWorkspace(workspace: WorkspaceInfo): Promise<RecentWorksp
   return next;
 }
 
-export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew, icon, compact, openRequest = 0 }: Props) {
+export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew, icon, compact, openRequest = 0, menuAnchorRef, hideTrigger = false }: Props) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
   const [recentIcons, setRecentIcons] = useState<Record<string, string>>({});
@@ -69,7 +72,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
   const lastOpenRequest = useRef(openRequest);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 296 });
   const positionMenu = () => {
-    const rect = rootRef.current?.getBoundingClientRect();
+    const rect = (menuAnchorRef?.current ?? rootRef.current)?.getBoundingClientRect();
     if (!rect) return;
     const width = Math.min(330, window.innerWidth - 16);
     setMenuPosition({
@@ -158,8 +161,8 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
   }
 
   return (
-    <div className={`workspace-switcher ${compact ? "is-compact" : ""}`} ref={rootRef}>
-      <button
+    <div className={`workspace-switcher ${compact ? "is-compact" : ""} ${hideTrigger ? "workspace-switcher-host" : ""}`} ref={rootRef}>
+      {!hideTrigger && <button
         className="workspace-button"
         type="button"
         onClick={() => { const nextOpen = !open; if (nextOpen) positionMenu(); setOpen(nextOpen); setError(""); if (nextOpen) void refreshRecent(); }}
@@ -170,7 +173,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
         <StudioIcon value={icon} />
         <span className="workspace-button-name">{activeWorkspace?.manifest.name ?? "Choose workspace"}</span>
         <ChevronDown className={open ? "workspace-switcher-chevron open" : "workspace-switcher-chevron"} size={16} />
-      </button>
+      </button>}
 
       {open && createPortal(
         <div ref={menuRef} className="workspace-switcher-menu" role="menu" aria-label="Choose workspace"
