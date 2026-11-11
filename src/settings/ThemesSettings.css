@@ -494,3 +494,61 @@
     transform: none;
   }
 }
+
+/* System-aware theme switching; a pair of intentional palettes, not a schedule. */
+.themes-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--sidebar-bg);
+}
+.themes-schedule-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.themes-schedule-heading > div:first-child { flex: 1 1 220px; }
+.themes-schedule-heading strong { display: block; margin-bottom: 5px; color: var(--ctp-text); font-size: 13px; }
+.themes-schedule-heading p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.themes-mode-switch { display: flex; gap: 3px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; background: var(--app-bg); }
+.themes-mode-switch button {
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ctp-subtext1);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.themes-mode-switch button:hover { color: var(--ctp-text); }
+.themes-mode-switch button.active {
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface));
+  color: var(--ctp-text);
+  font-weight: 700;
+}
+.themes-schedule-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.themes-schedule-slot { display: grid; gap: 8px; min-width: 0; font-size: 11px; color: var(--ctp-subtext1); }
+.themes-schedule-slot select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--app-bg);
+  color: var(--ctp-text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.themes-schedule-slot select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.themes-schedule-current { margin: 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.themes-schedule-current strong { color: var(--accent); }
+@media (max-width: 540px) {
+  .themes-schedule-slots { grid-template-columns: 1fr; }
+}
