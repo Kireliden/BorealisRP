@@ -1,4 +1,5 @@
 import AppSelect from "../ui/AppSelect";
+import { useAppDialog } from "../ui/AppDialogProvider";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight, ChevronLeft, ChevronRight, Palette } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
@@ -45,6 +46,7 @@ function matchesFilter(edge: RelationshipEdge, filter: string): boolean {
 }
 
 export default function RelationshipMap({ characters, portraitUrls, imageResources, onOpenCharacter }: Props) {
+  const { alert } = useAppDialog();
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name-asc" | "name-desc" | "updated">("newest");
   const [filter, setFilter] = useState("All connections");
@@ -162,14 +164,14 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
   function handleMapBackgroundImageChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { window.alert("Please choose an image file."); event.target.value = ""; return; }
-    if (file.size > 3 * 1024 * 1024) { window.alert("Please choose an image smaller than 3 MB so it can be stored locally."); event.target.value = ""; return; }
+    if (!file.type.startsWith("image/")) { void alert("Please choose an image file.", { title: "Unsupported image" }); event.target.value = ""; return; }
+    if (file.size > 3 * 1024 * 1024) { void alert("Please choose an image smaller than 3 MB so it can be stored locally.", { title: "Image too large" }); event.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = () => {
       const result = typeof reader.result === "string" ? reader.result : "";
       if (!result) return;
       try { localStorage.removeItem("brd.relationship-map.background-resource-id"); localStorage.setItem("brd.relationship-map.background-image", result); setMapBackgroundResourceId(""); setMapBackgroundImage(result); setMapBackground("custom"); localStorage.setItem("brd.relationship-map.background", "custom"); setShowBackgroundOptions(false); }
-      catch { window.alert("This image could not be saved in local storage. Try a smaller image."); }
+      catch { void alert("This image could not be saved in local storage. Try a smaller image.", { title: "Could not save background" }); }
     };
     reader.readAsDataURL(file);
     event.target.value = "";
