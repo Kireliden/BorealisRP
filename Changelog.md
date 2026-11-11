@@ -6,6 +6,15 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Easter egg 004: THE PLUMBOB and Lambda art swap
+
+- Added **THE PLUMBOB** as the fourth Collections secret, triggered when the word `tiranipeuti` is typed in any app editable field (case-insensitive, whole word).
+- The new `PlumbobEgg.tsx` registers discovery as `the-plumbob`, shows a green six-second Sims-inspired reveal using the actual `src/easter-eggs/assets/egg_004.png` image, does not modify written text, and is dismissible with Esc or Skip.
+- Added isolated `PlumbobEgg.css` with reduced-motion and animation-off support. The input listener only triggers when the word newly appears in an editable field, avoiding repeated activations for every subsequent keystroke.
+- Replaced THE LAMBDA's animated collectible GIF with the already uploaded static `src/easter-eggs/assets/egg_003.png` to postpone the holographic-GIF experiment. The animation handling code remains for possible future artwork.
+- Collections now shows four secrets, including the new static Plumbob sticker in the existing holographic viewer. Secret trigger text is not exposed in the undiscovered entry.
+- **Pending validation:** `npm run build`, reveal styling and Collections art on Windows/Linux, input/paste triggering, and existing easter egg regression checks.
+
 ## 2026-11-11 — Holographic GIF alpha-frame correction
 
 - Fixed the animated collectible viewer so GIFs do not use a separately decoded CSS `mask-image` that may display a different frame from the artwork (visible as a detached oval/foil plate during rotation).
