@@ -19,7 +19,7 @@ The MP3 is **optional**: if you have not added it, BRS compiles and the visual c
 The third Collections sticker uses your animated file:
 
 ```
-src/easter-eggs/assets/ee_03.gif
+src/easter-eggs/assets/ee_003.gif
 ```
 
 Its card and full-size holographic viewer display the actual GIF animation. The GIF is optional until you supply it; when absent, Collections displays a lambda glyph placeholder instead. Add the file to this folder before running `npm run build` or `npm run tauri dev`.
