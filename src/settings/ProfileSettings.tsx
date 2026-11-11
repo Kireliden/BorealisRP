@@ -5,6 +5,7 @@ import { importProfileMediaFile, profileMediaSource, removeSidebarAvatarThumbnai
 import ImageSourceDialog from "../resources/ImageSourceDialog";
 import SaveImageToResourcesDialog from "../resources/SaveImageToResourcesDialog";
 import { importResource } from "../resources/resources.storage";
+import { importWorkspaceResource } from "../resources/workspaceResources.storage";
 import SpecialTitleBadge from "../profile/SpecialTitleBadge";
 import { verifiedSpecialTitles, verifySpecialTitleCode, type SpecialTitle } from "../profile/specialTitles";
 import "../profile/ProfileModal.css";
@@ -12,7 +13,7 @@ import "./ProfileSettings.css";
 
 type Profile = AppPreferences["profile"];
 
-export default function ProfileSettings() {
+export default function ProfileSettings({ workspacePath }: { workspacePath?: string | null }) {
   const { preferences, updatePreferences } = usePreferences();
   const [draft, setDraft] = useState<Profile>(preferences.profile);
   const [error, setError] = useState("");
@@ -217,6 +218,7 @@ export default function ProfileSettings() {
       </div>
 
       {mediaTarget && <ImageSourceDialog
+        workspacePath={workspacePath}
         title={mediaTarget === "avatarAssetPath" ? "Choose profile portrait" : "Choose profile banner"}
         onCancel={() => setMediaTarget(null)}
         onSystem={(file) => useChosenImage(file, true)}
@@ -226,7 +228,8 @@ export default function ProfileSettings() {
         fileName={systemImageToSave.name}
         onSkip={() => setSystemImageToSave(null)}
         onSave={async () => {
-          await importResource(systemImageToSave);
+          if (workspacePath) await importWorkspaceResource(workspacePath, systemImageToSave);
+          else await importResource(systemImageToSave);
           setSystemImageToSave(null);
         }}
       />}
