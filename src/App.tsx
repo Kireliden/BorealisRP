@@ -1589,7 +1589,7 @@ function sanitiseHtml(html: string) {
 
   function applyExpressionCommand(command: string): boolean {
     const expression = resolveExpressionCommand(command);
-    if (!expression || editingMessageId !== null) return false;
+    if (!expression || editingMessageId !== null || selectedCharacter === "You") return false;
     setSelectedExpression(expression.emoji);
     setShowExpressions(false);
     setExpressionSlashQuery(null);
@@ -1604,7 +1604,7 @@ function sanitiseHtml(html: string) {
 
   function handleDraftInput(html: string) {
     const text = editorRef.current?.textContent ?? "";
-    if (editingMessageId === null) {
+    if (editingMessageId === null && selectedCharacter !== "You") {
       const expression = resolveExpressionCommand(text);
       // Typing a space after a complete command applies it immediately.
       if (expression && /\s$/.test(text)) {
