@@ -46,12 +46,14 @@
         "languages": [
           "English"
         ],
-        "installMode": "currentUser",
+        "installMode": "perMachine",
         "installerIcon": "icons/icon.ico",
         "sidebarImage": "windows/installer/sidebar.bmp",
         "headerImage": "windows/installer/header.bmp",
         "startMenuFolder": "Borealis",
-        "compression": "lzma"
+        "compression": "lzma",
+        "uninstallerIcon": "icons/icon.ico",
+        "uninstallerHeaderImage": "windows/installer/header.bmp"
       }
     }
   }
