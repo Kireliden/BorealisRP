@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Image as ImageIcon, RotateCcw, Trash2, X } from "lucide-react";
 import ImageSourceDialog from "../resources/ImageSourceDialog";
@@ -6,6 +6,10 @@ import SaveImageToResourcesDialog from "../resources/SaveImageToResourcesDialog"
 import { importWorkspaceResource } from "../resources/workspaceResources.storage";
 import {
   DEFAULT_SCENE_BACKGROUND,
+  SCENE_OVERLAY_PRESETS,
+  isLightOverlay,
+  overlayRgb,
+  safeOverlayHex,
   type SceneBackground,
   type SceneBackgroundAdjustments,
 } from "./sceneBackground";
@@ -20,9 +24,9 @@ type Props = {
   onClose: () => void;
 };
 
-type Adjustable = keyof SceneBackgroundAdjustments;
+type Adjustable = Exclude<keyof SceneBackgroundAdjustments, "overlayMode" | "overlayColor">;
 const controls: { key: Adjustable; label: string; min: number; max: number; step: number; unit: string }[] = [
-  { key: "dim", label: "Dark overlay", min: 0, max: 90, step: 2, unit: "%" },
+  { key: "dim", label: "Overlay strength", min: 0, max: 90, step: 2, unit: "%" },
   { key: "blur", label: "Blur", min: 0, max: 20, step: 1, unit: "px" },
   { key: "zoom", label: "Zoom", min: 100, max: 200, step: 5, unit: "%" },
   { key: "positionX", label: "Horizontal", min: 0, max: 100, step: 5, unit: "%" },
@@ -36,6 +40,7 @@ export default function SceneBackgroundSettings({
     current ? {
       dim: current.dim, blur: current.blur, zoom: current.zoom,
       positionX: current.positionX, positionY: current.positionY,
+      overlayMode: current.overlayMode ?? "dark", overlayColor: safeOverlayHex(current.overlayColor),
     } : { ...DEFAULT_SCENE_BACKGROUND },
   );
   const [image, setImage] = useState<File | null>(null);
@@ -65,6 +70,7 @@ export default function SceneBackgroundSettings({
   const previewUrl = remove ? null : pendingUrl ?? currentPreviewUrl;
   const hasImage = !remove && Boolean(image || current);
   const imageName = remove ? null : image?.name ?? current?.fileName;
+  const lightOverlay = isLightOverlay(settings);
 
   function selectImage(file: File, fromSystem: boolean) {
     setImage(file);
@@ -98,14 +104,16 @@ export default function SceneBackgroundSettings({
           <button type="button" aria-label="Close background settings" onClick={onClose} disabled={busy}><X size={18} /></button>
         </header>
         <div className="scene-background-content">
-          <div className="scene-background-preview" aria-label="Background preview">
+          <div className="scene-background-preview" data-scene-overlay-tone={lightOverlay ? "light" : "dark"}
+            style={{ "--scene-overlay-rgb": overlayRgb(settings), "--scene-bg-dim": settings.dim / 100 } as CSSProperties}
+            aria-label="Background preview">
             {previewUrl && <div className="scene-background-preview-image" style={{
               backgroundImage: `url("${previewUrl}")`,
               backgroundPosition: `${settings.positionX}% ${settings.positionY}%`,
               filter: `blur(${settings.blur}px)`,
               transform: `scale(${settings.zoom / 100})`,
             }} />}
-            <div className="scene-background-preview-dim" style={{ backgroundColor: `rgba(14,17,29,${settings.dim / 100})` }} />
+            <div className="scene-background-preview-dim" />
             <div className="scene-background-preview-chat" aria-hidden="true">
               <span>SCENE PREVIEW</span><strong>{sceneName}</strong>
               <p>Somewhere, another story begins beneath the stars.</p>
@@ -118,7 +126,25 @@ export default function SceneBackgroundSettings({
             <button type="button" onClick={() => setSourcePickerOpen(true)} disabled={busy}><ImageIcon size={15}/>{hasImage ? "Change image" : "Choose image"}</button>
             {hasImage && <button type="button" className="scene-background-remove" onClick={() => { setImage(null); setRemove(true); setError(""); }} disabled={busy} title="Remove this scene background"><Trash2 size={15}/><span>Remove</span></button>}
           </div>
-          <div className="scene-background-controls-header"><strong>Appearance</strong><button type="button" onClick={() => setSettings({ ...DEFAULT_SCENE_BACKGROUND })} disabled={busy}><RotateCcw size={13}/> Reset sliders</button></div>
+          <div className="scene-background-controls-header"><strong>Appearance</strong><button type="button" onClick={() => setSettings((previous) => ({ ...DEFAULT_SCENE_BACKGROUND, overlayMode: previous.overlayMode, overlayColor: previous.overlayColor }))} disabled={busy}><RotateCcw size={13}/> Reset sliders</button></div>
+          <fieldset className="scene-overlay-picker" disabled={busy}>
+            <legend>Overlay colour</legend>
+            <div className="scene-overlay-presets" aria-label="Overlay colour preset">
+              {(["dark", "light", "custom"] as const).map((mode) =>
+                <button type="button" key={mode} className={settings.overlayMode === mode ? "is-active" : ""}
+                  aria-pressed={settings.overlayMode === mode}
+                  onClick={() => setSettings((previous) => ({ ...previous, overlayMode: mode }))}>
+                  <span className="scene-overlay-swatch" style={{ backgroundColor: mode === "custom" ? safeOverlayHex(settings.overlayColor) : SCENE_OVERLAY_PRESETS[mode] }} />
+                  {mode === "dark" ? "Dark" : mode === "light" ? "Light" : "Custom"}
+                </button>)}
+            </div>
+            {settings.overlayMode === "custom" && <label className="scene-overlay-custom-colour">
+              <span>Custom tint</span>
+              <input type="color" value={safeOverlayHex(settings.overlayColor)} aria-label="Custom overlay colour"
+                onChange={(event) => setSettings((previous) => ({ ...previous, overlayColor: event.target.value }))} />
+              <output>{safeOverlayHex(settings.overlayColor)}</output>
+            </label>}
+          </fieldset>
           <div className="scene-background-controls">
             {controls.map(({ key, label, min, max, step, unit }) =>
               <label className="scene-background-control" key={key}>
