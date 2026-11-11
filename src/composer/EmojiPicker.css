@@ -66,7 +66,7 @@
 
 .emoji-picker-source {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 3px;
   padding: 3px;
   border: 1px solid var(--control-border);
@@ -156,6 +156,13 @@
   object-fit: contain;
 }
 
+.emoji-picker-lucide {
+  display: block;
+  width: 28px;
+  height: 28px;
+  color: var(--ctp-text);
+}
+
 .emoji-picker-openmoji {
   display: block;
   width: 40px;
@@ -239,6 +246,28 @@
 .message-rich-content .message-system-emoji {
   display: inline;
   font-size: 1.15em;
+}
+
+/* Lucide placeholders store only a validated icon name in saved rich text.
+   The local SVG mask is recreated when the composer or chat displays it. */
+.rich-editor .message-lucide-icon,
+.message-rich-content .message-lucide-icon {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  margin: 0 0.06em;
+  vertical-align: -0.28em;
+  background-color: transparent;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+.rich-editor .message-lucide-icon[data-lucide-ready],
+.message-rich-content .message-lucide-icon[data-lucide-ready] {
+  background-color: currentColor;
 }
 
 /* Let the picker escape the rounded composer shell while it is open. */
