@@ -207,15 +207,42 @@
   }
 }
 
-/* Scene header melts into the conversation instead of a solid horizontal box. */
+/* The 57px header stays solid for legibility. Its gradient starts at
+   the former bottom-border position and fades INTO the conversation below.
+   Keep this overlay behind the scene heading and controls, not over them. */
+.main-panel { position: relative; }
 .main-panel > .topbar,
 .main-panel.has-scene-background > .topbar {
-  border-bottom-color: transparent;
+  position: relative;
+  z-index: 3;
+  border-bottom: 0;
+  background: var(--sidebar-bg);
+}
+.main-panel::before {
+  content: "";
+  position: absolute;
+  top: 57px;
+  left: 0;
+  right: 0;
+  height: 116px;
+  z-index: 1;
+  pointer-events: none;
   background: linear-gradient(180deg,
     var(--sidebar-bg) 0%,
-    color-mix(in srgb, var(--sidebar-bg) 93%, transparent) 38%,
-    color-mix(in srgb, var(--sidebar-bg) 42%, transparent) 78%,
+    color-mix(in srgb, var(--sidebar-bg) 78%, transparent) 30%,
+    color-mix(in srgb, var(--sidebar-bg) 37%, transparent) 66%,
     transparent 100%);
+}
+.main-panel > .scene-toolbar,
+.main-panel > .demo-notice,
+.main-panel > .conversation,
+.main-panel > .composer-area,
+.main-panel.has-scene-background > .scene-toolbar,
+.main-panel.has-scene-background > .demo-notice,
+.main-panel.has-scene-background > .conversation,
+.main-panel.has-scene-background > .composer-area {
+  position: relative;
+  z-index: 2;
 }
 .main-panel.has-scene-background .scene-background-layer { inset: 0; }
 
