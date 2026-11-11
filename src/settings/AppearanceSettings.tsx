@@ -1,3 +1,4 @@
+import AppSelect from "../ui/AppSelect";
 
 import { usePreferences } from "../preferences/PreferencesContext";
 import type {
@@ -51,7 +52,7 @@ export default function AppearanceSettings() {
             Font used in controls and menus.
           </span>
         </span>
-        <select
+        <AppSelect
           value={interfaceFont}
           onChange={(event) =>
             updateAppearance({
@@ -64,7 +65,7 @@ export default function AppearanceSettings() {
               {option.label}
             </option>
           ))}
-        </select>
+        </AppSelect>
       </label>
 
 
