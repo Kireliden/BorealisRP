@@ -11,7 +11,7 @@ type NativeImage = { fileName: string; bytes: number[] };
 
 export function imageExtension(fileName: string): string {
   const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
-  if (!Object.hasOwn(IMAGE_MIMES, extension)) {
+  if (!Object.prototype.hasOwnProperty.call(IMAGE_MIMES, extension)) {
     throw new Error("Choose a PNG, JPG, WebP or GIF image.");
   }
   return extension;
