@@ -15,7 +15,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, X } from "lucide-react";
+import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -25,7 +25,11 @@ import { loadCharacters } from "./characters/characters.storage";
 import { loadWorkspaceCharacters } from "./characters/workspaceCharacters.storage";
 import { characterAccentColor } from "./characters/characters.types";
 import { getResourceBlob } from "./resources/resources.storage";
-import { getWorkspaceResourceBlob } from "./resources/workspaceResources.storage";
+import { getWorkspaceResourceBlob, importWorkspaceResource } from "./resources/workspaceResources.storage";
+import ImageSourceDialog from "./resources/ImageSourceDialog";
+import SaveImageToResourcesDialog from "./resources/SaveImageToResourcesDialog";
+import { type ComposerImage, loadMessageImages, saveMessageImages } from "./chat/messageImages";
+import "./chat/messageImages.css";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlob } from "./characters/workspaceCharacterExpressions.storage";
 import CharacterPortraitArt, { characterPortraitStyle } from "./characters/CharacterPortraitArt";
@@ -348,6 +352,11 @@ function sanitiseHtml(html: string) {
   const [showWorkspaceNotice, setShowWorkspaceNotice] = useState(true);
   useEffect(() => { if (workspaceError) setShowWorkspaceNotice(true); }, [workspaceError]);
   const [draftHtml, setDraftHtml] = useState("");
+  const [composerImages, setComposerImages] = useState<ComposerImage[]>([]);
+  const [messageImageUrls, setMessageImageUrls] = useState<Record<string, string>>({});
+  const composerImageUrlsRef = useRef<Set<string>>(new Set());
+  const [imageSourceOpen, setImageSourceOpen] = useState(false);
+  const [systemImageToSave, setSystemImageToSave] = useState<File | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
@@ -519,6 +528,31 @@ function sanitiseHtml(html: string) {
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [characters, activeWorkspace?.path]);
+  const messageImageKeys = messages.flatMap((message) => message.images ?? [])
+    .map((image) => `${image.id}:${image.relativePath}`).join("|");
+
+  useEffect(() => {
+    let disposed = false;
+    let urls: Record<string, string> = {};
+    setMessageImageUrls({});
+    if (activeWorkspace) {
+      const images = messages.flatMap((message) => message.images ?? []);
+      void loadMessageImages(activeWorkspace.path, images)
+        .then((loaded) => {
+          urls = loaded;
+          if (disposed) Object.values(loaded).forEach((url) => URL.revokeObjectURL(url));
+          else setMessageImageUrls(loaded);
+        })
+        .catch((reason) => console.warn("Could not load chat images:", reason));
+    }
+    return () => {
+      disposed = true;
+      Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  // The attachment key only changes when saved image references change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspace?.path, messageImageKeys]);
+
   const characterResourcePortraitUrl = selectedCharacter === "You" || !selectedCharacterBase?.portraitResourceId
     ? null
     : characterPortraitUrls[selectedCharacterBase.portraitResourceId] ?? null;
@@ -582,6 +616,11 @@ function sanitiseHtml(html: string) {
     }
     setWorkspaceError("");
     setDraftHtml("");
+    composerImageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    composerImageUrlsRef.current.clear();
+    setComposerImages([]);
+    setImageSourceOpen(false);
+    setSystemImageToSave(null);
     setEditingMessageId(null);
     setOpenMessageActionsId(null);
     setIsSceneOptionsOpen(false);
@@ -847,6 +886,8 @@ function sanitiseHtml(html: string) {
     setDraftHtml(editableSource);
     setShowCharacterPicker(false);
     setShowExpressions(false);
+    clearComposerImages();
+    setComposerImages((message.images ?? []).map((image) => ({ ...image })));
 
     if (editorRef.current) {
       editorRef.current.innerHTML = editableSource;
@@ -856,6 +897,7 @@ function sanitiseHtml(html: string) {
 
   function cancelEditingMessage() {
     setEditingMessageId(null);
+    clearComposerImages();
     setDraftHtml("");
     if (editorRef.current) editorRef.current.innerHTML = "";
   }
@@ -919,10 +961,12 @@ function sanitiseHtml(html: string) {
     try {
       await saveWorkspaceContent(workspacePath, content);
       if (activeWorkspacePathRef.current === workspacePath) setWorkspaceError("");
+      return true;
     } catch (reason) {
       if (activeWorkspacePathRef.current === workspacePath) {
         setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
       }
+      return false;
     }
   }
 
@@ -1252,6 +1296,9 @@ function sanitiseHtml(html: string) {
     const requestId = ++draftLoadRequestRef.current;
     setActiveSceneId(scene.id);
     setMessages(scene.messages);
+    clearComposerImages();
+    setImageSourceOpen(false);
+    setSystemImageToSave(null);
     setDraftHtml("");
     if (editorRef.current) editorRef.current.innerHTML = "";
     setEditingMessageId(null);
@@ -1288,6 +1335,35 @@ function sanitiseHtml(html: string) {
     }, 500);
   }
 
+  function clearComposerImages() {
+    composerImageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    composerImageUrlsRef.current.clear();
+    setComposerImages([]);
+  }
+
+  function removeComposerImage(id: string) {
+    setComposerImages((current) => {
+      const removed = current.find((image) => image.id === id);
+      if (removed?.previewUrl) {
+        URL.revokeObjectURL(removed.previewUrl);
+        composerImageUrlsRef.current.delete(removed.previewUrl);
+      }
+      return current.filter((image) => image.id !== id);
+    });
+  }
+
+  function attachComposerImage(file: File, fromSystem: boolean) {
+    if (!activeWorkspace || !activeSceneId) throw new Error("Choose a scene first.");
+    if (composerImages.length >= 6) throw new Error("You can attach up to six images per message.");
+    const previewUrl = URL.createObjectURL(file);
+    composerImageUrlsRef.current.add(previewUrl);
+    setComposerImages((current) => [...current, {
+      id: crypto.randomUUID(), fileName: file.name, mimeType: file.type,
+      file, previewUrl,
+    }]);
+    if (fromSystem) setSystemImageToSave(file);
+  }
+
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!activeWorkspace || !activeSceneId || workspaceLoading) return;
@@ -1296,7 +1372,14 @@ function sanitiseHtml(html: string) {
     const isEditingMessage = editingMessageId !== null;
     const editor = editorRef.current;
     const plainText = editor?.innerText.trim() ?? "";
-    if (!plainText) return;
+    if (!plainText && !composerImages.length) return;
+    let savedImages;
+    try {
+      savedImages = await saveMessageImages(workspacePath, composerImages);
+    } catch (reason) {
+      setWorkspaceError(`Could not save message image: ${reason instanceof Error ? reason.message : String(reason)}`);
+      return;
+    }
 
     const source = markdownSourceFromHtml(editor?.innerHTML ?? plainText);
     const contentRoot = document.createElement("div");
@@ -1308,7 +1391,7 @@ function sanitiseHtml(html: string) {
     if (editingMessageId !== null) {
       nextMessages = messages.map((message) =>
         message.id === editingMessageId
-          ? { ...message, content, source, history: [...(message.history ?? []), message.content] }
+          ? { ...message, content, source, images: savedImages, history: [...(message.history ?? []), message.content] }
           : message,
       );
       setEditingMessageId(null);
@@ -1325,6 +1408,7 @@ function sanitiseHtml(html: string) {
           time: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
           content,
           source,
+          images: savedImages,
           avatar: character.avatar,
           expression: selectedCharacter === "You" ? "" : selectedExpression,
           avatarAssetPath: character.avatarAssetPath ?? null,
@@ -1339,7 +1423,9 @@ function sanitiseHtml(html: string) {
       draftSaveTimerRef.current = null;
     }
     if (typeof enteringId === "number") setEnteringMessageId(null);
-    await persistSceneMessages(nextMessages);
+    const saved = await persistSceneMessages(nextMessages);
+    if (!saved) return;
+    clearComposerImages();
     if (!isEditingMessage) {
       try {
         await saveWorkspaceDraft(workspacePath, sceneId, "");
@@ -1513,7 +1599,13 @@ function sanitiseHtml(html: string) {
                           WebkitMaskImage: `url("${expressions.find((expression) => expression.emoji === message.expression)?.image ?? ""}")`,
                         }}
                       />
-                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}</div><div className="message-actions">
+                    )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}
+                  {!!message.images?.length && <div className="message-image-gallery">
+                    {message.images.map((image) => messageImageUrls[image.id]
+                      ? <img key={image.id} src={messageImageUrls[image.id]} alt={image.fileName} title={image.fileName} loading="lazy" />
+                      : <span className="message-image-unavailable" key={image.id}>{image.fileName} · image unavailable</span>)}
+                  </div>}
+                </div><div className="message-actions">
                 <button className="message-menu" type="button" title="Message actions" aria-label={`Message actions for ${displayAuthor}`} aria-expanded={openMessageActionsId === message.id} onClick={() => setOpenMessageActionsId((current) => current === message.id ? null : message.id)}><MoreHorizontal size={17} /></button>
                 {openMessageActionsId === message.id && <div className="message-actions-popover" role="menu">
                   <button type="button" role="menuitem" onClick={() => { setOpenMessageActionsId(null); beginEditingMessage(message); }}><Pencil size={14} /><span>Edit message</span></button>
@@ -1651,11 +1743,12 @@ function sanitiseHtml(html: string) {
                   <span className="toolbar-divider" />
                   <button
                     type="button"
-                    title="Insert image (coming soon)"
+                    title="Insert image"
                     aria-label="Insert image"
-                    disabled
+                    disabled={!activeWorkspace || !activeSceneId || workspaceLoading || composerImages.length >= 6}
+                    onClick={() => setImageSourceOpen(true)}
                   >
-                  ▧
+                  <ImagePlus size={16} />
                   </button>
 
 <NudgeEgg />
@@ -1666,7 +1759,14 @@ function sanitiseHtml(html: string) {
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
                 <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
-                <div className="composer-bottom"><span className="composer-hint">{editingMessageId !== null ? <>Editing message <span>·</span> <kbd>Enter</kbd> to save</> : <><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line <span>·</span> <kbd>↑</kbd> to edit latest</>}</span>{editingMessageId !== null && <button className="cancel-edit-button" type="button" onClick={cancelEditingMessage}>Cancel</button>}<button className="send-button" type="submit" disabled={!activeWorkspace || !activeSceneId || workspaceLoading || !draftHtml.replace(/<[^>]*>/g, "").trim()}>{editingMessageId !== null ? "Save changes" : "Send passage"} <span>↑</span></button></div>
+                {composerImages.length > 0 && <div className="composer-image-previews" aria-label="Attached images">
+                  {composerImages.map((image) => <div className="composer-image-preview" key={image.id}>
+                    {(image.previewUrl ?? messageImageUrls[image.id]) && <img src={image.previewUrl ?? messageImageUrls[image.id]} alt="" />}
+                    <span title={image.fileName}>{image.fileName}</span>
+                    <button type="button" aria-label={`Remove ${image.fileName}`} title="Remove image" onClick={() => removeComposerImage(image.id)}><X size={13} /></button>
+                  </div>)}
+                </div>}
+                <div className="composer-bottom"><span className="composer-hint">{editingMessageId !== null ? <>Editing message <span>·</span> <kbd>Enter</kbd> to save</> : <><kbd>Enter</kbd> to send <span>·</span> <kbd>Shift + Enter</kbd> for a new line <span>·</span> <kbd>↑</kbd> to edit latest</>}</span>{editingMessageId !== null && <button className="cancel-edit-button" type="button" onClick={cancelEditingMessage}>Cancel</button>}<button className="send-button" type="submit" disabled={!activeWorkspace || !activeSceneId || workspaceLoading || (!draftHtml.replace(/<[^>]*>/g, "").trim() && composerImages.length === 0)}>{editingMessageId !== null ? "Save changes" : "Send passage"} <span>↑</span></button></div>
               </form>
             </div>
             <p className="composer-footnote">Your story, your pace. Take it one passage at a time.</p>
@@ -1866,6 +1966,22 @@ function sanitiseHtml(html: string) {
           </section>
         </div>
       )}
+      {imageSourceOpen && <ImageSourceDialog
+        workspacePath={activeWorkspace?.path}
+        title="Add image to passage"
+        onCancel={() => setImageSourceOpen(false)}
+        onSystem={(file) => attachComposerImage(file, true)}
+        onResource={(file) => attachComposerImage(file, false)}
+      />}
+      {systemImageToSave && <SaveImageToResourcesDialog
+        fileName={systemImageToSave.name}
+        onSkip={() => setSystemImageToSave(null)}
+        onSave={async () => {
+          if (!activeWorkspace) throw new Error("No active workspace.");
+          await importWorkspaceResource(activeWorkspace.path, systemImageToSave);
+          setSystemImageToSave(null);
+        }}
+      />}
       {isSettingsOpen && (
         <SettingsModal initialCategory={settingsInitialCategory} onClose={() => setIsSettingsOpen(false)} />
       )}
