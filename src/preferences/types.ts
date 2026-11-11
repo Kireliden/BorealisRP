@@ -5,6 +5,7 @@ export type CatppuccinFlavor =
   | "macchiato"
   | "mocha"
   | "crimson-void"
+  | "crimson-dawn"
   | "coral-bloom"
   | "sakura-dreams"
   | "moon-light"
