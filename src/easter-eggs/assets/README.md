@@ -26,7 +26,7 @@ This is the temporary static artwork while the animated holographic treatment is
 
 ## THE PLUMBOB (egg 004)
 
-Type the standalone secret word `tiranipeuti` (case-insensitively) in an editable field to unlock the fourth collectible and display its reveal.
+Type the standalone word `sims` (case-insensitively) in an editable field to unlock the fourth collectible, display its reveal, and unlock both palettes of the **Emerald Collection** in Settings → Themes.
 
 The fourth Collections sticker and its reveal use:
 
@@ -37,3 +37,10 @@ src/easter-eggs/assets/egg_004.png
 Its artwork is bundled with the app. No external audio is required.
 
 Use only audio and artwork you have permission to use. The MP3 is ignored by Git and should not be committed to a publicly shared repository without appropriate rights.
+
+## Theme rewards: Emerald Collection
+
+- `Emerald Glade` — light palette with jade/soft green accents.
+- `Emerald Nocturne` — dark palette inspired by the Plumbob reveal's green Skip button.
+
+The pair is visible but locked before `the-plumbob` is discovered; after that, both are selectable and available as the light/dark pair in Follow system. The unlock remains saved in the existing Collections store.
