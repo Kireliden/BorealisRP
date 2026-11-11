@@ -6,6 +6,17 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Sakura pairing and native Borealis UI controls
+
+- Merged the former Coral and Sakura groups into **Sakura Collection** with **Sakura Dreams** (light) and **Sakura Dusk** (dark). Sakura Dusk reuses Coral Bloom's existing colours and internal `coral-bloom` theme ID to preserve saved preferences and system dark-theme choices.
+- Removed the separate Coral Collection; Catppuccin, Moonlight, Crimson, Sakura and unlockable Emerald now account for all twelve palettes.
+- Created reusable `src/ui/AppSelect.tsx` and its theme-aware CSS. Migrated **all 15 native HTML select controls** in the React UI to portalled in-app menus, including theme switching, Appearance, profile/title/frame, composer character selection, Character Studio and relationships, character/resource sorting, Resources filtering/move target, expression manager and emoji picker.
+- AppSelect preserves controlled values and existing change handlers. It supports keyboard arrow navigation, Escape, focus/click-outside dismissal, chosen-item state, positioning that flips above the control when space is limited, and theme-aware colour across light/dark collections.
+- Created `AppDialogProvider` / `useAppDialog`, installed at the React application root, replacing all eight previous browser `window.confirm` / `window.prompt` / `window.alert` interactions with queued native-looking Borealis dialogs. These cover message deletion, workspace renaming, relationship-type deletion, expression saving and image validation alerts.
+- Created `AppColorPicker` with preset swatches, hue/saturation/lightness sliders and editable hex colour for the composer, Character Studio accents and scene background overlay, replacing four browser-native colour popovers.
+- Existing app-authored popovers/context menus and system file selection dialogs remain in place; native file chooser dialogs are deliberately preserved for OS integration and filesystem security.
+- **Pending local validation:** `npm run build`, interactive keyboard/focus checks in Tauri WebView2/WebKitGTK, portal positioning inside modals, text-colour selection preservation, and narrow-window layouts.
+
 ## 2026-11-11 — Crimson Dawn and theme layout refinements
 
 - Introduced **Crimson Dawn**, the light counterpart to Crimson Void: warm pink-ivory surfaces, garnet typography and saturated crimson highlights, with a complete Catppuccin-compatible semantic variable palette in `src/themes/themes.css`.
