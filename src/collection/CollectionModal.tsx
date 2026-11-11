@@ -28,6 +28,14 @@ const COLLECTION_ITEMS = [
     imageSrc: nudgeSticker,
     imageAlt: "THE NUDGE, the classic MSN nudge sticker",
   },
+  {
+    id: "lambda-signal",
+    name: "THE LAMBDA",
+    description: "A strange signal from somewhere beyond Borealis.",
+    icon: "λ",
+    imageSrc: null,
+    imageAlt: "THE LAMBDA — sticker artwork coming soon",
+  },
 ] as const;
 
 
