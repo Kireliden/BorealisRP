@@ -5,9 +5,17 @@
 **Target:** First privately distributable Windows alpha; Linux packages later.  
 **Branding decision for installer:** **Borealis Roleplay Studio** (not “Den”). Preserve the existing real application icon, an OpenMoji crescent moon **without additional sparkle in the actual logo**. Decorative celestial effects around the illustration are separate.
 
+## Current installation policy — 11 November 2026
+
+**Machine-wide Windows install:** NSIS `installMode: "perMachine"`, default installation under `C:\\Program Files\\Borealis Roleplay Studio` with UAC administrator consent. The earlier unsigned `currentUser` installer defaulted to Local AppData and should not be installed alongside the new machine-wide build. If a per-user copy was installed, uninstall it first through Windows Settings → Installed apps, then install the rebuilt machine-wide setup.
+
+**Uninstall:** the Tauri NSIS installer creates a registered standard Windows uninstaller, additionally branded with the same moon `.ico` and header artwork. Do not implement custom deletion hooks for user-owned Workspace directories; those are independent of the app binary.
+
+**Development versus installation:** `C:\\Dev\\BorealisRP` and the installed program executable are independent copies. However, dev and packaged builds may share app-local Tauri profile/preferences because the app identifier is the same; keep a disposable workspace for testing and avoid simultaneous writes to the same workspace. Updates should be tested as an install/upgrade process using stable product identity and explicit version increments.
+
 ## 0. Implemented installer baseline (11 November 2026)
 
-- **Current implementation:** `src-tauri/tauri.conf.json` now configures `bundle.windows.nsis` using `installMode: "currentUser"`, `installerIcon: "icons/icon.ico"`, `sidebarImage: "windows/installer/sidebar.bmp"`, `headerImage: "windows/installer/header.bmp"`, `startMenuFolder: "Borealis"` and `compression: "lzma"`. Non-Windows bundling targets were **not** removed.
+- **Current implementation:** `src-tauri/tauri.conf.json` now configures `bundle.windows.nsis` using `installMode: "perMachine"`, `installerIcon: "icons/icon.ico"`, `sidebarImage: "windows/installer/sidebar.bmp"`, `headerImage: "windows/installer/header.bmp"`, `startMenuFolder: "Borealis"`, `compression: "lzma"` and matching branded uninstaller icon/header. Non-Windows bundling targets were **not** removed.
 - **Checked-in graphics:** `src-tauri/windows/installer/sidebar.bmp` (164×314, native 24-bit BMP) and `header.bmp` (150×57, native 24-bit BMP). These are original procedural Frappé celestial illustrations, not baked screenshots of interface controls.
 - **Automated Windows packaging:** `.github/workflows/windows-installer.yml` builds the NSIS `-setup.exe` on a Windows runner and uploads it as a workflow artifact. It is triggered by relevant pushes to `feature/workspace-persistence` or by manual workflow dispatch when available. The workflow was added but **its first run has not been confirmed successful**.
 - **Optional original-concept artwork:** the conversation also provides a separate downloadable BMP artwork pack cropped from the approved illustration mockups; replacing the two same-named BMP files locally before packaging applies those visuals. The GitHub branch contains its own self-sufficient art by default.
@@ -115,7 +123,7 @@ Use Tauri's standard Windows NSIS `-setup.exe` target and brand the real install
     "windows": {
       "nsis": {
         "languages": ["English"],
-        "installMode": "currentUser",
+        "installMode": "perMachine",
         "installerIcon": "icons/icon.ico",
         "headerImage": "./windows/installer/header.bmp",
         "sidebarImage": "./windows/installer/sidebar.bmp"
@@ -125,7 +133,7 @@ Use Tauri's standard Windows NSIS `-setup.exe` target and brand the real install
 }
 ```
 
-Paths in this sample are illustrative. Create and verify the asset files and check their path resolution before using the configuration. `installMode: "currentUser"` is intended to avoid unnecessary administrator elevation for the first alpha.
+Paths in this sample are illustrative. Create and verify the asset files and check their path resolution before using the configuration. `installMode: "perMachine"` is intended to avoid unnecessary administrator elevation for the first alpha.
 
 **This produces a branded standard installer, not a pixel-perfect recreation of the illustrated mockups.** The Windows installer still owns native page layout and widgets.
 
@@ -165,7 +173,7 @@ The same artwork can be used later for an expanded custom installer. Keep **text
 - **Zero forced account sign-up.** The app works locally.
 - **Never silently delete, reset or move user workspaces** during setup, upgrade or uninstall.
 - Keep existing Tauri installer upgrade/uninstall behaviour intact unless custom changes have test coverage.
-- Do not introduce elevated privileges where they are not required.
+- Installer elevation is required for `perMachine` installation into Program Files; everyday app execution must remain unelevated.
 - No dummy update checkboxes, fabricated progress values or unimplemented functionality.
 - Link to relevant notices/third-party acknowledgements before public redistribution, including OpenMoji attribution if applicable.
 - Handle Tauri/WebView2 runtime dependencies as configured by Tauri rather than writing ad-hoc dependency installers without need.
