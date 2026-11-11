@@ -7,13 +7,8 @@ import "./CollectionModal.css";
 import potatoSticker from "../easter-eggs/assets/ee_001.png";
 import nudgeSticker from "../easter-eggs/assets/ee_002.png";
 
-/** Optional animated collectible: the card becomes available when ee_003.gif is added. */
-const ANIMATED_STICKERS = import.meta.glob<string>("../easter-eggs/assets/ee_*.gif", {
-  eager: true,
-  query: "?url",
-  import: "default",
-});
-const lambdaSticker = ANIMATED_STICKERS["../easter-eggs/assets/ee_003.gif"] ?? null;
+import lambdaSticker from "../easter-eggs/assets/egg_003.png";
+import plumbobSticker from "../easter-eggs/assets/egg_004.png";
 
 type CollectionsModalProps = {
   onClose: () => void;
@@ -42,7 +37,15 @@ const COLLECTION_ITEMS = [
     description: "A strange signal from somewhere beyond Borealis.",
     icon: "λ",
     imageSrc: lambdaSticker,
-    imageAlt: "THE LAMBDA — animated lambda sticker",
+    imageAlt: "THE LAMBDA — static lambda sticker",
+  },
+  {
+    id: "the-plumbob",
+    name: "THE PLUMBOB",
+    description: "Sul sul! An exceptionally well-hidden little secret.",
+    icon: "◆",
+    imageSrc: plumbobSticker,
+    imageAlt: "THE PLUMBOB — green Sims-inspired diamond sticker",
   },
 ] as const;
 
