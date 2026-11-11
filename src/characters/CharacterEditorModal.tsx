@@ -1,3 +1,4 @@
+import AppColorPicker from "../ui/AppColorPicker";
 import AppSelect from "../ui/AppSelect";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -147,7 +148,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
               <span className="studio-portrait-overlay"><SlidersHorizontal size={14} /> {draft.portraitResourceId ? "Adjust framing" : "Portrait preview"}</span>
             </button>
             <label className="studio-field studio-portrait-select"><span>Portrait image</span><AppSelect value={draft.portraitResourceId ?? ""} onChange={(event) => patch({ portraitResourceId: event.target.value || null })}><option value="">Use initials</option>{imageResources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</AppSelect>{imageResources.length === 0 && <small>Import images in Resources to use them here.</small>}</label>
-            <label className="studio-field studio-accent-field"><span>Character accent</span><div className="studio-colour-control"><input type="color" value={characterAccentColor(draft.accent)} onChange={(event) => patch({ accent: event.target.value })} aria-label="Choose character accent colour" /><code>{characterAccentColor(draft.accent).toUpperCase()}</code></div></label>
+            <label className="studio-field studio-accent-field"><span>Character accent</span><div className="studio-colour-control"><AppColorPicker value={characterAccentColor(draft.accent)} onChange={(event) => patch({ accent: event.target.value })} aria-label="Choose character accent colour" /><code>{characterAccentColor(draft.accent).toUpperCase()}</code></div></label>
           </div>
           <div className="studio-identity">
             <span className="studio-kicker">CHARACTER IDENTITY</span>
@@ -178,7 +179,7 @@ export default function CharacterEditorModal({ draft, setDraft, characters, sele
             <ListField label="Fears" values={draft.fears} onChange={(fears) => patch({ fears })} placeholder="Add a fear…" />
           </div>
           <ListField label="Knowledge & wisdom" values={draft.knowledge} onChange={(knowledge) => patch({ knowledge })} placeholder="Add knowledge, expertise or wisdom…" />
-          <label className="studio-field"><span>Associated colour</span><div className="studio-colour-control"><input type="color" value={draft.associatedColor || "#b4befe"} onChange={(event) => patch({ associatedColor: event.target.value })} aria-label="Choose associated colour" /><code>{(draft.associatedColor || "#b4befe").toUpperCase()}</code></div></label>
+          <label className="studio-field"><span>Associated colour</span><div className="studio-colour-control"><AppColorPicker value={draft.associatedColor || "#b4befe"} onChange={(event) => patch({ associatedColor: event.target.value })} aria-label="Choose associated colour" /><code>{(draft.associatedColor || "#b4befe").toUpperCase()}</code></div></label>
         </section>
 
         <section className="studio-section">
