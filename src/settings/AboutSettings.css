@@ -130,6 +130,10 @@
   outline-offset: 3px;
 }
 .about-backup-action:disabled { opacity: .6; }
+.about-backup-action + .about-backup-action { margin-top: 10px; }
+.about-backup-label { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.about-backup-label svg { flex: 0 0 auto; }
+
 .about-backup-hint {
   margin: 12px 1px 0;
   color: var(--muted);
