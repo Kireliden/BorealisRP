@@ -91,6 +91,10 @@
   color: #303446;
   text-shadow: 0 1px 3px rgb(255 255 255 / 70%);
 }
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .message-meta strong.message-author-user {
+  color: var(--accent);
+}
+
 .main-panel.has-scene-background[data-scene-overlay-tone="light"] .composer-context .composer-scene-pill {
   color: #303446;
   background: color-mix(in srgb, white 81%, transparent);
