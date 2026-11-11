@@ -4,7 +4,7 @@
 **Status:** Approved architectural decision  
 **Date:** 17 October 2026  
 **Scope:** Workspace discovery, storage, portability, open formats and backup/restore  
-**Implementation status:** Initial storage foundation and workspace-manager UI implemented on `feature/workspace-storage-foundation`; persistent content integration remains pending
+**Implementation status (11 November 2026):** The workspace foundation and active-workspace scenes, characters, resources, drafts and messages are now implemented on `feature/workspace-persistence`. This is the original approved design document; its proposed folder layouts and unchecked acceptance criteria are historical requirements, not a live test log. See `CurrentState.md`, `Architecture.md` and `docs/ALPHA-READINESS.md` for implemented paths and remaining recovery/release checks.
 
 ---
 
