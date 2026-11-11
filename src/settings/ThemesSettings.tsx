@@ -1,3 +1,4 @@
+import AppSelect from "../ui/AppSelect";
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { LockKeyhole, Sparkles } from "lucide-react";
@@ -83,19 +84,19 @@ export default function ThemesSettings() {
           <div className="themes-schedule-slots">
             <label className="themes-schedule-slot">
               <span>☀ Light theme</span>
-              <select value={appearance.systemLightTheme}
+              <AppSelect value={appearance.systemLightTheme}
                 onChange={(event) => selectTheme(event.target.value as CatppuccinFlavor)}>
                 {availableThemes.filter((theme) => isLightTheme(theme.id)).map((theme) =>
                   <option key={theme.id} value={theme.id}>{theme.name}</option>)}
-              </select>
+              </AppSelect>
             </label>
             <label className="themes-schedule-slot">
               <span>☾ Dark theme</span>
-              <select value={appearance.systemDarkTheme}
+              <AppSelect value={appearance.systemDarkTheme}
                 onChange={(event) => selectTheme(event.target.value as CatppuccinFlavor)}>
                 {availableThemes.filter((theme) => !isLightTheme(theme.id)).map((theme) =>
                   <option key={theme.id} value={theme.id}>{theme.name}</option>)}
-              </select>
+              </AppSelect>
             </label>
           </div>
           <p className="themes-schedule-current">
