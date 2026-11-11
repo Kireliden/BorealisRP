@@ -1,3 +1,4 @@
+import AppColorPicker from "../ui/AppColorPicker";
 import { useEffect, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { Image as ImageIcon, RotateCcw, Trash2, X } from "lucide-react";
@@ -145,7 +146,7 @@ export default function SceneBackgroundSettings({
             {settings.overlayMode === "auto" && <p className="scene-overlay-auto-info">Using {themeIsLight ? "Light" : "Dark"} for the current BRS theme; updates automatically when your theme changes.</p>}
             {settings.overlayMode === "custom" && <label className="scene-overlay-custom-colour">
               <span>Custom tint</span>
-              <input type="color" value={safeOverlayHex(settings.overlayColor)} aria-label="Custom overlay colour"
+              <AppColorPicker value={safeOverlayHex(settings.overlayColor)} aria-label="Custom overlay colour"
                 onChange={(event) => setSettings((previous) => ({ ...previous, overlayColor: event.target.value }))} />
               <output>{safeOverlayHex(settings.overlayColor)}</output>
             </label>}
