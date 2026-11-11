@@ -6,11 +6,11 @@ import plumbobArtwork from "./assets/egg_004.png";
 import "./PlumbobEgg.css";
 
 const EGG_ID = "the-plumbob";
-const SECRET_WORD = /\btiranipeuti\b/i;
+const SECRET_WORD = /\bsims\b/i;
 const DURATION_MS = 6200;
 
 /**
- * Easter egg 004: a deliberately obscure in-joke.
+ * Easter egg 004: a secret Sims reference.
  * The trigger listens to ordinary user editing, never modifies text,
  * and requires the word to appear anew before replaying.
  */
