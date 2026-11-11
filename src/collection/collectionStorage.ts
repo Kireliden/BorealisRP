@@ -7,6 +7,7 @@ import {
 
 const STORE_PATH = "collections.json";
 const COLLECTION_KEY = "collectionData";
+export const COLLECTION_UPDATED_EVENT = "borealis:collection-updated";
 
 let operationQueue: Promise<void> = Promise.resolve();
 
@@ -81,6 +82,10 @@ export async function registerDiscovery(id: string): Promise<void> {
 
     await store.set(COLLECTION_KEY, { discovered });
     await store.save();
+    // Theme collections react immediately when a new secret is discovered.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(COLLECTION_UPDATED_EVENT, { detail: { id } }));
+    }
   });
 
   operationQueue = operation.catch(() => {});
