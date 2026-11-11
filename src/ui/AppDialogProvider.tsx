@@ -96,9 +96,9 @@ export function AppDialogProvider({ children }: { children: ReactNode }) {
         finish(task.kind === "confirm" ? false : null);
       }
       if (event.key === "Tab" && dialogRef.current) {
-        const controls = [...dialogRef.current.querySelectorAll<HTMLElement>(
+        const controls = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
           'button:not(:disabled), input:not(:disabled), textarea:not(:disabled)',
-        )];
+        ));
         const first = controls[0];
         const last = controls[controls.length - 1];
         if (!first || !last) return;
