@@ -90,6 +90,11 @@ function charactersFromLibrary(): Character[] {
   return [...libraryCharacters, { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" }];
 }
 
+// Browser rich-text editing (execCommand("foreColor")) often creates
+// <font color="..."> rather than <span style="color:...">. Preserve both
+// formats while allowing only simple CSS colour values through to messages.
+const validRichTextColour = /^(#[0-9a-f]{3,8}|rgb\([\d\s,%]+\)|rgba\([\d\s,.%]+\)|[a-z]+)$/i;
+
 function markdownSourceFromHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
 
@@ -116,11 +121,17 @@ function markdownSourceFromHtml(html: string) {
       ];
     }
 
-    if (tag === "SPAN" && source.style.color) {
-      const span = document.createElement("span");
-      span.style.color = source.style.color;
-      [...source.childNodes].forEach((child) => span.append(...convert(child)));
-      return [span];
+    if (tag === "SPAN" || tag === "FONT") {
+      const colour = tag === "FONT"
+        ? (source.getAttribute("color") || source.style.color)
+        : source.style.color;
+      if (validRichTextColour.test(colour)) {
+        const span = document.createElement("span");
+        span.style.color = colour;
+        [...source.childNodes].forEach((child) => span.append(...convert(child)));
+        return [span];
+      }
+      // Non-colour spans/fonts still flatten to their formatted children.
     }
 
     if (tag === "IMG" && source.classList.contains("message-openmoji-emoji")) {
@@ -199,7 +210,7 @@ function applyMarkdownToTextNodes(root: HTMLElement) {
 function sanitiseHtml(html: string) {
   const parsed = new DOMParser().parseFromString(html, "text/html");
   const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "S", "DEL", "CODE", "SPAN", "BR", "DIV", "P", "IMG"]);
-  const validColour = /^(#[0-9a-f]{3,8}|rgb\([\d\s,%]+\)|rgba\([\d\s,.%]+\)|[a-z]+)$/i;
+  const validColour = validRichTextColour;
 
   function cleanNode(node: Node): Node[] {
     if (node.nodeType === Node.TEXT_NODE) {
