@@ -1,0 +1,71 @@
+/* BRS chat content width — grows with the window without becoming edge-to-edge.
+   A 900px minimum target preserves the existing layout on ordinary windows;
+   percentage growth and a cap keep large / ultrawide windows comfortable. */
+.main-panel {
+  --chat-column-width: min(100%, max(900px, 84%));
+}
+
+.conversation > .message,
+.conversation > .date-divider,
+.conversation > .scene-empty-state,
+.composer-layout,
+.composer-context {
+  box-sizing: border-box;
+  width: var(--chat-column-width);
+  max-width: 1540px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+/* Let the narration card and message actions use the expanded column,
+   rather than leaving an invisible unused area inside each message row. */
+.conversation > .message > .message-body {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* This label follows the same column width as the composer below it. */
+.composer-context {
+  gap: 7px;
+  min-width: 0;
+}
+
+.composer-context .composer-context-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+.composer-context .composer-context-caption {
+  flex: 0 0 auto;
+}
+
+.composer-context .composer-scene-pill {
+  display: inline-block;
+  min-width: 0;
+  max-width: min(54%, 330px);
+  padding: 4px 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface));
+  color: var(--ctp-text);
+  font-weight: 650;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: none;
+}
+
+.main-panel.has-scene-background .composer-context .composer-scene-pill {
+  background: color-mix(in srgb, var(--ctp-mantle) 80%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+  color: #f3f4ff;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+/* The existing 164px character portrait and responsive composer gap
+   remain the source of truth for the context label's left alignment. */
