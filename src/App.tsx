@@ -41,7 +41,8 @@ import ChatImageLightbox, { type ChatLightboxImage } from "./chat/ChatImageLight
 import { exportScenesToMarkdown } from "./chat/obsidianExport";
 import "./chat/obsidianExport.css";
 import SceneBackgroundSettings from "./chat/SceneBackgroundSettings";
-import { isLightOverlay, overlayRgb, loadSceneBackgroundUrl, safeSceneBackground, saveSceneBackgroundFile, type SceneBackground, type SceneBackgroundAdjustments } from "./chat/sceneBackground";
+import { isLightOverlay, overlayRgb, safeSceneBackground, saveSceneBackgroundFile, type SceneBackground, type SceneBackgroundAdjustments } from "./chat/sceneBackground";
+import { getCachedSceneBackground, peekSceneBackground, forgetSceneBackground, prefetchSceneBackgrounds } from "./chat/sceneBackgroundCache";
 import "./chat/sceneBackground.css";
 import FavouritesPage from "./favourites/FavouritesPage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
@@ -601,28 +602,25 @@ function sanitiseHtml(html: string) {
   const sceneBackground = safeSceneBackground(activeScene?.background);
   const sceneBackgroundPath = sceneBackground?.relativePath ?? null;
   const backgroundImageKey = `${activeWorkspace?.path ?? ""}::${sceneBackgroundPath ?? ""}`;
-  const backgroundImageUrl = backgroundImageState?.key === backgroundImageKey ? backgroundImageState.url : null;
+  const backgroundImageUrl = activeWorkspace && sceneBackgroundPath
+    ? peekSceneBackground(activeWorkspace.path, sceneBackgroundPath) ??
+      (backgroundImageState?.key === backgroundImageKey ? backgroundImageState.url : null)
+    : null;
 
   useEffect(() => {
     let disposed = false;
-    let objectUrl: string | null = null;
     setBackgroundImageState(null);
     if (activeWorkspace && sceneBackground) {
-      void loadSceneBackgroundUrl(activeWorkspace.path, sceneBackground)
+      void getCachedSceneBackground(activeWorkspace.path, sceneBackground)
         .then((url) => {
-          objectUrl = url;
-          if (disposed) URL.revokeObjectURL(url);
-          else setBackgroundImageState({ key: backgroundImageKey, url });
+          if (!disposed) setBackgroundImageState({ key: backgroundImageKey, url });
         })
         .catch((reason) => {
           if (!disposed) console.warn("Could not load this scene's background:", reason);
         });
     }
-    return () => {
-      disposed = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-    // Only the workspace and referenced image change the loaded binary.
+    return () => { disposed = true; };
+    // The LRU owns object URL lifetime, so switching scenes does not revoke/reload.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWorkspace?.path, sceneBackgroundPath]);
 
@@ -1070,6 +1068,7 @@ function sanitiseHtml(html: string) {
       if (oldPath && oldPath !== nextBackground?.relativePath &&
         !nextScenes.some((item) => item.background?.relativePath === oldPath)) {
         // The new workspace manifest is already durable; deleting an orphan is best-effort.
+        forgetSceneBackground(workspacePath, oldPath);
         await deleteWorkspaceFile(workspacePath, oldPath).catch((reason) =>
           console.warn("Could not clean up an unused chat background:", reason));
       }
