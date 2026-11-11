@@ -40,3 +40,52 @@
 .studio-icon-more { flex: 0 0 auto; padding: 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--accent); font-size: 11px; cursor: pointer; }
 .studio-icon-panel small { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; flex: 0 0 auto; }
 @media (prefers-reduced-motion: reduce) { .studio-icon-trigger { transition: none; } }
+
+/* Workspace icon actions: first level of the hero icon's popup.
+   "Change icon" reveals the existing OpenMoji/system picker in place. */
+.studio-workspace-actions {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+.studio-workspace-actions button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ctp-text);
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 640;
+  cursor: pointer;
+}
+.studio-workspace-actions button svg {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+.studio-workspace-actions button:hover:not(:disabled),
+.studio-workspace-actions button:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface));
+}
+.studio-workspace-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.studio-workspace-actions button:disabled {
+  opacity: .43;
+  cursor: not-allowed;
+}
+.studio-icon-panel header:has(button[aria-label="Back to workspace options"]) {
+  justify-content: flex-start;
+}
+.studio-icon-panel header:has(button[aria-label="Back to workspace options"]) strong {
+  flex: 1;
+}
