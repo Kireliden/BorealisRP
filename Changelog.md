@@ -6,6 +6,18 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Markdown / Obsidian chat export
+
+### Implemented (runtime and build verification pending)
+- Added **Export scene as Markdown** and **Export all scenes as Markdown** to the current scene's `⋯` menu, opening a native destination-folder picker (an Obsidian vault folder can be chosen).
+- Exports each scene to a UTF-8 `.md` note with YAML frontmatter for workspace/scene/export date and Obsidian-compatible callouts identifying each character, Narration or Dialogue, and message time.
+- Converts saved rich-text HTML to Markdown, retaining bold, italics, strikethrough, inline code, paragraphs and line breaks; uses limited inline HTML for underlining/colours. No network or Obsidian plugin is required.
+- Copies existing chat image attachments, including animated GIFs, into an `assets/` folder next to the notes and embeds each using portable relative Markdown image links.
+- Exporting multiple scenes also produces `00 - Index.md` linking to each scene. Repeated exports create a uniquely numbered new folder rather than overwriting existing vault files.
+- The Rust backend checks workspace-relative image paths and destination names before copying, and removes incomplete export directories on failure. Original BRS scenes and resources are not modified.
+- Export notices report destination paths or errors. **The scene background wallpaper and character portrait images are not part of this first export**; conversation attachments are included.
+- **Pending validation:** `npm run build`, Rust/Tauri compilation, destination picker on Windows/Fedora, Obsidian callout rendering, large-GIF export and repeated export safety.
+
 ## 2026-11-11 — Follow system themes and synchronised chat overlays
 
 ### Implemented (local build/runtime verification pending)
