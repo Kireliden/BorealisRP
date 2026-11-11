@@ -987,6 +987,9 @@ function sanitiseHtml(html: string) {
       setScenes(nextScenes);
       setActiveSceneId(scene.id);
       setMessages([]);
+      clearComposerImages();
+      setImageSourceOpen(false);
+      setSystemImageToSave(null);
       setDraftHtml("");
       setEditingMessageId(null);
       setWorkspaceError("");
@@ -1016,6 +1019,9 @@ function sanitiseHtml(html: string) {
         const nextActiveScene = nextScenes[0] ?? null;
         setActiveSceneId(nextActiveScene?.id ?? null);
         setMessages(nextActiveScene?.messages ?? []);
+        clearComposerImages();
+        setImageSourceOpen(false);
+        setSystemImageToSave(null);
         setDraftHtml("");
         setEditingMessageId(null);
         setOpenMessageActionsId(null);
