@@ -148,7 +148,7 @@ export default function ResourceImagePicker({
         </>}
       </div>
       <footer className="resource-image-picker-footer">
-        <span>Images are copied into the expression slot when saved, so moving or deleting a vault item won't break saved expressions.</span>
+        <span>The selected image is copied into its destination. Removing it from Resources later will not break a saved portrait or message.</span>
         <button type="button" className="resource-image-picker-cancel" disabled={busy} onClick={onCancel}>Cancel</button>
         <button type="button" className="resource-image-picker-use" disabled={busy || !selectedIds.length} onClick={() => void useSelection()}>{busy ? "Loading…" : multiple ? `Use selected images (${selectedIds.length})` : "Use image"}</button>
       </footer>
