@@ -6,6 +6,16 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Profile and composer image integration
+
+### Implemented (runtime/build verification pending)
+- Added **From system** and **From Resources** choices for the user portrait and banner. The Resource picker follows the active workspace; selected files are copied to durable profile storage rather than referenced by their original vault ID.
+- Enabled the composer's image button for current scenes. Images from the computer or the active workspace's Resources are previewed before sending and saved as independent files in `Chats/Images/`, with relative-path metadata in messages. Text-only, image-only and combined messages are supported; existing message images remain editable/removable.
+- When an image comes from the system picker, a separate, skippable **Save to Resources?** dialog asks whether to import an additional copy. Declining never prevents its use in the profile or a sent passage.
+- Resources imports remain explicit. Existing workspace content and legacy storage identifiers are unchanged; the new attachment metadata is optional for older messages.
+- Image picker overlays work over Settings; the user retains their composer attachments if message saving fails.
+- **Pending validation:** Tauri Rust command compilation, TypeScript/Vite build and manual checks of media persistence across restarts, switching scenes and deleting Resources items.
+
 ## 2026-11-11 — BRS branding and final interface polish
 
 - Standardised visible **BRS** initials for Borealis Roleplay Studio across the profile, holographic avatar card, Resources dialogs, workspace manager, settings, user-facing errors and development documentation.
