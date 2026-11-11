@@ -8,6 +8,7 @@ import { loadSceneBackgroundUrl, type SceneBackground } from "./sceneBackground"
 const MAX_BACKGROUNDS = 8;
 const cached = new Map<string, string>();
 const pending = new Map<string, Promise<string>>();
+const generations = new Map<string, number>();
 
 export const sceneBackgroundCacheKey = (workspacePath: string, relativePath: string) =>
   workspacePath + "::" + relativePath;
@@ -31,8 +32,13 @@ export function getCachedSceneBackground(
   if (hit) return Promise.resolve(hit);
   const loading = pending.get(key);
   if (loading) return loading;
+  const generation = generations.get(key) ?? 0;
   const job = loadSceneBackgroundUrl(workspacePath, background).then((url) => {
     pending.delete(key);
+    if ((generations.get(key) ?? 0) !== generation) {
+      URL.revokeObjectURL(url);
+      throw new Error("Scene background was invalidated while loading.");
+    }
     // If another caller has inserted this key while loading, keep one URL.
     const existing = cached.get(key);
     if (existing) {
@@ -60,7 +66,8 @@ export function forgetSceneBackground(workspacePath: string, relativePath: strin
   const key = sceneBackgroundCacheKey(workspacePath, relativePath);
   const url = cached.get(key);
   cached.delete(key);
-  // A pending decode is also prevented from persisting on completion.
+  generations.set(key, (generations.get(key) ?? 0) + 1);
+  // An in-flight read will now discard its outdated object URL on completion.
   if (url) URL.revokeObjectURL(url);
 }
 
