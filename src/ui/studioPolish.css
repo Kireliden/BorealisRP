@@ -1,12 +1,19 @@
 /* BRS workspace/chat polish: small overrides kept outside the legacy App.css. */
 
-/* Workspace switcher is now the sidebar's header; the name opens the menu. */
+/* The two-tier workspace header follows the annotated layout:
+   a compact switcher capsule, then the prominent icon/title and collapse icon. */
 .sidebar .workspace-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  gap: 11px;
+  padding: 4px 3px 17px;
+}
+.sidebar .workspace-selector-row {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 4px;
-  padding: 4px 3px 15px;
 }
 .sidebar .brand-workspace-switcher {
   flex: 1 1 auto;
@@ -19,8 +26,8 @@
   min-width: 0;
   width: 100%;
   min-height: 42px;
-  padding: 7px;
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
   border-radius: 11px;
   background: color-mix(in srgb, var(--accent) 7%, var(--sidebar-bg));
   color: var(--ctp-text);
@@ -33,16 +40,64 @@
 }
 .brand-workspace-switcher .studio-icon-image,
 .brand-workspace-switcher .studio-icon-emoji {
-  width: 24px; height: 24px; flex-basis: 24px; font-size: 23px;
+  width: 22px; height: 22px; flex-basis: 22px; font-size: 21px;
+}
+.sidebar .workspace-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 5px;
+}
+.sidebar .workspace-hero-icon {
+  flex: 0 0 47px;
+  width: 47px;
+  height: 47px;
+}
+.sidebar .workspace-hero-icon .studio-icon-trigger.is-compact {
+  width: 47px;
+  height: 47px;
+  padding: 5px;
+  border: 1px solid color-mix(in srgb, var(--accent) 57%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--accent) 18%, var(--surface)),
+    color-mix(in srgb, var(--accent) 9%, var(--sidebar-bg)));
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.sidebar .workspace-hero-icon .studio-icon-trigger:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 19%, var(--surface));
+}
+.sidebar .workspace-hero-icon .studio-icon-image,
+.sidebar .workspace-hero-icon .studio-icon-emoji {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  font-size: 30px;
+}
+.sidebar .workspace-header-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: var(--ctp-text);
+  font-size: clamp(16px, 1.2vw, 23px);
+  font-weight: 800;
+  letter-spacing: -.55px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .sidebar-collapse-button {
-  display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 34px;
-  border: 1px solid transparent; border-radius: 8px;
+  display: grid; place-items: center;
+  flex: 0 0 28px;
+  width: 28px; height: 36px;
+  margin-left: auto;
+  border: 1px solid transparent;
+  border-radius: 8px;
   color: var(--muted); background: transparent; cursor: pointer;
 }
 .sidebar-collapse-button:hover { color: var(--accent); background: var(--surface-hover); }
 .sidebar-collapse-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.sidebar .workspace-brand-icon-editor { flex: 0 0 25px; }
 
 /* Taller user photo + footer, without losing access to Settings/Collections. */
 .sidebar .sidebar-footer {
@@ -65,16 +120,31 @@
   padding: 13px 6px 8px;
 }
 .app-shell.sidebar-is-collapsed .sidebar .workspace-brand {
-  flex-direction: column; gap: 4px; padding: 4px 0 11px;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 0 11px;
 }
+.app-shell.sidebar-is-collapsed .sidebar .workspace-selector-row { width: 100%; }
 .app-shell.sidebar-is-collapsed .sidebar .brand-workspace-switcher { flex: 0 0 auto; width: 100%; }
 .app-shell.sidebar-is-collapsed .sidebar .workspace-button {
   width: 100%; justify-content: center; padding: 8px 0; min-height: 43px;
 }
 .app-shell.sidebar-is-collapsed .sidebar .workspace-button-name,
 .app-shell.sidebar-is-collapsed .sidebar .workspace-switcher-chevron,
-.app-shell.sidebar-is-collapsed .sidebar .workspace-brand-icon-editor { display: none; }
-.app-shell.sidebar-is-collapsed .sidebar .sidebar-collapse-button { width: 100%; }
+.app-shell.sidebar-is-collapsed .sidebar .workspace-hero-icon,
+.app-shell.sidebar-is-collapsed .sidebar .workspace-header-label { display: none; }
+.app-shell.sidebar-is-collapsed .sidebar .workspace-header-row {
+  justify-content: center;
+  width: 100%;
+  padding: 0;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-collapse-button {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 54px;
+  margin: 0;
+}
 .app-shell.sidebar-is-collapsed .sidebar .sidebar-section:not(.scenes-section) {
   margin: 10px 0 0; padding: 0;
 }
