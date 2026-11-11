@@ -27,7 +27,10 @@ type EmojiItem = {
 };
 
 type EmojiStyle = "color" | "linework" | "system" | "lucide";
-type Props = { editorRef: RefObject<HTMLDivElement | null> };
+type Props = {
+  editorRef: RefObject<HTMLDivElement | null>;
+  onInserted?: (html: string) => void;
+};
 const RECENT_LIMIT = 32;
 const EMOJI_PAGE_SIZE = 140;
 const RECENT_KEY: Record<EmojiStyle, string> = {
@@ -72,7 +75,7 @@ function readRecent(style: EmojiStyle): string[] {
   }
 }
 
-export default function EmojiPicker({ editorRef }: Props) {
+export default function EmojiPicker({ editorRef, onInserted }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [source, setSource] = useState<EmojiStyle>("color");
   const [query, setQuery] = useState("");
@@ -149,7 +152,8 @@ export default function EmojiPicker({ editorRef }: Props) {
     selection?.removeAllRanges();
     selection?.addRange(activeRange);
     savedRangeRef.current = activeRange.cloneRange();
-    editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: eventData }));
+    if (onInserted) onInserted(editor.innerHTML);
+    else editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: eventData }));
     trackRecent(recentId);
     setIsOpen(false);
     setQuery("");
