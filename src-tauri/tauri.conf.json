@@ -1,4 +1,3 @@
-
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Borealis Roleplay Studio",
@@ -26,7 +25,9 @@
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/**"]
+        "scope": [
+          "$APPDATA/**"
+        ]
       }
     }
   },
@@ -39,6 +40,19 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "languages": [
+          "English"
+        ],
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "sidebarImage": "windows/installer/sidebar.bmp",
+        "headerImage": "windows/installer/header.bmp",
+        "startMenuFolder": "Borealis",
+        "compression": "lzma"
+      }
+    }
   }
 }
