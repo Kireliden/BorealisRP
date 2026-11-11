@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ChevronDown, FolderOpen, Pencil, Plus, Search, Smile, X } from "lucide-react";
-import { DynamicIcon, iconNames, type IconName } from "lucide-react/dynamic";
+import { DynamicIcon } from "lucide-react/dynamic";
+import { LUCIDE_PREFIX, LUCIDE_PAGE_SIZE, lucideNameFromValue, lucideOptions } from "./lucideCatalogue";
 import openMojiData from "openmoji/data/openmoji.json";
 import "./StudioIconPicker.css";
 
 type OpenMojiRecord = { hexcode: string; emoji: string; annotation: string; tags?: string; group?: string };
 type EmojiOption = { kind: "emoji"; emoji: string; hex: string; label: string; search: string };
-type LucideOption = { kind: "lucide"; name: IconName; label: string; search: string };
 const emojiOptions: EmojiOption[] = (openMojiData as OpenMojiRecord[])
   .filter((item) => item.emoji && item.hexcode)
   .map((item) => ({
@@ -16,29 +16,9 @@ const emojiOptions: EmojiOption[] = (openMojiData as OpenMojiRecord[])
     search: (item.annotation + " " + (item.tags ?? "") + " " + item.emoji).toLocaleLowerCase(),
   }));
 
-// Keep the complete Lucide catalogue searchable without eagerly bundling every SVG.
-const LUCIDE_PREFIX = "lucide:";
-const featuredLucideNames = [
-  "moon", "star", "sparkles", "book-open", "folder", "heart", "compass",
-  "feather", "wand-sparkles", "cloud", "sun", "cat", "paw-print",
-];
-const lucideNameSet = new Set<string>(iconNames);
-const lucideOptions: LucideOption[] = [...iconNames]
-  .sort((a, b) => {
-    const first = featuredLucideNames.indexOf(a);
-    const second = featuredLucideNames.indexOf(b);
-    if (first !== -1 || second !== -1) return first === -1 ? 1 : second === -1 ? -1 : first - second;
-    return a.localeCompare(b);
-  })
-  .map((name) => ({ kind: "lucide", name, label: name.replace(/-/g, " "), search: name.replace(/-/g, " ") }));
 const LIMIT = 112;
-const LUCIDE_LIMIT = 56;
 const isOpenMoji = (value: string) => value.startsWith("om:") && /^[A-F0-9-]+$/i.test(value.slice(3));
-const getLucideName = (value: string): IconName | null => {
-  if (!value.startsWith(LUCIDE_PREFIX)) return null;
-  const name = value.slice(LUCIDE_PREFIX.length);
-  return lucideNameSet.has(name) ? name as IconName : null;
-};
+const getLucideName = (value: string) => value.startsWith(LUCIDE_PREFIX) ? lucideNameFromValue(value) : null;
 
 export function StudioIcon({ value, className = "" }: { value?: string | null; className?: string }) {
   const icon = value || "📁";
@@ -101,7 +81,7 @@ export default function StudioIconPicker({
       left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) });
   };
 
-  useEffect(() => { setLimit(mode === "lucide" ? LUCIDE_LIMIT : LIMIT); }, [query, mode]);
+  useEffect(() => { setLimit(mode === "lucide" ? LUCIDE_PAGE_SIZE : LIMIT); }, [query, mode]);
 
   useEffect(() => {
     if (!open) return;
@@ -211,7 +191,7 @@ export default function StudioIconPicker({
             {filtered.length === 0 && <p className="studio-icon-empty">No matching icons found.</p>}
           </div>}
           {panelView === "icons" && filtered.length > limit &&
-            <button type="button" className="studio-icon-more" onClick={() => setLimit((n) => n + (mode === "lucide" ? LUCIDE_LIMIT : LIMIT))}>
+            <button type="button" className="studio-icon-more" onClick={() => setLimit((n) => n + (mode === "lucide" ? LUCIDE_PAGE_SIZE : LIMIT))}>
               Show more ({filtered.length - limit} remaining)
             </button>}
           {panelView === "icons" && <small><Smile size={12} /> {mode === "openmoji"
