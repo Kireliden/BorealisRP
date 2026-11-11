@@ -652,6 +652,16 @@ function sanitiseHtml(html: string) {
   }, [activeWorkspace?.path, sceneBackgroundPath]);
 
 
+  // Keep nearby scene backgrounds warm so navigating between scenes has no
+  // repeated disk reads; cache size is bounded independently.
+  useEffect(() => {
+    if (!activeWorkspace) return;
+    const previews = scenes.filter((scene) => Boolean(scene.background))
+      .map((scene) => safeSceneBackground(scene.background))
+      .filter((item): item is SceneBackground => item !== null);
+    prefetchSceneBackgrounds(activeWorkspace.path, previews);
+  }, [activeWorkspace?.path, scenes]);
+
   // Restore the last active workspace once, before persisting later selections.
   useEffect(() => {
     let cancelled = false;
@@ -1257,6 +1267,30 @@ function sanitiseHtml(html: string) {
     } catch (reason) {
       if (activeWorkspacePathRef.current === activeWorkspace.path) {
         setWorkspaceError(reason instanceof Error ? reason.message : String(reason));
+      }
+    }
+  }
+
+  async function updateTreeIcon(kind: "folder" | "scene", id: string, icon: string) {
+    if (!activeWorkspace || workspaceLoading) return;
+    const workspacePath = activeWorkspace.path;
+    const nextFolders = kind === "folder"
+      ? folders.map((item) => item.id === id ? { ...item, icon } : item)
+      : folders;
+    const nextScenes = kind === "scene"
+      ? scenes.map((item) => item.id === id ? { ...item, icon } : item)
+      : scenes;
+    try {
+      await saveWorkspaceContent(workspacePath, {
+        schemaVersion: 1, scenes: nextScenes, folders: nextFolders, categories,
+      });
+      if (activeWorkspacePathRef.current !== workspacePath) return;
+      if (kind === "folder") setFolders(nextFolders);
+      else setScenes(nextScenes);
+      setWorkspaceError("");
+    } catch (error) {
+      if (activeWorkspacePathRef.current === workspacePath) {
+        setWorkspaceError(error instanceof Error ? error.message : String(error));
       }
     }
   }
