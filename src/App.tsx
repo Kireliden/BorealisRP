@@ -1,3 +1,4 @@
+import AppColorPicker from "./ui/AppColorPicker";
 import AppSelect from "./ui/AppSelect";
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
@@ -1996,7 +1997,7 @@ function sanitiseHtml(html: string) {
                   <button type="button" title="Italic" aria-label="Italic" onMouseDown={(event) => event.preventDefault()} onClick={() => formatText("italic")}><em>I</em></button>
                   <button type="button" title="Underline" aria-label="Underline" onMouseDown={(event) => event.preventDefault()} onClick={() => formatText("underline")}><u>U</u></button>
                   <span className="toolbar-divider" />
-                  <label className="colour-picker" title="Text colour"><span>A</span><input aria-label="Text colour" type="color" defaultValue="#babbf1" onChange={(event) => changeTextColour(event.target.value)} /></label>
+                  <label className="colour-picker" title="Text colour"><span>A</span><AppColorPicker aria-label="Text colour" defaultValue="#babbf1" onChange={(event) => changeTextColour(event.target.value)} /></label>
                   <span className="toolbar-divider" />
                   <button
                     type="button"
