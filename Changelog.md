@@ -6,6 +6,17 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Per-scene chat backgrounds
+
+### Implemented (runtime/build verification pending)
+- Added **Background** beside Favourite in the scene toolbar. Each scene can use a different background image or keep the original plain chat.
+- Reused the system/Resources image chooser; system selections still ask whether to import an optional additional copy to Resources.
+- Saved image snapshots in portable `Chats/Backgrounds/` paths and attached the image reference and appearance options to each scene's optional `background` metadata; deleting an image from Resources does not break an active scene background.
+- Added a preview and sliders for dark overlay intensity, blur, zoom and horizontal/vertical framing, plus reset and remove controls. Changes apply when explicitly saved.
+- Rendered the image underneath the scene heading, messages and composer, not the sidebar or topbar. The composer and notices get a translucent glass surface for legibility; chats without backgrounds keep their existing styling.
+- Obsolete background snapshots are removed after successfully saving a replacement/removal, without touching Resources.
+- **Pending validation:** TypeScript/Vite build, Tauri Rust compilation, background persistence across restarts and scene changes, GIF behaviour, light-theme legibility and slider layout on smaller windows.
+
 ## 2026-11-11 — Chat lightbox and workspace favourites
 
 ### Implemented (build/runtime verification pending)
