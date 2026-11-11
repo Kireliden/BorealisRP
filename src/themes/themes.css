@@ -395,6 +395,96 @@
   --accent-soft: #292B4A;
 }
 
+/* Emerald Collection — Plumbob secret: Glade (light) */
+:root[data-theme="emerald-glade"] {
+  color-scheme: light;
+
+  --ctp-rosewater: #b7897a;
+  --ctp-flamingo: #c48a8a;
+  --ctp-pink: #ab80a6;
+  --ctp-mauve: #618d88;
+  --ctp-red: #bb5962;
+  --ctp-maroon: #a26071;
+  --ctp-peach: #c28d63;
+  --ctp-yellow: #9c904e;
+  --ctp-green: #278b60;
+  --ctp-teal: #318f78;
+  --ctp-sky: #61ada8;
+  --ctp-sapphire: #4a959b;
+  --ctp-blue: #55839d;
+  --ctp-lavender: #278b60;
+  --ctp-text: #234539;
+  --ctp-subtext1: #496f5e;
+  --ctp-subtext0: #709386;
+  --ctp-overlay2: #84a99a;
+  --ctp-overlay1: #9bbbab;
+  --ctp-overlay0: #afc9ba;
+  --ctp-surface2: #b7d8c5;
+  --ctp-surface1: #cbe3d3;
+  --ctp-surface0: #dceee2;
+  --ctp-base: #f0f8f2;
+  --ctp-mantle: #e3f1e8;
+  --ctp-crust: #d6e8dc;
+
+  --app-bg: var(--ctp-base);
+  --sidebar-bg: var(--ctp-mantle);
+  --panel-bg: var(--ctp-base);
+  --surface: var(--ctp-surface0);
+  --surface-hover: #cde6d7;
+  --border: #b7d8c5;
+  --muted: var(--ctp-subtext0);
+  --accent: #278b60;
+  --accent-soft: #c5e9d5;
+
+  color: var(--ctp-text);
+  background: var(--ctp-base);
+}
+
+/* Emerald Collection — Plumbob secret: Nocturne (dark) */
+:root[data-theme="emerald-nocturne"] {
+  color-scheme: dark;
+
+  --ctp-rosewater: #f3c4bc;
+  --ctp-flamingo: #eeb5b5;
+  --ctp-pink: #d49fc8;
+  --ctp-mauve: #85d0af;
+  --ctp-red: #f08d94;
+  --ctp-maroon: #d58d97;
+  --ctp-peach: #e8ad8c;
+  --ctp-yellow: #e0c78a;
+  --ctp-green: #63d99a;
+  --ctp-teal: #6ccbb3;
+  --ctp-sky: #8bd3cf;
+  --ctp-sapphire: #66b6ad;
+  --ctp-blue: #83aedd;
+  --ctp-lavender: #63d99a;
+  --ctp-text: #d7f5e3;
+  --ctp-subtext1: #aecfc0;
+  --ctp-subtext0: #85ab9c;
+  --ctp-overlay2: #769d8d;
+  --ctp-overlay1: #638775;
+  --ctp-overlay0: #52735f;
+  --ctp-surface2: #365b4b;
+  --ctp-surface1: #2b493b;
+  --ctp-surface0: #213a30;
+  --ctp-base: #0e1918;
+  --ctp-mantle: #122321;
+  --ctp-crust: #0a1211;
+
+  --app-bg: var(--ctp-base);
+  --sidebar-bg: var(--ctp-mantle);
+  --panel-bg: var(--ctp-base);
+  --surface: var(--ctp-surface0);
+  --surface-hover: #2c4b3c;
+  --border: #365b4b;
+  --muted: var(--ctp-subtext0);
+  --accent: #63d99a;
+  --accent-soft: #214b37;
+
+  color: var(--ctp-text);
+  background: var(--ctp-base);
+}
+
 /* Shared semantic component colors */
 :root,
 :root[data-theme] {
