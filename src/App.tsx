@@ -22,11 +22,13 @@ import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
 import LambdaEgg from "./easter-eggs/LambdaEgg";
 import PlumbobEgg from "./easter-eggs/PlumbobEgg";
-import { Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, FileDown, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, FileDown, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
+import StudioIconPicker, { StudioIcon } from "./ui/StudioIconPicker";
+import { getWorkspaceIcon, saveWorkspaceIcon } from "./workspace/workspaceIcons";
 import CharactersPage from "./characters/CharactersPage";
 import { loadCharacters } from "./characters/characters.storage";
 import { loadWorkspaceCharacters } from "./characters/workspaceCharacters.storage";
@@ -402,6 +404,10 @@ function sanitiseHtml(html: string) {
   const [avatarTilt, setAvatarTilt] = useState({ x: 0, y: 0, shineX: 50, shineY: 35 });
   const [isMaximized, setIsMaximized] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(272);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem("brs.sidebar-collapsed") === "true"; } catch { return false; }
+  });
+  const [workspaceIcon, setWorkspaceIcon] = useState("om:1F319");
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const [enteringMessageId, setEnteringMessageId] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -430,6 +436,27 @@ function sanitiseHtml(html: string) {
   activeWorkspacePathRef.current = activeWorkspace?.path ?? null;
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
+
+  useEffect(() => {
+    try { localStorage.setItem("brs.sidebar-collapsed", String(sidebarCollapsed)); } catch { /* Optional UI preference. */ }
+  }, [sidebarCollapsed]);
+  useEffect(() => {
+    let disposed = false;
+    setWorkspaceIcon("om:1F319");
+    if (activeWorkspace) {
+      void getWorkspaceIcon(activeWorkspace.manifest.id)
+        .then((icon) => { if (!disposed) setWorkspaceIcon(icon); })
+        .catch((error: unknown) => console.warn("Could not load workspace icon:", error));
+    }
+    return () => { disposed = true; };
+  }, [activeWorkspace?.manifest.id]);
+  const changeWorkspaceIcon = (icon: string) => {
+    if (!activeWorkspace) return;
+    const id = activeWorkspace.manifest.id;
+    setWorkspaceIcon(icon);
+    void saveWorkspaceIcon(id, icon).catch((error: unknown) =>
+      console.error("Could not save workspace icon:", error));
+  };
 
   useEffect(() => {
     let cancelled = false;
