@@ -60,6 +60,7 @@ import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, remembe
 import { loadWorkspaceDraft, saveWorkspaceDraft } from "./workspace/workspaceDrafts.storage";
 import { deleteWorkspaceFile } from "./workspace/workspaceFiles";
 import "./popup-motion.css";
+import "./ui/studioPolish.css";
 
 const appWindow = getCurrentWindow();
 const SAVED_WINDOW_SIZE_KEY = "brd.window-physical-size.v1";
@@ -1811,7 +1812,6 @@ function sanitiseHtml(html: string) {
               </div>
               <div className="scene-creation-actions">
                 <button className="new-scene-button" onClick={() => { setSceneNameDraft(""); setIsCreatingScene(true); }} disabled={!activeWorkspace || workspaceLoading}><span>＋</span> New scene</button>
-                <button className="new-folder-button" type="button" title="Create folder" aria-label="Create folder" onClick={() => { setActiveCategoryId(null); setPendingSceneMoveId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }} disabled={!activeWorkspace || workspaceLoading}><FolderPlus size={16} /></button>
               </div>
             </>}
           </div>
