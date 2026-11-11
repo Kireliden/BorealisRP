@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { save } from "@tauri-apps/plugin-dialog";
-import { Archive, Download, Heart, Info, Users } from "lucide-react";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { Archive, Download, Heart, Info, RotateCcw, Users } from "lucide-react";
+import { useAppDialog } from "../ui/AppDialogProvider";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { savePreferences } from "../preferences/storage";
 import "./AboutSettings.css";
 
 const APP_VERSION = "0.1.0";
 type BackupResult = { path: string; fileCount: number };
+type RestorePreview = {
+  createdAt: string;
+  applicationVersion: string;
+  fileCount: number;
+  mediaCount: number;
+};
+type RestoreResult = { restoredCount: number; safetyBackupPath: string };
 type BackupFeedback = { kind: "success" | "error"; message: string };
 
 export default function AboutSettings() {
   const { isLoaded, preferences } = usePreferences();
+  const { confirm } = useAppDialog();
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [backupFeedback, setBackupFeedback] = useState<BackupFeedback | null>(null);
 
   async function createBackup() {
-    if (!isLoaded || isBackingUp) return;
+    if (!isLoaded || isBackingUp || isRestoring) return;
     setIsBackingUp(true);
     setBackupFeedback(null);
     try {
@@ -43,6 +53,42 @@ export default function AboutSettings() {
       });
     } finally {
       setIsBackingUp(false);
+    }
+  }
+
+  async function restoreBackup() {
+    if (!isLoaded || isBackingUp || isRestoring) return;
+    setBackupFeedback(null);
+    try {
+      const source = await open({
+        title: "Choose a Borealis settings backup",
+        multiple: false,
+        directory: false,
+        filters: [{ name: "Borealis backup ZIP", extensions: ["zip"] }],
+      });
+      if (typeof source !== "string") return;
+      setIsRestoring(true);
+      const preview = await invoke<RestorePreview>("inspect_settings_backup", { path: source });
+      const proceed = await confirm(
+        `This Borealis backup was created on ${preview.createdAt} (version ${preview.applicationVersion}). ` +
+        `It contains ${preview.fileCount} settings/profile files, including ${preview.mediaCount} profile images.\n\n` +
+        "Your current application settings will be saved as a safety backup before restoring. " +
+        "Workspaces and their contents will not be changed.\n\n" +
+        "Borealis will restart automatically after the restore. Continue?",
+        { title: "Restore settings backup", confirmLabel: "Restore & restart", destructive: true },
+      );
+      if (!proceed) return;
+      // The native command validates the ZIP a second time, stages files,
+      // preserves the current settings and restarts the app upon success.
+      const result = await invoke<RestoreResult>("restore_settings_backup", { path: source });
+      setBackupFeedback({
+        kind: "success",
+        message: `Restored ${result.restoredCount} files. Restarting Borealis… Safety copy: ${result.safetyBackupPath}`,
+      });
+    } catch (error) {
+      setBackupFeedback({ kind: "error", message: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setIsRestoring(false);
     }
   }
 
@@ -88,17 +134,27 @@ export default function AboutSettings() {
           type="button"
           className="about-action about-backup-action"
           onClick={() => void createBackup()}
-          disabled={isBackingUp || !isLoaded}
+          disabled={isBackingUp || isRestoring || !isLoaded}
           aria-busy={isBackingUp}
         >
           <span>Create settings backup</span>
           <span className="about-action-status">{isBackingUp ? "Creating backup…" : "Save ZIP…"}</span>
         </button>
+        <button
+          type="button"
+          className="about-action about-backup-action"
+          onClick={() => void restoreBackup()}
+          disabled={isRestoring || isBackingUp || !isLoaded}
+          aria-busy={isRestoring}
+        >
+          <span className="about-backup-label"><RotateCcw size={15} aria-hidden="true" /> Restore settings backup</span>
+          <span className="about-action-status">{isRestoring ? "Checking backup…" : "Choose ZIP…"}</span>
+        </button>
         <p className="about-backup-hint">
           Includes themes, interface preferences, saved workspace icons, recent workspace
           references, achievements and imported profile images. Your Workspaces
           (characters, scenes, chats and resources) are stored separately and are
-          <strong> not included</strong>. The ZIP contains manual restore instructions.
+          <strong> not included</strong>. The ZIP also includes manual recovery instructions. Restoring requires a restart and automatically saves your current settings first.
         </p>
         {backupFeedback && (
           <p className={`about-backup-feedback ${backupFeedback.kind}`}
