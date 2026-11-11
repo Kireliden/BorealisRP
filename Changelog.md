@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Responsive chat reading width and composer context
+
+- Let the message column, narration cards, date separator and composer grow proportionally with the main window, preserving side margins and a comfortable width cap on ultrawide monitors.
+- Keep the body of each message flexible so it uses the wider reading column instead of staying compressed against the avatar.
+- Replaced the typing-like dot in **Writing in** with a directional arrow; the active scene name now sits in a compact accent-tinted pill with truncation for long titles.
+- Kept these styles in `src/chat/chatLayout.css`, without expanding `App.css`. Existing scene backgrounds and no-background chats share the same layout.
+- **Pending validation:** local TypeScript/Vite build and visual check at standard, maximised and narrow window sizes.
+
 ## 2026-11-11 — Per-scene chat backgrounds
 
 ### Implemented (runtime/build verification pending)
