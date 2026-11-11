@@ -78,6 +78,9 @@ export default function AboutSettings() {
         { title: "Restore settings backup", confirmLabel: "Restore & restart", destructive: true },
       );
       if (!proceed) return;
+      // Flush any queued preference writes first, so the safety snapshot really
+      // captures the settings in use before we replace them.
+      await savePreferences(preferences);
       // The native command validates the ZIP a second time, stages files,
       // preserves the current settings and restarts the app upon success.
       const result = await invoke<RestoreResult>("restore_settings_backup", { path: source });
