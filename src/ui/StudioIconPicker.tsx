@@ -30,7 +30,7 @@ const lucideOptions: LucideOption[] = [...iconNames]
     if (first !== -1 || second !== -1) return first === -1 ? 1 : second === -1 ? -1 : first - second;
     return a.localeCompare(b);
   })
-  .map((name) => ({ kind: "lucide", name, label: name.replaceAll("-", " "), search: name.replaceAll("-", " ") }));
+  .map((name) => ({ kind: "lucide", name, label: name.replace(/-/g, " "), search: name.replace(/-/g, " ") }));
 const LIMIT = 112;
 const LUCIDE_LIMIT = 56;
 const isOpenMoji = (value: string) => value.startsWith("om:") && /^[A-F0-9-]+$/i.test(value.slice(3));
