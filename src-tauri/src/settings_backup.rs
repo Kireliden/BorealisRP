@@ -307,8 +307,11 @@ fn load_validated_backup(path: &Path) -> Result<ValidatedBackup, String> {
                 return Err("The backup manifest is too large.".into());
             }
             let mut bytes = Vec::new();
-            entry.read_to_end(&mut bytes)
+            (&mut entry).take(MAX_MANIFEST_BYTES + 1).read_to_end(&mut bytes)
                 .map_err(|error| format!("Could not read the backup manifest: {error}"))?;
+            if bytes.len() as u64 > MAX_MANIFEST_BYTES {
+                return Err("The backup manifest is too large.".into());
+            }
             manifest_bytes = Some(bytes);
             continue;
         }
@@ -474,6 +477,14 @@ fn restore_settings_backup_sync(app: &AppHandle, source: &str) -> Result<Restore
     };
     let rollback_base = app_data.join("settings-backups");
     let result = (|| -> Result<RestoreResult, String> {
+        // Never follow an existing symlink/junction for the recovery archive.
+        match fs::symlink_metadata(&rollback_base) {
+            Ok(meta) if !meta.file_type().is_dir() =>
+                return Err("The safety backup location is not a normal directory.".into()),
+            Ok(_) => {},
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {},
+            Err(error) => return Err(format!("Could not inspect the safety backup folder: {error}")),
+        }
         fs::create_dir_all(&rollback_base)
             .map_err(|error| format!("Could not create a safety backup folder: {error}"))?;
         let name = format!("before-restore-{}.zip", Uuid::new_v4());
