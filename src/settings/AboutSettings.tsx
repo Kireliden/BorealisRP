@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
+import { load } from "@tauri-apps/plugin-store";
 import { Archive, Download, Heart, Info, RotateCcw, Users } from "lucide-react";
 import { useAppDialog } from "../ui/AppDialogProvider";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -15,7 +16,12 @@ type RestorePreview = {
   fileCount: number;
   mediaCount: number;
 };
-type RestoreResult = { restoredCount: number; safetyBackupPath: string };
+type RestoreResult = {
+  restoredCount: number;
+  safetyBackupPath: string;
+  restoredStoreNames: string[];
+  reloadWebview: boolean;
+};
 type BackupFeedback = { kind: "success" | "error"; message: string };
 
 export default function AboutSettings() {
@@ -81,9 +87,29 @@ export default function AboutSettings() {
       // Flush any queued preference writes first, so the safety snapshot really
       // captures the settings in use before we replace them.
       await savePreferences(preferences);
-      // The native command validates the ZIP a second time, stages files,
-      // preserves the current settings and restarts the app upon success.
+      // Rust restarts the installed app. A dev build must NOT restart its
+      // executable or it will also kill the Vite server backing localhost:1420.
       const result = await invoke<RestoreResult>("restore_settings_backup", { path: source });
+      if (result.reloadWebview) {
+        try {
+          // The native plugin-store keeps an in-memory cache. React reloading
+          // alone would read stale values without reloading the restored stores.
+          for (const name of result.restoredStoreNames) {
+            const store = await load(name, { autoSave: false });
+            await store.reload({ ignoreDefaults: true });
+          }
+        } catch (error) {
+          setBackupFeedback({
+            kind: "error",
+            message: "Settings were restored to disk, but the live app could not refresh its cached data. " +
+              "Close this development window and start npm run tauri dev again. " +
+              (error instanceof Error ? error.message : String(error)),
+          });
+          return;
+        }
+        window.location.reload();
+        return;
+      }
       setBackupFeedback({
         kind: "success",
         message: `Restored ${result.restoredCount} files. Restarting Borealis… Safety copy: ${result.safetyBackupPath}`,
