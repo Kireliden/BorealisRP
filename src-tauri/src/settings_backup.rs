@@ -132,14 +132,24 @@ fn create_zip(temp_path: &Path, files: &[(PathBuf, String)], version: &str) -> R
 }
 
 /// Does not overwrite pre-existing archives, and never changes a workspace.
+// ZIP compression and filesystem work run away from the Tauri UI thread.
 #[tauri::command]
-pub(crate) fn create_settings_backup(
+pub(crate) async fn create_settings_backup(
+    app: AppHandle,
+    destination_path: String,
+) -> Result<SettingsBackupResult, String> {
+    tauri::async_runtime::spawn_blocking(move || create_settings_backup_sync(app, destination_path))
+        .await
+        .map_err(|error| format!("Could not finish the settings backup: {error}"))?
+}
+
+fn create_settings_backup_sync(
     app: AppHandle,
     destination_path: String,
 ) -> Result<SettingsBackupResult, String> {
     let destination = PathBuf::from(destination_path);
     if !destination.is_absolute()
-        || !destination.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip"))
+        || !destination.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("zip"))
     {
         return Err("Choose an absolute .zip filename for the backup.".to_string());
     }
@@ -152,7 +162,9 @@ pub(crate) fn create_settings_backup(
         .map_err(|error| format!("Could not access the backup folder: {error}"))?;
     let app_data = app.path().app_data_dir()
         .map_err(|error| format!("Could not locate Borealis settings: {error}"))?;
-    if parent.starts_with(&app_data) {
+    let resolved_app_data = app_data.canonicalize()
+        .map_err(|error| format!("Could not inspect Borealis settings folder: {error}"))?;
+    if parent.starts_with(&resolved_app_data) {
         return Err("Save your backup outside Borealis's own application data folder.".to_string());
     }
     let sources = collect_settings_files(&app_data)?;
