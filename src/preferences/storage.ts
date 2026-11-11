@@ -9,19 +9,8 @@ import type {
 
 const STORE_PATH = "preferences.json";
 const PREFERENCES_KEY = "appPreferences";
-const VALID_THEMES = [
-  "latte",
-  "frappe",
-  "macchiato",
-  "mocha",
-  "crimson-void",
-  "coral-bloom",
-  "sakura-dreams",
-  "moon-light",
-  "moon-shadow",
-  "emerald-glade",
-  "emerald-nocturne",
-] as const;
+// Derive valid IDs from the same light/dark classification used by Follow system.
+const VALID_THEMES = [...LIGHT_THEMES, ...DARK_THEMES] as const;
 
 type UnknownRecord = Record<string, unknown>;
 
