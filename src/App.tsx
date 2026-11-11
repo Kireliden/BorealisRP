@@ -54,6 +54,8 @@ import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlo
 import CharacterPortraitArt, { characterPortraitStyle } from "./characters/CharacterPortraitArt";
 import EffectLayer from "./effects/components/EffectLayer";
 import EmojiPicker from "./composer/EmojiPicker";
+import { hydrateLucideInlineIcons, makeLucideInlineIcon } from "./composer/lucideInline";
+import { lucideNameFromValue } from "./ui/lucideCatalogue";
 import ResourcesPage from "./resources/ResourcesPage";
 import GlobalSearch from "./GlobalSearch";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
@@ -119,6 +121,11 @@ function markdownSourceFromHtml(html: string) {
         ...[...source.childNodes].flatMap(convert),
         document.createTextNode(wrappers[tag]),
       ];
+    }
+
+    if (tag === "SPAN" && source.classList.contains("message-lucide-icon")) {
+      const name = lucideNameFromValue(source.getAttribute("data-lucide-icon") ?? "");
+      return name ? [makeLucideInlineIcon(name)] : [];
     }
 
     if (tag === "SPAN" || tag === "FONT") {
@@ -232,6 +239,11 @@ function sanitiseHtml(html: string) {
 
     if (!allowedTags.has(source.tagName)) {
       return [...source.childNodes].flatMap(cleanNode);
+    }
+
+    if (source.tagName === "SPAN" && source.classList.contains("message-lucide-icon")) {
+      const name = lucideNameFromValue(source.getAttribute("data-lucide-icon") ?? "");
+      return name ? [makeLucideInlineIcon(name)] : [];
     }
 
     if (source.tagName === "IMG" && source.classList.contains("message-openmoji-emoji")) {
@@ -397,6 +409,11 @@ function sanitiseHtml(html: string) {
   const [systemImageToSave, setSystemImageToSave] = useState<File | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
+  useEffect(() => {
+    // Rich text is saved by icon name; hydrate its SVG mask after messages
+    // and editor drafts have been inserted into the DOM.
+    hydrateLucideInlineIcons(document);
+  }, [messages, draftHtml, editingMessageId, activeSceneId]);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
   const [markdownExportBusy, setMarkdownExportBusy] = useState(false);
   const [markdownExportNotice, setMarkdownExportNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
@@ -1712,7 +1729,8 @@ function sanitiseHtml(html: string) {
     const editor = editorRef.current;
     const plainText = editor?.innerText.trim() ?? "";
     if (!isEditingMessage && applyExpressionCommand(plainText)) return;
-    if (!plainText && !composerImages.length) return;
+    const hasInlineIcon = Boolean(editor?.querySelector(".message-lucide-icon[data-lucide-icon]"));
+    if (!plainText && !composerImages.length && !hasInlineIcon) return;
     let savedImages;
     try {
       savedImages = await saveMessageImages(workspacePath, composerImages);
