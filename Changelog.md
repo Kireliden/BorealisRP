@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Restore settings backups with preview and rollback
+
+- Added **Restore settings backup** next to the export action under **Settings → About → Backups**, using a native ZIP picker and a confirmation showing the saved date, version, file and profile-image counts.
+- Implemented a strict native import validator in `src-tauri/src/settings_backup.rs`: validates the V1 manifest, Borealis identifier and file paths; rejects unexpected ZIP entries, duplicate names, symlinks and excessive decompression.
+- The importer stages the restore, preserves the current app-local settings to a separate `settings-backups/before-restore-<UUID>.zip`, applies the validated settings and profile media, rolls back attempted writes on errors, and requests a native application restart on success.
+- Restoring does **not** modify user-selected Workspace folders; app-local stores absent from the imported archive remain untouched. The two known imported profile image paths are adjusted when restoring onto a different user account/computer.
+- Updated backup/restore documentation and smoke tests in `docs/SETTINGS-BACKUP.md`. Source implementation and security checks are complete; end-to-end import/rollback tests are still required on a disposable installation.
+
 ## 2026-11-11 — Export settings backups from About
 
 - Added **Settings → About → Backups** directly underneath Check for updates. **Create settings backup** opens the OS save dialog and reports success/error in the themed panel.
