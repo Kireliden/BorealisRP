@@ -15,7 +15,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, Heart, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
+import { Cog, Trophy, Heart, Image as ImageIcon, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -31,6 +31,9 @@ import SaveImageToResourcesDialog from "./resources/SaveImageToResourcesDialog";
 import { type ComposerImage, loadMessageImages, saveMessageImages } from "./chat/messageImages";
 import "./chat/messageImages.css";
 import ChatImageLightbox, { type ChatLightboxImage } from "./chat/ChatImageLightbox";
+import SceneBackgroundSettings from "./chat/SceneBackgroundSettings";
+import { loadSceneBackgroundUrl, safeSceneBackground, saveSceneBackgroundFile, type SceneBackground, type SceneBackgroundAdjustments } from "./chat/sceneBackground";
+import "./chat/sceneBackground.css";
 import FavouritesPage from "./favourites/FavouritesPage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlob } from "./characters/workspaceCharacterExpressions.storage";
@@ -348,6 +351,9 @@ function sanitiseHtml(html: string) {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [folderNameDraft, setFolderNameDraft] = useState("");
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+  const [backgroundSettingsOpen, setBackgroundSettingsOpen] = useState(false);
+  const [backgroundImageState, setBackgroundImageState] = useState<{ key: string; url: string } | null>(null);
+  const backgroundSavingRef = useRef(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [workspaceError, setWorkspaceError] = useState("");
@@ -578,6 +584,34 @@ function sanitiseHtml(html: string) {
   const previewCharacter = avatarPreviewCharacter ?? character;
   const previewExpression = avatarPreviewCharacter?.expression ?? selectedExpression;
   const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? null;
+  const sceneBackground = safeSceneBackground(activeScene?.background);
+  const sceneBackgroundPath = sceneBackground?.relativePath ?? null;
+  const backgroundImageKey = `${activeWorkspace?.path ?? ""}::${sceneBackgroundPath ?? ""}`;
+  const backgroundImageUrl = backgroundImageState?.key === backgroundImageKey ? backgroundImageState.url : null;
+
+  useEffect(() => {
+    let disposed = false;
+    let objectUrl: string | null = null;
+    setBackgroundImageState(null);
+    if (activeWorkspace && sceneBackground) {
+      void loadSceneBackgroundUrl(activeWorkspace.path, sceneBackground)
+        .then((url) => {
+          objectUrl = url;
+          if (disposed) URL.revokeObjectURL(url);
+          else setBackgroundImageState({ key: backgroundImageKey, url });
+        })
+        .catch((reason) => {
+          if (!disposed) console.warn("Could not load this scene's background:", reason);
+        });
+    }
+    return () => {
+      disposed = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+    // Only the workspace and referenced image change the loaded binary.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeWorkspace?.path, sceneBackgroundPath]);
+
 
   // Restore the last active workspace once, before persisting later selections.
   useEffect(() => {
@@ -638,6 +672,7 @@ function sanitiseHtml(html: string) {
     setEditingMessageId(null);
     setOpenMessageActionsId(null);
     setIsSceneOptionsOpen(false);
+    setBackgroundSettingsOpen(false);
     setFavouriteJump(null);
     setChatLightbox(null);
     setCleanConfirmationStep(null);
@@ -987,6 +1022,45 @@ function sanitiseHtml(html: string) {
     }
   }
 
+  async function saveActiveSceneBackground(
+    settings: SceneBackgroundAdjustments | null, file: File | null,
+  ): Promise<void> {
+    if (!activeWorkspace || !activeSceneId || backgroundSavingRef.current) {
+      throw new Error("Choose an active scene before saving its background.");
+    }
+    const workspacePath = activeWorkspace.path;
+    const sceneId = activeSceneId;
+    const previousScene = scenes.find((item) => item.id === sceneId);
+    if (!previousScene) throw new Error("This scene no longer exists.");
+    backgroundSavingRef.current = true;
+    try {
+      const storedImage = file ? await saveSceneBackgroundFile(workspacePath, file) : null;
+      const existingImage = safeSceneBackground(previousScene.background);
+      if (settings && !storedImage && !existingImage) {
+        throw new Error("Choose a background image first.");
+      }
+      const nextBackground: SceneBackground | undefined = settings
+        ? { ...(storedImage ?? existingImage!), ...settings }
+        : undefined;
+      const nextScenes = scenes.map((item) =>
+        item.id === sceneId ? { ...item, background: nextBackground } : item,
+      );
+      await saveWorkspaceContent(workspacePath, {
+        schemaVersion: 1, scenes: nextScenes, folders, categories,
+      });
+      if (activeWorkspacePathRef.current !== workspacePath) return;
+      setScenes(nextScenes);
+      setWorkspaceError("");
+    } catch (reason) {
+      if (activeWorkspacePathRef.current === workspacePath) {
+        setWorkspaceError(`Could not save chat background: ${reason instanceof Error ? reason.message : String(reason)}`);
+      }
+      throw reason;
+    } finally {
+      backgroundSavingRef.current = false;
+    }
+  }
+
   async function toggleFavourite(sceneId: string, messageId?: number) {
     if (!activeWorkspace || workspaceLoading || favouritePendingRef.current) return;
     const scene = scenes.find((entry) => entry.id === sceneId);
@@ -1064,6 +1138,7 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== activeWorkspace.path) return;
       setScenes(nextScenes);
       setActiveSceneId(scene.id);
+      setBackgroundSettingsOpen(false);
       setMessages([]);
       clearComposerImages();
       setImageSourceOpen(false);
@@ -1096,6 +1171,7 @@ function sanitiseHtml(html: string) {
       if (activeSceneId === scene.id) {
         const nextActiveScene = nextScenes[0] ?? null;
         setActiveSceneId(nextActiveScene?.id ?? null);
+        setBackgroundSettingsOpen(false);
         setMessages(nextActiveScene?.messages ?? []);
         clearComposerImages();
         setImageSourceOpen(false);
@@ -1377,6 +1453,7 @@ function sanitiseHtml(html: string) {
   }
 
   async function selectScene(scene: WorkspaceScene) {
+    setBackgroundSettingsOpen(false);
     setActiveLibraryPage(null);
     const requestId = ++draftLoadRequestRef.current;
     setActiveSceneId(scene.id);
@@ -1666,8 +1743,20 @@ function sanitiseHtml(html: string) {
           }}
         />
 
-        <section className="main-panel">
+        <section className={`main-panel ${backgroundImageUrl && sceneBackground ? "has-scene-background" : ""}`}>
           <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
+          {backgroundImageUrl && sceneBackground && <div className="scene-background-layer" aria-hidden="true"
+            style={{
+              "--scene-bg-dim": sceneBackground.dim / 100,
+              "--scene-bg-blur": `${sceneBackground.blur}px`,
+              "--scene-bg-zoom": sceneBackground.zoom / 100,
+            } as CSSProperties}>
+            <div className="scene-background-layer-image" style={{
+              backgroundImage: `url("${backgroundImageUrl}")`,
+              backgroundPosition: `${sceneBackground.positionX}% ${sceneBackground.positionY}%`,
+            }} />
+            <div className="scene-background-layer-shade" />
+          </div>}
           <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button type="button" className={`secondary-button scene-favourite-button ${activeScene?.favourite ? "is-favourite" : ""}`}
               aria-pressed={Boolean(activeScene?.favourite)}
               disabled={!activeScene || !activeWorkspace || workspaceLoading || favouriteBusy}
@@ -1675,6 +1764,12 @@ function sanitiseHtml(html: string) {
               onClick={() => { if (activeScene) void toggleFavourite(activeScene.id); }}>
               <Heart size={15} fill={activeScene?.favourite ? "currentColor" : "none"} />
               <span>{activeScene?.favourite ? "Favourited" : "Favourite"}</span>
+            </button>
+            <button type="button" className={`secondary-button scene-background-button ${sceneBackground ? "is-custom" : ""}`}
+              disabled={!activeScene || !activeWorkspace || workspaceLoading}
+              title="Customise this scene's chat background"
+              onClick={() => setBackgroundSettingsOpen(true)}>
+              <ImageIcon size={15} /><span>Background</span>
             </button></div></div>
           {showWorkspaceNotice && <div className="demo-notice" role={workspaceError ? "alert" : "status"}><span className="notice-icon" aria-hidden="true">i</span><span className="demo-notice-text"><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span><button type="button" className="demo-notice-close" onClick={() => setShowWorkspaceNotice(false)} aria-label="Dismiss workspace notice" title="Dismiss notice"><X size={15} /></button></div>}
 
@@ -2084,6 +2179,13 @@ function sanitiseHtml(html: string) {
           await importWorkspaceResource(activeWorkspace.path, systemImageToSave);
           setSystemImageToSave(null);
         }}
+      />}
+      {backgroundSettingsOpen && activeWorkspace && activeScene && <SceneBackgroundSettings
+        key={`${activeWorkspace.path}:${activeScene.id}`}
+        workspacePath={activeWorkspace.path} sceneName={activeScene.name}
+        current={sceneBackground} currentPreviewUrl={backgroundImageUrl}
+        onSave={saveActiveSceneBackground}
+        onClose={() => setBackgroundSettingsOpen(false)}
       />}
       {chatLightbox && <ChatImageLightbox images={chatLightbox.images} startIndex={chatLightbox.startIndex} onClose={() => setChatLightbox(null)} />}
       {isSettingsOpen && (
