@@ -7,3 +7,18 @@
 .message-image-gallery{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
 .message-image-gallery img{display:block;max-width:min(100%,320px);max-height:300px;object-fit:contain;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 .message-image-gallery .message-image-unavailable{padding:12px;color:var(--muted);font-size:11px;border:1px dashed var(--border);border-radius:9px}
+
+/* Clickable, full-resolution image previews, styled like Discord attachments. */
+.message-image-gallery .message-image-open {
+  display:block;max-width:min(100%,320px);padding:0;border:0;border-radius:10px;
+  background:transparent;cursor:zoom-in;line-height:0;
+}
+.message-image-gallery .message-image-open img {
+  max-width:100%;border:1px solid var(--border);border-radius:10px;
+  transition:border-color 140ms ease,filter 140ms ease;
+}
+.message-image-gallery .message-image-open:hover img,
+.message-image-gallery .message-image-open:focus-visible img {
+  border-color:var(--accent);filter:brightness(1.1);
+}
+@media(prefers-reduced-motion:reduce){.message-image-gallery .message-image-open img{transition:none}}
