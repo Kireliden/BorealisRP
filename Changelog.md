@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — First branded Windows installer build pipeline
+
+- Added original Catppuccin Frappé-inspired celestial 24-bit BMP graphics for the native NSIS installer: a 164×314 sidebar and 150×57 header, kept in `src-tauri/windows/installer/`.
+- Configured Tauri's `bundle.windows.nsis` with the existing application moon `.ico`, custom artwork, current-user installation (no unnecessary administrator prompt), English strings, a Borealis Start Menu folder and LZMA compression. Preserved the existing general bundle targets for future Linux/other packages.
+- Added `.github/workflows/windows-installer.yml` to compile a real Windows NSIS `-setup.exe` and upload it as a GitHub Actions artifact. The workflow has been triggered but its Windows build, installation and uninstall behaviour are **not yet confirmed**; do not label a shipped alpha release on that basis.
+- The illustrated four-screen mockups remain design concepts; standard NSIS supports branded native pages, not identical fully custom React windows. Optional screenshot-cropped concept artwork is available separately as a replacement BMP asset pack in the development conversation.
+- Workspace data must remain untouched by installer/upgrade/uninstaller actions. Testing is still required before distributing an alpha.
+
 ## 2026-11-11 — Shared Lucide icon support and composer insertion corrections
 
 - Extended `StudioIconPicker` with a **third Lucide tab**, joining OpenMoji and system emoji. The shared `src/ui/lucideCatalogue.ts` validates icon names and provides searchable, paged choices; workspace icon values use `lucide:<name>` in the existing `workspace-icons.json` store. Existing icon values continue to work.
