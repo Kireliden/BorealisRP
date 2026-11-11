@@ -1,0 +1,136 @@
+/* Egg 004 — an isolated, Sims-inspired plumbob reveal. */
+.plumbob-egg {
+  position: fixed;
+  inset: 0;
+  z-index: 16001;
+  isolation: isolate;
+  overflow: hidden;
+  color: #e9ffeb;
+  -webkit-app-region: no-drag;
+}
+.plumbob-egg-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgb(20 111 68 / 29%), transparent 65%),
+    rgb(5 11 13 / 92%);
+  backdrop-filter: blur(15px) saturate(.6);
+  animation: plumbob-veil 6.2s ease both;
+}
+.plumbob-egg-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 36px;
+  text-align: center;
+  pointer-events: none;
+  animation: plumbob-reveal 6.2s ease both;
+}
+.plumbob-egg-aura {
+  position: absolute;
+  z-index: -1;
+  width: min(440px, 85vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(64 239 135 / 22%), rgb(64 239 135 / 4%) 45%, transparent 73%);
+  filter: blur(32px);
+  animation: plumbob-breathe 2.4s ease-in-out infinite alternate;
+}
+.plumbob-egg-kicker {
+  font: 700 11px "Ubuntu Mono", Consolas, monospace;
+  letter-spacing: .23em;
+  color: #96ffb5;
+  text-shadow: 0 0 12px rgb(58 236 119 / 40%);
+}
+.plumbob-egg-artwork {
+  display: grid;
+  place-items: center;
+  width: min(280px, 57vw);
+  height: min(330px, 47vh);
+  margin: 8px 0;
+  filter: drop-shadow(0 0 27px rgb(83 247 124 / 45%));
+  animation: plumbob-float 2.1s ease-in-out infinite alternate;
+}
+.plumbob-egg-artwork img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.plumbob-egg-reveal h2 {
+  margin: 2px 0 0;
+  font-size: clamp(17px, 2.4vw, 24px);
+  font-weight: 800;
+  letter-spacing: .17em;
+  color: #ecffef;
+  text-shadow: 0 0 23px rgb(65 236 124 / 35%);
+}
+.plumbob-egg-reveal p {
+  margin: 0;
+  font-size: 13px;
+  color: #b6e9c3;
+  letter-spacing: .04em;
+}
+.plumbob-egg-skip {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid rgb(130 253 165 / 38%);
+  border-radius: 8px;
+  background: rgb(13 30 22 / 82%);
+  color: #dafce1;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.plumbob-egg-skip span {
+  color: #9dc2a5;
+  font: 10px "Ubuntu Mono", Consolas, monospace;
+}
+.plumbob-egg-skip:hover { border-color: #9cf4b7; color: #fff; }
+@keyframes plumbob-veil {
+  0% { opacity: 0; }
+  14%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes plumbob-reveal {
+  0%, 8% { opacity: 0; transform: translateY(14px) scale(.96); }
+  22%, 82% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-7px) scale(1.03); }
+}
+@keyframes plumbob-float {
+  from { transform: translateY(-5px) rotate(-2deg); }
+  to { transform: translateY(6px) rotate(2deg); }
+}
+@keyframes plumbob-breathe {
+  from { opacity: .6; transform: scale(.92); }
+  to { opacity: 1; transform: scale(1.12); }
+}
+:root[data-animations="off"] .plumbob-egg-veil,
+:root[data-animations="off"] .plumbob-egg-reveal,
+:root[data-animations="off"] .plumbob-egg-artwork,
+:root[data-animations="off"] .plumbob-egg-aura {
+  animation: none !important;
+}
+:root[data-animations="off"] .plumbob-egg-veil,
+:root[data-animations="off"] .plumbob-egg-reveal { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .plumbob-egg-veil,
+  .plumbob-egg-reveal,
+  .plumbob-egg-artwork,
+  .plumbob-egg-aura { animation: none !important; }
+  .plumbob-egg-veil,
+  .plumbob-egg-reveal { opacity: 1; }
+}
