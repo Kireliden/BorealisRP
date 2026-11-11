@@ -6,6 +6,13 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Program Files installation and branded uninstaller
+
+- Switched the Windows NSIS installer from per-user `currentUser` (`%LOCALAPPDATA%`) to machine-wide `perMachine`, defaulting to `C:\Program Files\Borealis Roleplay Studio` with administrator consent during installation.
+- Kept the standard Tauri/NSIS uninstall registration and set the application's moon icon and Frappé header artwork for the uninstaller as well.
+- Development sources in `C:\Dev\BorealisRP` remain independent from the installed binary. App-local preferences can still be shared between developer and packaged builds using the same application identifier; simultaneous writes to the same workspace should be avoided.
+- **Test required:** rebuild the setup `.exe`; confirm Program Files destination, Windows Installed Apps uninstall entry, no duplicate per-user copy, and that external Workspaces survive upgrade/uninstall. Do not install the earlier current-user setup alongside this one.
+
 ## 2026-11-11 — First branded Windows installer build pipeline
 
 - Added original Catppuccin Frappé-inspired celestial 24-bit BMP graphics for the native NSIS installer: a 164×314 sidebar and 150×57 header, kept in `src-tauri/windows/installer/`.
