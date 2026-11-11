@@ -56,7 +56,7 @@ export default function ImageSourceDialog({ workspacePath, title, onCancel, onSy
   return createPortal(
     resourcesOpen
       ? <ResourceImagePicker workspacePath={workspacePath} title="Choose an image from Resources"
-          onCancel={onCancel} onChoose={chooseResource} />
+          onCancel={() => setResourcesOpen(false)} onChoose={chooseResource} />
       : <div className="image-source-backdrop" role="presentation" onMouseDown={(event) => {
           if (event.target === event.currentTarget && !busy) onCancel();
         }}>
