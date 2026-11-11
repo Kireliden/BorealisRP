@@ -17,7 +17,7 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 - Applied a **bottom-fading chat topbar** for regular and image-backed scenes; themed the composer Send passage button (including hover/disabled states) and the titlebar moon application mark using the current palette accent, instead of fixed purple colours.
 - Added a **bounded eight-image LRU cache** for chat background Blob URLs, with reuse between scenes, limited prefetching and invalidation when an image file is deleted. This cache is per running app session and does not alter workspace image files.
 - Added isolated styles in `src/ui/studioPolish.css`, `src/composer/expressionCommands.css`, and `src/ui/StudioIconPicker.css` instead of expanding the legacy App.css.
-- **Verification status:** source-level integrity checks still required, followed by user-run `npm run build` and visual testing at expanded/compact sidebar widths and in multiple themes. Dynamic OS/taskbar application icons are not modified; the in-app titlebar mark is theme-aware.
+- **Verification status:** 27 repository-level static integration assertions passed (module imports, feature wiring, theme styles, icon persistence, background caching and editor command guards). User-run `npm run build` and real WebView visual tests at expanded/compact sidebar widths remain pending. Dynamic OS/taskbar application icons are not modified; the in-app titlebar mark is theme-aware.
 
 ## 2026-11-11 — Sakura pairing and native Borealis UI controls
 
