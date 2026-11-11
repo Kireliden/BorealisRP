@@ -1,0 +1,56 @@
+name: Borealis Windows installer
+
+on:
+  push:
+    branches:
+      - feature/workspace-persistence
+    paths:
+      - ".github/workflows/windows-installer.yml"
+      - "src/**"
+      - "src-tauri/**"
+      - "public/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vite.config.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-nsis:
+    name: Build Frappé NSIS setup
+    runs-on: windows-latest
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build actual Windows NSIS installer
+        run: npm run tauri -- build --bundles nsis
+
+      - name: Upload unsigned alpha installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Borealis-Roleplay-Studio-Frappé-Windows-Setup
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          retention-days: 14
