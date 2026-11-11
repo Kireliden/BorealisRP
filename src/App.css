@@ -2616,3 +2616,22 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
   border-color: var(--notice-border, var(--border));
   background: color-mix(in srgb, var(--accent) 9%, transparent);
 }
+
+/* Favourites are stored with their source scenes/messages. */
+.scene-favourite-button { cursor:pointer; }
+.scene-favourite-button.is-favourite {
+  border-color:color-mix(in srgb,var(--accent) 55%,var(--border));
+  background:color-mix(in srgb,var(--accent) 12%,var(--surface));
+  color:var(--accent);
+}
+.message-favourite-target {
+  outline:2px solid color-mix(in srgb,var(--accent) 62%,transparent);
+  outline-offset:6px;border-radius:9px;
+  animation:brs-favourite-jump 1.8s ease-out both;
+}
+@keyframes brs-favourite-jump {
+  0%, 25% { outline-color:color-mix(in srgb,var(--accent) 72%,transparent); }
+  100% { outline-color:transparent; }
+}
+:root[data-animations="off"] .message-favourite-target { animation:none; }
+@media(prefers-reduced-motion:reduce){.message-favourite-target{animation:none}}
