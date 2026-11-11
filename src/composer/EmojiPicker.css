@@ -248,26 +248,26 @@
   font-size: 1.15em;
 }
 
-/* Lucide placeholders store only a validated icon name in saved rich text.
-   The local SVG mask is recreated when the composer or chat displays it. */
+/* Inline Lucide symbols have the same visible size in the composer and chat.
+   Real SVGs are rendered by Lucide; no mask URL or injected SVG is persisted. */
 .rich-editor .message-lucide-icon,
 .message-rich-content .message-lucide-icon {
-  display: inline-block;
+  display: inline-grid;
+  place-items: center;
   width: 1.4em;
   height: 1.4em;
   margin: 0 0.06em;
   vertical-align: -0.28em;
-  background-color: transparent;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
+  color: inherit;
+  line-height: 1;
 }
-.rich-editor .message-lucide-icon[data-lucide-ready],
-.message-rich-content .message-lucide-icon[data-lucide-ready] {
-  background-color: currentColor;
+.rich-editor .message-lucide-icon svg,
+.message-rich-content .message-lucide-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+  stroke: currentColor;
 }
 
 /* Let the picker escape the rounded composer shell while it is open. */
