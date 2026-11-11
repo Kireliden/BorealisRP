@@ -1717,7 +1717,7 @@ function sanitiseHtml(html: string) {
     }
   }
   return (
-    <main className="app-shell" style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
+    <main className={`app-shell ${sidebarCollapsed ? "sidebar-is-collapsed" : ""}`} style={{ "--sidebar-width": `${sidebarCollapsed ? 76 : sidebarWidth}px` } as CSSProperties}>
       <div className="custom-titlebar" data-tauri-drag-region>
         <div className="titlebar-brand" data-tauri-drag-region>
         <span className="titlebar-easter-egg"><PotatoEgg /></span>
@@ -1731,17 +1731,34 @@ function sanitiseHtml(html: string) {
         </div>
       </div>
 
-      <div className="app-content" style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
-        <aside className="sidebar">
-          <div className="brand"><div className="brand-mark" aria-label="Borealis moon"><svg className="borealis-moon-mark" viewBox="0 0 72 72" role="img" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/></svg></div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
-          <div className="workspace-switcher-row"><div className="workspace-switcher-slot"><WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} /></div><button type="button" className="workspace-search-button" title="Search characters and resources" aria-label="Search global libraries" onClick={() => setIsGlobalSearchOpen(true)}><Search size={16} /></button></div>
-          <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className={`nav-item ${activeLibraryPage === "projects" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("projects")}><span className="nav-icon">▦</span>Projects</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button><button className={`nav-item ${activeLibraryPage === "favourites" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("favourites")}><span className="nav-icon"><Heart size={17} /></span>Favourites</button></div>
+      <div className="app-content" style={{ "--sidebar-width": `${sidebarCollapsed ? 76 : sidebarWidth}px` } as CSSProperties}>
+        <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`}>
+          <div className="brand workspace-brand">
+            <div className="workspace-switcher-slot brand-workspace-switcher">
+              <WorkspaceSwitcher activeWorkspace={activeWorkspace} icon={workspaceIcon}
+                compact={sidebarCollapsed}
+                onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
+                onAddNew={() => setIsWorkspaceManagerOpen(true)} />
+            </div>
+            <StudioIconPicker className="workspace-brand-icon-editor" value={workspaceIcon}
+              onChange={changeWorkspaceIcon} title="Change workspace icon"
+              disabled={!activeWorkspace} compact />
+            <button type="button" className="sidebar-collapse-button"
+              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!sidebarCollapsed}>
+              {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            </button>
+          </div>
+          
+          <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className={`nav-item ${activeLibraryPage === "projects" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("projects")}><span className="nav-icon">▦</span>Projects</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button><button className={`nav-item ${activeLibraryPage === "favourites" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("favourites")}><span className="nav-icon"><Heart size={17} /></span>Favourites</button><button type="button" className="nav-item sidebar-search-nav" onClick={() => setIsGlobalSearchOpen(true)} title="Search characters and resources" aria-label="Search characters and resources"><span className="nav-icon"><Search size={17} /></span>Search</button></div>
           <div className={`sidebar-section scenes-section ${isScenesCollapsed ? "scenes-collapsed" : ""}`}>
             <div className="section-heading roleplay-space-heading">
               <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
                 <span>ROLEPLAY SPACE</span>{isScenesCollapsed ? <ChevronRight size={14} className="scenes-collapse-chevron" /> : <ChevronDown size={14} className="scenes-collapse-chevron" />}
               </button>
-              <button type="button" className="tiny-button roleplay-create-button" title="Create category" aria-label="Create category" onClick={() => { setCategoryNameDraft(""); setIsCreatingCategory(true); }}><Plus size={15} /></button>
+              <button type="button" className="tiny-button roleplay-create-button" title="Create category" aria-label="Create category" onClick={() => { setCategoryNameDraft(""); setIsCreatingCategory(true); }}><Plus size={15} /></button><button type="button" className="tiny-button roleplay-create-button" title="New root folder" aria-label="New root folder" disabled={!activeWorkspace || workspaceLoading} onClick={() => { setActiveCategoryId(null); setPendingSceneMoveId(null); setFolderNameDraft(""); setIsCreatingFolder(true); }}><FolderPlus size={15} /></button>
             </div>
             {!isScenesCollapsed && <>
               <div className="roleplay-tree" data-drop-type="tree" onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }} onDrop={(event) => { event.preventDefault(); if (draggingNode?.type === "folder") void moveFolder(draggingNode.id, null); if (draggingNode?.type === "scene") void moveSceneToFolder(draggingNode.id, null); setDraggingNode(null); }}>
