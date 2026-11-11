@@ -7,6 +7,14 @@ import "./CollectionModal.css";
 import potatoSticker from "../easter-eggs/assets/ee_001.png";
 import nudgeSticker from "../easter-eggs/assets/ee_002.png";
 
+/** Optional animated collectible: the card becomes available when ee_03.gif is added. */
+const ANIMATED_STICKERS = import.meta.glob<string>("../easter-eggs/assets/ee_*.gif", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+const lambdaSticker = ANIMATED_STICKERS["../easter-eggs/assets/ee_03.gif"] ?? null;
+
 type CollectionsModalProps = {
   onClose: () => void;
 };
@@ -33,8 +41,8 @@ const COLLECTION_ITEMS = [
     name: "THE LAMBDA",
     description: "A strange signal from somewhere beyond Borealis.",
     icon: "λ",
-    imageSrc: null,
-    imageAlt: "THE LAMBDA — sticker artwork coming soon",
+    imageSrc: lambdaSticker,
+    imageAlt: "THE LAMBDA — animated lambda sticker",
   },
 ] as const;
 
