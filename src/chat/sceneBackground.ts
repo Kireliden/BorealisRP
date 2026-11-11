@@ -27,7 +27,7 @@ export const DEFAULT_SCENE_BACKGROUND: SceneBackgroundAdjustments = {
 const backgroundFilePattern = /^Chats\/Backgrounds\/[a-f0-9-]+\.(?:png|jpe?g|webp|gif)$/i;
 
 export function safeSceneBackground(background: SceneBackground | undefined): SceneBackground | null {
-  if (!background || !backgroundFilePattern.test(background.relativePath)) return null;
+  if (!background || typeof background.relativePath !== "string" || !backgroundFilePattern.test(background.relativePath)) return null;
   const clamp = (value: unknown, low: number, high: number, fallback: number): number =>
     typeof value === "number" && Number.isFinite(value)
       ? Math.min(high, Math.max(low, value)) : fallback;
