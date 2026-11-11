@@ -108,6 +108,25 @@
   -webkit-user-drag: none;
 }
 
+/* Animated GIFs must never use an independent mask-image URL: it can display
+   a different animation frame and leave a floating holographic silhouette.
+   The SVG filter is applied directly to the single live <img> and composites
+   colour/noise against SourceAlpha from whichever frame is currently visible.
+   Static stickers retain their original masked foil/sparkles unchanged. */
+.holographic-animated-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.holographic-card--animated .holographic-art img {
+  /* The actual filter reference is unique per sticker and set inline in TSX.
+     Do not add a mask-image to animated artworks. */
+  will-change: filter;
+}
+
 /* Each effect uses the PNG's actual alpha channel as its silhouette. */
 .holographic-foil,
 .holographic-glare,
