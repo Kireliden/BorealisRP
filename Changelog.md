@@ -11,7 +11,7 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 ### First cinematic pass (build/runtime verification pending)
 - Added `LambdaEgg.tsx` and modular CSS. Typing the standalone word **lambda** in any editable field, case-insensitively, triggers a visual glitch at the word's location and a dark, blurred cinematic overlay featuring a stylised orange lambda emblem.
 - The sequence lasts 9.5 seconds, has a gentle visual entry/exit, can be skipped with Esc, and respects the existing animation-off and system reduced-motion settings. Original text is never changed or deleted.
-- Added an optional user-supplied audio slot at `public/easter-eggs/path_of_borealis_clip.mp3`; playback starts at zero volume, fades in over 1.9 seconds, fades out over the final 1.5 seconds, and is stopped after 9.5 seconds. Without the asset, the visual easter egg still plays silently.
+- Added an optional user-supplied audio slot at `src/easter-eggs/assets/path_of_borealis_clip.mp3`; playback starts at zero volume, fades in over 1.9 seconds, fades out over the final 1.5 seconds, and is stopped after 9.5 seconds. Without the asset, the visual easter egg still plays silently.
 - The secret registers via `collectionStorage.registerDiscovery("lambda-signal")`, and appears as the third entry in Collections, with a temporary λ glyph in place of future sticker artwork.
 - Re-triggering is possible after a full sequence when the word is removed and typed again. The effect is isolated from other eggs and does not interfere with workspace storage.
 - **Not included:** the actual soundtrack audio or a licensed artwork asset; add a clip you have rights to use and future sticker image separately.
