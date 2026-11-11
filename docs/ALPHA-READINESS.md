@@ -42,6 +42,10 @@ Use a disposable/copy of the workspace for destructive tests; **never experiment
 
 **Blocker policy:** data loss/corruption, cross-workspace bleed, unsendable messages, unrecoverable drafts, an application that will not open/build, or installers that cannot access workspaces **block the alpha**. Cosmetic imperfections may be logged as non-blocking if they do not impede use.
 
+### Core settings-backup smoke test
+
+The About page now has a **Create settings backup** action (source implemented, runtime acceptance pending). Verify the ZIP manifest, four app-local stores, images, and manual restoration using a disposable app-data copy. This does **not replace** the full Workspace copy/restore gate above. See `docs/SETTINGS-BACKUP.md`.
+
 ## Known candidates for follow-up investigation
 
 - **Markdown/Obsidian export and inline Lucide:** export currently processes rich HTML but does not have an explicit `data-lucide-icon` fallback. Verify that icon-only messages are not silently exported as blank; implement a readable substitute if needed.
