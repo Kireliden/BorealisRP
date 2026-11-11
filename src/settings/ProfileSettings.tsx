@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import type { AppPreferences } from "../preferences/types";
-import { chooseProfileMedia, profileMediaSource, removeSidebarAvatarThumbnail, saveSidebarAvatarThumbnail } from "../profile/profileMedia";
+import { importProfileMediaFile, profileMediaSource, removeSidebarAvatarThumbnail, saveSidebarAvatarThumbnail } from "../profile/profileMedia";
+import ImageSourceDialog from "../resources/ImageSourceDialog";
+import SaveImageToResourcesDialog from "../resources/SaveImageToResourcesDialog";
+import { importResource } from "../resources/resources.storage";
 import SpecialTitleBadge from "../profile/SpecialTitleBadge";
 import { verifiedSpecialTitles, verifySpecialTitleCode, type SpecialTitle } from "../profile/specialTitles";
 import "../profile/ProfileModal.css";
@@ -14,6 +17,8 @@ export default function ProfileSettings() {
   const [draft, setDraft] = useState<Profile>(preferences.profile);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [mediaTarget, setMediaTarget] = useState<"avatarAssetPath" | "bannerAssetPath" | null>(null);
+  const [systemImageToSave, setSystemImageToSave] = useState<File | null>(null);
   const [titleCodeInput, setTitleCodeInput] = useState("");
   const [verifiedTitles, setVerifiedTitles] = useState<{ key: string; titles: SpecialTitle[] } | null>(null);
   const titleValidationKey = `${draft.displayName}\u0000${JSON.stringify(draft.specialTitleCodes)}`;
@@ -54,14 +59,12 @@ export default function ProfileSettings() {
     setSaved(false);
   }
 
-  async function pickMedia(target: "avatarAssetPath" | "bannerAssetPath") {
-    try {
-      setError("");
-      const path = await chooseProfileMedia();
-      if (path) update({ [target]: path });
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
-    }
+  async function useChosenImage(file: File, fromSystem: boolean) {
+    if (!mediaTarget) return;
+    setError("");
+    const storedPath = await importProfileMediaFile(file);
+    update({ [mediaTarget]: storedPath });
+    if (fromSystem) setSystemImageToSave(file);
   }
 
   async function save() {
@@ -119,7 +122,7 @@ export default function ProfileSettings() {
         <div className="profile-banner">
           {bannerSrc ? <img src={bannerSrc} alt="" className="profile-banner-image" style={{ objectPosition: `${draft.bannerPositionX}% ${draft.bannerPositionY}%`, transform: `scale(${draft.bannerZoom / 100})`, transformOrigin: `${draft.bannerPositionX}% ${draft.bannerPositionY}%` }} /> : <div className="profile-banner-art" />}
           <div className="profile-banner-overlay" />
-          <button className="profile-media-button profile-banner-edit" type="button" onClick={() => void pickMedia("bannerAssetPath")}>{bannerSrc ? "Change banner" : "Add banner / GIF"}</button>
+          <button className="profile-media-button profile-banner-edit" type="button" onClick={() => setMediaTarget("bannerAssetPath")}>{bannerSrc ? "Change banner" : "Add banner / GIF"}</button>
           {bannerSrc && <button className="profile-media-button profile-banner-remove" type="button" onClick={() => update({ bannerAssetPath: null })}>Remove</button>}
         </div>
 
@@ -128,7 +131,7 @@ export default function ProfileSettings() {
             <div className={`profile-portrait frame-border-${draft.frameStyle}`}>
               {avatarSrc ? <img src={avatarSrc} alt="" className="profile-portrait-image" style={{ objectPosition: `${draft.avatarPositionX}% ${draft.avatarPositionY}%`, transform: `scale(${draft.avatarZoom / 100})`, transformOrigin: `${draft.avatarPositionX}% ${draft.avatarPositionY}%` }} /> : <span className="profile-portrait-placeholder">{draft.displayName.trim().charAt(0).toUpperCase() || "K"}</span>}
             </div>
-            <button className="profile-media-button" type="button" onClick={() => void pickMedia("avatarAssetPath")}>{avatarSrc ? "Change portrait / GIF" : "Add portrait / GIF"}</button>
+            <button className="profile-media-button" type="button" onClick={() => setMediaTarget("avatarAssetPath")}>{avatarSrc ? "Change portrait / GIF" : "Add portrait / GIF"}</button>
             {avatarSrc && <button className="profile-media-button profile-remove-media" type="button" onClick={() => update({ avatarAssetPath: null })}>Remove portrait</button>}
           </div>
 
@@ -213,6 +216,20 @@ export default function ProfileSettings() {
       </section>
       </div>
 
+      {mediaTarget && <ImageSourceDialog
+        title={mediaTarget === "avatarAssetPath" ? "Choose profile portrait" : "Choose profile banner"}
+        onCancel={() => setMediaTarget(null)}
+        onSystem={(file) => useChosenImage(file, true)}
+        onResource={(file) => useChosenImage(file, false)}
+      />}
+      {systemImageToSave && <SaveImageToResourcesDialog
+        fileName={systemImageToSave.name}
+        onSkip={() => setSystemImageToSave(null)}
+        onSave={async () => {
+          await importResource(systemImageToSave);
+          setSystemImageToSave(null);
+        }}
+      />}
       {error && <p className="profile-media-error profile-settings-error" role="alert">{error}</p>}
       <div className="profile-settings-actions">
         <span className={`profile-settings-status ${saved ? "is-saved" : ""}`}>{saved ? "Profile saved" : hasChanges ? "Unsaved changes" : "All changes saved"}</span>
