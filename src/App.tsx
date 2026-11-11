@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 
 import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { usePreferences } from "./preferences/PreferencesContext";
+import { isLightTheme } from "./preferences/themeMode";
 import ProfileModal from "./profile/ProfileModal";
 import SpecialTitleBadge from "./profile/SpecialTitleBadge";
 import { useActiveSpecialTitle } from "./profile/useActiveSpecialTitle";
@@ -404,7 +405,8 @@ function sanitiseHtml(html: string) {
   const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "accessibility" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { preferences } = usePreferences();
+  const { preferences, resolvedTheme } = usePreferences();
+  const themeIsLight = isLightTheme(resolvedTheme);
   const activeSpecialTitle = useActiveSpecialTitle(preferences.profile);
 
 
@@ -1753,12 +1755,12 @@ function sanitiseHtml(html: string) {
         />
 
         <section className={`main-panel ${backgroundImageUrl && sceneBackground ? "has-scene-background" : ""}`}
-          data-scene-overlay-tone={backgroundImageUrl && sceneBackground ? (isLightOverlay(sceneBackground) ? "light" : "dark") : undefined}>
+          data-scene-overlay-tone={backgroundImageUrl && sceneBackground ? (isLightOverlay(sceneBackground, themeIsLight) ? "light" : "dark") : undefined}>
           <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
           {backgroundImageUrl && sceneBackground && <div className="scene-background-layer" aria-hidden="true"
             style={{
               "--scene-bg-dim": sceneBackground.dim / 100,
-              "--scene-overlay-rgb": overlayRgb(sceneBackground),
+              "--scene-overlay-rgb": overlayRgb(sceneBackground, themeIsLight),
               "--scene-bg-blur": `${sceneBackground.blur}px`,
               "--scene-bg-zoom": sceneBackground.zoom / 100,
             } as CSSProperties}>
