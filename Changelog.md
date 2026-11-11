@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Clean rich-text pastes and extend chat header fade
+
+- Fixed unwanted background/highlight blocks appearing in the rich-text composer after pasting text copied from the chat or an external app. The composer now intercepts **HTML clipboard paste** and inserts only the result of the existing `sanitiseHtml` allowlist: inline text colours, basic formatting and supported emoji survive, while pasted background colours and unsupported styles are removed.
+- Plain-text paste retains native handling; an HTML insertion failure falls back to safe plain text. The editor's draft state and selection are updated after the paste.
+- Added a CSS guard for *existing unsanitised drafts* containing inline background styles or `<mark>` elements, so their non-persistent background highlighting is not displayed in the composer.
+- Reworked the chat topbar gradient: the **57px header is solid**, with no bottom border; a longer, **116px fade starts immediately below its former boundary** and blends into the chat, rather than fading inside the header itself. The fade sits behind the scene heading, action buttons and messages, while supporting custom scene background images.
+- **Pending local validation:** `npm run build`, copy/paste from an existing message with bold/colour and external backgrounds, verify no background in the composer, and check seamless header blending with and without scene images across light/dark themes.
+
 ## 2026-11-11 — Preserve composer text colours in sent messages
 
 - Fixed colour formatting being lost when a rich-text composer passage was sent to chat. WebView's `execCommand("foreColor")` emits `<font color="...">` runs, but the composer-to-Markdown source converter previously flattened the `FONT` tag and discarded its colour before sanitisation.
