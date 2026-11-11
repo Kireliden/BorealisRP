@@ -87,6 +87,8 @@
 
 
 
+/* The old native colour input used a non-interactive <span> overlay.
+   AppColorPicker itself is now that span; never disable its pointer events. */
 .colour-picker {
   position: relative;
   display: grid;
@@ -94,38 +96,35 @@
   height: 27px;
   flex: 0 0 28px;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 5px;
   color: var(--ctp-text);
-  font-size: 15px;
-  font-weight: 750;
-  cursor: pointer;
 }
-
-.colour-picker:hover {
-  background: var(--surface);
-}
-
-.colour-picker > span {
-  text-decoration: underline;
-  text-decoration-color: var(--ctp-mauve);
-  text-decoration-thickness: 3px;
-  pointer-events: none;
-}
-
 .colour-picker .app-color-picker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
-  align-items: stretch;
+  pointer-events: auto;
 }
-.colour-picker .app-color-trigger {
+.colour-picker .app-color-trigger--text {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
-  border: 0;
+  min-height: 27px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
   background: transparent;
+  color: var(--ctp-text);
 }
-.colour-picker .app-color-trigger > span {
-  border-bottom: 0;
+.colour-picker .app-color-trigger--text:hover,
+.colour-picker .app-color-trigger--text[aria-expanded="true"] {
+  background: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .toolbar-spacer {
