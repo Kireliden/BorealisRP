@@ -6,6 +6,12 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Fix restore restart in Tauri development mode
+
+- Corrected the backup-restore restart behaviour under `npm run tauri dev`: a native `app.request_restart()` terminated the Tauri CLI and its Vite dev server, leaving a WebView showing `localhost:1420` connection refused.
+- Native process restart is now used only in production builds. Development builds return which app-local stores were restored; the frontend reloads their plugin-store caches and refreshes the WebView without shutting down the Vite server.
+- This prevents the blank Edge error after restore while keeping the packaged app's ordinary restart path. Requires a manual acceptance test of the dev reload and release restart.
+
 ## 2026-11-11 — Restore settings backups with preview and rollback
 
 - Added **Restore settings backup** next to the export action under **Settings → About → Backups**, using a native ZIP picker and a confirmation showing the saved date, version, file and profile-image counts.
