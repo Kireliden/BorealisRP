@@ -65,6 +65,7 @@ export default function AppColorPicker({ value, defaultValue = "#babbf1", onChan
   const move = (newColor: string) => {
     const next = safeHex(newColor);
     if (value === undefined) setUncontrolledValue(next);
+    setHexDraft(next.toUpperCase());
     onChange({ target: { value: next } });
   };
   const placement = () => {
