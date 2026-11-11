@@ -54,6 +54,10 @@ export interface AppPreferences {
 
   appearance: {
     theme: CatppuccinFlavor;
+    /** Manual preserves the existing theme. System follows the OS light/dark preference. */
+    themeMode: "manual" | "system";
+    systemLightTheme: CatppuccinFlavor;
+    systemDarkTheme: CatppuccinFlavor;
     accentColor: string | null;
     uiScale: 80 | 90 | 100 | 110 | 125 | 150;
     density: UiDensity;
