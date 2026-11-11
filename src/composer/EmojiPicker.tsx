@@ -1,3 +1,4 @@
+import AppSelect from "../ui/AppSelect";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Smile } from "lucide-react";
 import openMojiData from "openmoji/data/openmoji.json";
@@ -220,10 +221,10 @@ export default function EmojiPicker({ editorRef }: Props) {
           </div>
           <input className="emoji-picker-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search emojis…" aria-label="Search emojis" autoFocus />
           <label className="emoji-picker-category-label" htmlFor="emoji-picker-category">Category</label>
-          <select id="emoji-picker-category" className="emoji-picker-category" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
+          <AppSelect id="emoji-picker-category" className="emoji-picker-category" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
             <option value="All">All categories</option>
             {groups.map((group) => <option key={group} value={group}>{group}</option>)}
-          </select>
+          </AppSelect>
           <div className="emoji-picker-grid-wrap">
             {visibleRecent.length > 0 && (
               <div className="emoji-picker-section">
