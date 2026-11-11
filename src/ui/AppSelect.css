@@ -120,3 +120,30 @@
 .character-sort-control .app-select,
 .relationship-map-sort .app-select { max-width: 190px; }
 .studio-relationship-type-select .app-select { flex: 1; min-width: 0; }
+
+/* Keep each module's established control density without native popup chrome. */
+.appearance-setting .app-select {
+  width: min(190px, 44%);
+  flex: 0 1 190px;
+  font-size: 12px;
+}
+.themes-schedule-slot .app-select { width: 100%; font-size: 12px; }
+.themes-schedule-slot .app-select-trigger { min-height: 38px; padding: 10px 9px; }
+.profile-field-label .app-select,
+.profile-title-choice .app-select,
+.studio-field .app-select,
+.profile-framing-control .app-select,
+.expression-field .app-select,
+.resource-dialog-folder-label .app-select { width: 100%; font-size: 11px; }
+.character-sort-control .app-select { max-width: 175px; font-size: 11px; }
+.relationship-map-sort .app-select { max-width: 155px; font-size: 10px; }
+.resource-controls .app-select { flex: 0 1 150px; width: 150px; font-size: 11px; }
+.studio-relationship-top .app-select-trigger { min-height: 34px; padding: 7px 9px; font-size: 10px; }
+.studio-scroll.is-readonly .studio-field .app-select-trigger { cursor: default; }
+.emoji-picker-category.app-select, .character-picker-popover .app-select { width: 100%; }
+@media (max-width: 760px) {
+  .relationship-map-sort .app-select { max-width: none; flex: 1; }
+}
+@media (max-width: 600px) {
+  .character-sort-control .app-select { max-width: none; flex: 1; }
+}
