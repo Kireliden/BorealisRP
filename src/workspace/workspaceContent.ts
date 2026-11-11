@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { MessageImage } from "../chat/messageImages";
 
 export type WorkspaceMessage = {
   id: number;
@@ -14,6 +15,7 @@ export type WorkspaceMessage = {
   expression?: string;
   history?: string[];
   source?: string;
+  images?: MessageImage[];
 };
 
 export type WorkspaceCategory = { id: string; name: string; };
