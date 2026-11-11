@@ -1,220 +1,128 @@
-# Borealis Roleplay Studio — Architecture
+# Borealis Roleplay Den — Architecture
 
-**Last updated:** 16 October 2026  
-**Status:** Current known frontend architecture plus planned boundaries. Verify the repository before treating this as a complete inventory.
+**Updated:** 11 November 2026  
+**Scope:** Architecture observed on `feature/workspace-persistence`, not a promise of future features.  
+**Product name:** Borealis Roleplay Den (BRD). `BRS` and *Borealis Roleplay Studio* survive in some older identifiers and documents.
 
-## 1. Technology stack
+## 1. Stack and execution
 
-- **React** — UI components.
-- **TypeScript** — typed application code and data models.
-- **Vite 8** — frontend development and build tooling.
-- **Tauri 2** — desktop shell and native integration.
-- **CSS** — layout, theme palettes and interface styling.
-
-The final persistence strategy for roleplay content has not yet been confirmed in the available notes. Do not assume a particular database or file format until the current code and dependencies have been inspected.
-
-## 2. Known folder structure
-
-Known frontend files:
+- **Desktop:** Tauri 2, with native Rust commands in `src-tauri/src/lib.rs`.
+- **Frontend:** React 19 + TypeScript, Vite 8, CSS.
+- **Core UI dependencies:** `lucide-react` and `openmoji`; app-owned dialogs, selects and colour pickers.
+- **Local-first:** no account, AI generation, cloud server or realtime collaboration in the current desktop workflow.
+- **Platforms:** Windows development environment is used; Linux remains a target that requires packaging/runtime acceptance tests.
 
 ```text
-C:\Dev\BorealisRP
-├── src/
-│   ├── App.tsx
-│   ├── App.css
-│   ├── main.tsx
-│   ├── preferences/
-│   │   ├── types.ts
-│   │   ├── defaults.ts
-│   │   ├── storage.ts
-│   │   └── PreferencesContext.tsx
-│   └── settings/
-│       ├── SettingsModal.tsx
-│       ├── SettingsModal.css
-│       ├── AppearanceSettings.tsx
-│       ├── AppearanceSettings.css
-│       ├── ThemesSettings.tsx
-│       └── ThemesSettings.css
-└── ...
+src/
+  App.tsx, App.css               Application composition; legacy monolithic surfaces
+  main.tsx                       React bootstrap
+  ui/                            Shared picker, dialog, select, colours, reusable styling
+  themes/                        Shared CSS palettes / themed styles
+  preferences/, settings/        App preferences, persistence, settings pages
+  workspace/                     Workspace paths, manifest operations, scene models and drafts
+  composer/                      Editor styles, emoji picker, expression commands, inline Lucide
+  chat/                          Message media, scene backgrounds, export and presentation CSS
+  characters/                    Character library, relationships, expression storage
+  resources/                     Workspace resource gallery, imports, media caching
+  profile/                       Personal identity and portrait controls
+  favourites/                    Workspace message/scene favourites UI
+  collection/                    App-local discoveries / achievements
+  easter-eggs/                   Potato, Nudge, Lambda, Plumbob
+  effects/                        Shared UI effects
+src-tauri/
+  src/lib.rs                     Native file and workspace commands
+  tauri.conf.json                Window/bundling metadata
+docs/                             Feature docs, audits and release readiness
 ```
 
-The ellipsis is intentional: this is not a full repository listing. Inspect the project tree before adding or renaming files.
+## 2. Data ownership and storage
 
-## 3. Existing module responsibilities
+**A workspace directory is the source of truth for workspace-owned data.** The Rust layer validates `workspace.json` (format `borealis-roleplay-den-workspace`, `schemaVersion: 1`) and handles native reads/writes. The app uses typed frontend wrappers to call the native layer.
 
-### `src/App.tsx`
-Main application UI and composition of the primary workspace. Inspect before assuming which scene, character or composer features are currently wired up.
-
-### `src/App.css`
-Application layout and styling, theme palettes, density rules and global UI styling.
-
-Known styling rules include:
-- Theme styles driven by `data-theme` on the document root.
-- Density styles driven by `data-density`.
-- Font selection driven by `data-font`.
-- Chat text size driven by `--chat-font-size`.
-- Global UI scale driven by `--ui-scale`.
-- Main content scaling applied to `.app-content`; title-bar scaling is intentionally excluded.
-
-Avoid adding a second competing implementation of the same preference.
-
-### `src/main.tsx`
-Frontend entry point. The application is wrapped in `PreferencesProvider`.
-
-### `src/preferences/types.ts`
-TypeScript definitions for preferences, character display preferences and character data.
-
-### `src/preferences/defaults.ts`
-Default preference values. The default theme is Catppuccin Frappé.
-
-### `src/preferences/storage.ts`
-Existing preference storage module. Inspect its implementation to determine the actual storage mechanism and failure behavior; the exact backend should not be inferred from the filename.
-
-### `src/preferences/PreferencesContext.tsx`
-Provides preferences to React components, updates preference state and applies relevant values to the document root. Automatic preference saving uses a short debounce.
-
-### `src/settings/SettingsModal.tsx`
-Settings navigation and category routing. Themes and Appearance are separate categories.
-
-### `src/settings/AppearanceSettings.tsx`
-Controls interface font, chat text size, global UI scale and density. It must not contain theme selection.
-
-### `src/settings/ThemesSettings.tsx`
-Displays the nine theme choices and their previews.
-
-## 4. Preferences data model
-
-The known preferences model uses `schemaVersion: 1` and contains these groups:
+Representative current workspace files:
 
 ```text
-AppPreferences
-├── schemaVersion
-├── appearance
-│   ├── theme
-│   ├── accentColor
-│   ├── uiScale
-│   ├── density
-│   ├── interfaceFont
-│   └── chatFontSize
-├── profile
-│   ├── displayName
-│   ├── avatarAssetId
-│   └── description
-├── editor
-│   ├── fontSize
-│   ├── toolbarVisible
-│   ├── defaultTextColor
-│   ├── pasteFormatting
-│   ├── height
-│   └── preserveDrafts
-├── roleplay
-│   ├── defaultRole
-│   ├── sendShortcut
-│   ├── showSessionSeparators
-│   ├── showDates
-│   └── paragraphSpacing
-└── characterDisplayDefaults
-    ├── showAvatar
-    ├── avatarSize
-    ├── nameMode
-    ├── showRoleLabel
-    ├── showExpression
-    ├── messageSpacing
-    ├── colorMode
-    └── customColor
+<My Workspace>/
+  workspace.json
+  Chats/
+    workspace-content.json       Scenes, categories, folders, message content
+    Drafts/<scene-id>.json       Draft HTML per scene
+    Images/                      Saved chat image attachments
+    Backgrounds/                 Scene background assets
+  Characters/
+    characters.json              Workspace character records
+    relationship-kinds.json      Custom relationship types
+    Expressions/
+      manifest.json              Workspace expressions registry
+      ...                        Expression artwork
+  Resources/
+    manifest.json                Workspace resource index
+    Files/                       Imported resource binaries
+  Settings/, Stories/, Themes/   Reserved or feature-dependent directories
 ```
 
-The known `Character` model contains:
+Actual layouts can grow as features are added; the layout above is representative, not a guarantee that every directory/file always exists.
 
-- `id`
-- `name`
-- `alias`
-- `avatarAssetId`
-- `summary`
-- `displayOverrides`
+- `src/workspace/workspaceStorage.ts`: create, inspect, rename, most recently active workspace.
+- `src/workspace/workspaceContent.ts`: `WorkspaceContent` / `WorkspaceMessage` data types and load/save calls, `schemaVersion: 1`.
+- `src/workspace/workspaceFiles.ts`: generic workspace-relative file read/write/delete wrappers.
+- `src/workspace/workspaceDrafts.storage.ts`: per-scene draft JSON; pending writes serialised per workspace + scene to avoid older autosaves overtaking later ones.
+- `src/characters/workspaceCharacters.storage.ts`: character records and relationship types. Legacy global data migration is guarded to avoid copying it into every workspace.
+- `src/characters/workspaceCharacterExpressions.storage.ts`: workspace-owned expression asset files and manifest; legacy expression migration.
+- `src/resources/workspaceResources.storage.ts`: resource manifest, binary files, folder metadata and guarded legacy import.
+- `src/preferences/storage.ts`: app-wide `preferences.json` Tauri store. Workspace recents, custom workspace icons and achievement/collection metadata have separate **app-local** stores.
 
-The character model is defined in `src/preferences/types.ts` in the known implementation. Verify whether the runtime character-management workflow is already wired up before extending it.
+**Do not replace the workspace-owned files with an implicit global IndexedDB/AppData source.** Legacy localStorage/IndexedDB code remains for migration and no-workspace fallback.
 
-## 5. Current preference data flow
-
-The known flow is:
+## 3. Primary data flow
 
 ```text
-User changes a setting
-        ↓
-Settings component
-        ↓
-Preferences context update
-        ↓
-React preferences state changes
-        ├──→ UI reads updated preferences
-        ├──→ document root receives theme/font/density/scale variables
-        └──→ debounced persistence through storage module
+Choose / restore workspace folder
+  → Native manifest inspection and validation
+  → App loads workspace-content.json (categories / folders / scenes)
+  → Characters, resources, expressions and background media load by active workspace path
+  → User navigates to a scene and composes HTML-rich content
+  → Draft autosaves to Chats/Drafts/<scene-id>.json
+  → Send/edit: convert formatting → sanitise → save scene messages
+  → Re-open: reload workspace content and restore per-scene drafts
 ```
 
-The document root currently receives:
-- `data-theme`
-- `data-density`
-- `data-font`
-- `--ui-scale`
-- `--chat-font-size`
+When asynchronous operations complete, the application checks active workspace and scene identifiers before updating stale UI. Workspace isolation and draft-operation races received a dedicated audit; see `docs/WorkspaceIsolationAndPersistenceAudit.md`.
 
-The exact storage backend and its guarantees should be confirmed by reading `storage.ts` and testing a full application restart.
+**Message schema:** message IDs, author and role (Narration/Dialogue), rich content, optional source for editing, optional history, avatar/character/expression references, images and favourite metadata. Scene schema includes name, optional folder reference, displayed icon and optional background.
 
-## 6. Roleplay data architecture: unresolved
+## 4. Rich text and icon representation
 
-The future application will need durable storage for:
+- Composer: `src/composer/EmojiPicker.tsx` exposes **Color**, **Linework**, **System** and **Lucide** tabs.
+- Workspace icon picker: `src/ui/StudioIconPicker.tsx` supports **OpenMoji**, **System emoji** and **Lucide**. Workspace icon values are stored in the app-local `workspace-icons.json` by workspace ID.
+- `src/ui/lucideCatalogue.ts` supplies the searchable Lucide names, validation and `lucide:` prefix. Icons load through `lucide-react/dynamic`.
+- `src/composer/lucideInline.ts` renders actual Lucide SVGs in rich composer/chat content. **Persisted content stores validated `data-lucide-icon` names on `message-lucide-icon` spans, not arbitrary SVG markup.**
+- `src/App.tsx` includes rich text/Markdown conversion, sanitisation and editor/scene send logic. The sanitiser reconstructs permitted Lucide markers. The composer synchronises its draft state after picker insertion, including icon-only messages.
+- OpenMoji artwork comes from copied app assets; system emoji uses the OS font. Inline Lucide follows surrounding text colour.
+- Workspace hero imagery is visually normalised to the OpenMoji size. Folder icon controls and scene inline icon-change controls are **temporarily removed**; stored icon fields are preserved for backward compatibility.
 
-- Projects
-- Scenes
-- Characters
-- Messages
-- Message versions/history
-- Drafts
-- Avatar and expression assets
-- Inserted media
+**Known integration edge:** Markdown/Obsidian export requires a deliberate fallback for inline Lucide-only content, since SVG visuals do not automatically translate into Markdown text. Track in alpha tests.
 
-The final source of truth, data format, migration strategy, backup format and media storage approach are **not yet confirmed** in the available notes.
+## 5. UI and theming
 
-Before implementing substantial roleplay persistence:
-1. Inspect current data structures and any existing storage code.
-2. Identify what is currently in memory versus persisted.
-3. Decide on a durable storage strategy that fits the Tauri desktop app.
-4. Define stable IDs and relationships between projects, scenes, characters and messages.
-5. Plan schema migrations and backup/recovery behavior.
-6. Test save, restart, restore and failure scenarios.
+- `src/themes/themes.css` is the central palette CSS; `src/settings/themeCatalog.ts` registers twelve themes across five collections.
+- `src/ui/studioPolish.css` holds newer sidebar/scene UI refinements to avoid extending `App.css` indiscriminately.
+- `src/ui/AppSelect.tsx`, `AppColorPicker.tsx`, `AppDialogProvider.tsx` are reusable, themed components.
+- Theme choices belong to **Themes**, not Appearance. Settings contain global scale, font, chat, accessibility and preferences.
+- Profile and collection metadata are distinct from workspace-scoped characters/resources.
 
-Do not introduce a database or a new persistence library without first inspecting the existing project and dependencies.
+## 6. Boundaries and intentional omissions
 
-## 7. Planned high-level boundaries
+- **Existing**: workspace-based local editing, scene/message persistence, resource and character libraries, expression support, scene export.
+- **Not established as release-ready**: verified ZIP backup/restore, schema evolution/migrations for future versions, automated integration/regression suite, signed or tested installers on both target operating systems.
+- **Not part of this alpha**: online sessions/invite system, cloud sync, mobile companion, AI generation, multi-device conflict resolution.
+- The repository's version and Tauri identity currently retain `0.1.0` and *Borealis Roleplay Studio* strings. Release branding/versioning requires a separate, tested decision.
 
-These are intended architectural responsibilities, not claims that all modules already exist.
+## 7. Maintenance rules
 
-- **Application shell:** window behavior and top-level layout.
-- **Settings/preferences:** user-level preferences and their persistence.
-- **Projects/scenes:** organization and navigation of roleplay work.
-- **Characters:** character profiles, avatars, expressions and display overrides.
-- **Composer/editor:** message drafting, formatting and submission.
-- **Messages/history:** published content and recoverable edits.
-- **Asset management:** avatars, expressions and inserted media.
-- **Storage/recovery:** durable data, backups, migrations and save-error handling.
-- **Android companion/sync:** future integration, protocol and conflict handling.
-
-## 8. Development commands
-
-```powershell
-npm run build
-npm run tauri dev
-```
-
-Use the build to catch compilation errors, then run the app to validate actual behavior. A successful build is not sufficient proof that persistence or UI interactions work.
-
-## 9. Architecture maintenance rules
-
-- Inspect before changing.
-- Keep themes separate from Appearance settings.
-- Avoid duplicating preference state or CSS mechanisms.
-- Keep TypeScript models aligned with the real persisted schema.
-- Do not claim data durability until it has been tested across restarts.
-- Record architectural decisions when they are actually made.
-- Update this document whenever folder structure, data flow or persistence changes.
+1. Keep types and native validation aligned before changing any workspace file schema.
+2. Keep data loss and cross-workspace contamination as release blockers.
+3. Preserve the modular `ui/`, `composer/`, `chat/`, `workspace/` boundaries; avoid new direct filesystem hacks in UI components.
+4. Preserve legacy data during migration and test backup/recovery before destructive changes.
+5. Run `npm run build` **and** real Tauri runtime tests; compilation alone is not acceptance.
+6. Use `CurrentState.md` for the current verified feature status, `Changelog.md` for dated changes and `docs/ALPHA-READINESS.md` for release gates.
