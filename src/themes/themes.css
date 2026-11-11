@@ -272,7 +272,7 @@
   background: var(--ctp-base);
 }
 
-/* Coral Bloom — Dark */
+/* Sakura Dusk — Dark (formerly Coral Bloom; ID retained for saved preferences) */
 :root[data-theme="coral-bloom"] {
   color-scheme: dark;
 
