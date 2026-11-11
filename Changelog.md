@@ -20,7 +20,7 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 - Standardised visible **BRS** initials for Borealis Roleplay Studio across the profile, holographic avatar card, Resources dialogs, workspace manager, settings, user-facing errors and development documentation.
 - Preserved legacy `brd.*` application storage keys, event names, CSS selectors, character identifiers and migration markers to avoid breaking existing data and integrations. These are internal compatibility identifiers, not display branding.
-- Rebuilt the Moon/Star special-title aura as an outward-expanding rounded outline, using equal physical spacing on every side and a restrained 6.8-second cycle; opened the sidebar's clipping containers to show it.
+- Refined the Moon/Star special-title capsules into a stationary, tightly blurred glow with a synchronised brighter border/halo colour transition (6.8 seconds), while keeping the sidebar aura visible without clipping.
 - Added a close button to the workspace status notice. The dismissal lasts for the current app session, while a newly raised workspace error makes the notice visible again.
 - Kept the existing accessibility/reduced-motion behavior for visual effects. Visual checks on narrow sidebars and multiple themes remain recommended.
 
