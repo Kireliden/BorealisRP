@@ -701,7 +701,9 @@ pub fn run() {
             remove_profile_sidebar_thumbnail,
             read_dropped_resource_files,
             delete_confirmed_original_resource_file,
-            settings_backup::create_settings_backup
+            settings_backup::create_settings_backup,
+            settings_backup::inspect_settings_backup,
+            settings_backup::restore_settings_backup
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
