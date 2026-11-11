@@ -245,7 +245,7 @@ fn workspace_file_path(workspace_path: &str, relative_path: &str) -> Result<Path
 /// Removes a file stored inside the selected workspace.
 #[tauri::command]
 fn delete_workspace_file(path: String, relative_path: String) -> Result<(), String> {
-    if !relative_path.starts_with("Resources/Files/") && !relative_path.starts_with("Characters/Expressions/") {
+    if !relative_path.starts_with("Resources/Files/") && !relative_path.starts_with("Characters/Expressions/") && !relative_path.starts_with("Chats/Backgrounds/") {
         return Err("Only workspace media assets can be deleted with this command.".into());
     }
     let file_path = workspace_file_path(&path, &relative_path)?;
