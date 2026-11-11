@@ -106,7 +106,7 @@
   background: var(--surface);
 }
 
-.colour-picker span {
+.colour-picker > span {
   text-decoration: underline;
   text-decoration-color: var(--ctp-mauve);
   text-decoration-thickness: 3px;
