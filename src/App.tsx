@@ -1983,7 +1983,7 @@ function sanitiseHtml(html: string) {
         }}
       />}
       {isSettingsOpen && (
-        <SettingsModal initialCategory={settingsInitialCategory} onClose={() => setIsSettingsOpen(false)} />
+        <SettingsModal initialCategory={settingsInitialCategory} workspacePath={activeWorkspace?.path} onClose={() => setIsSettingsOpen(false)} />
       )}
       {isCollectionsOpen && (
         <CollectionsModal onClose={() => setIsCollectionsOpen(false)} />
