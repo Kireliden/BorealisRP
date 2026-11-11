@@ -73,8 +73,13 @@
 
   position: relative;
   isolation: isolate;
-  width: min(76vw, 390px);
-  max-height: 65vh;
+  /*
+   * Fit the card to the image's rendered dimensions instead of forcing 390px
+   * and letterboxing tall images with object-fit: contain. That mismatch made
+   * the foil mask stretch across the empty sides of the Plumbob.
+   */
+  width: fit-content;
+  max-width: min(76vw, 390px);
   overflow: visible;
   background: transparent;
   border: none;
@@ -90,18 +95,23 @@
 .holographic-art {
   position: relative;
   z-index: 0;
-  display: grid;
-  place-items: center;
-  width: 100%;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .holographic-art img {
   position: relative;
   z-index: 0;
   display: block;
-  width: 100%;
-  max-height: 65vh;
+  /*
+   * Allow BOTH dimensions to shrink proportionally. The actual <img> box,
+   * .holographic-card and its absolute foil layers now share a 1:1 geometry.
+   */
+  width: auto;
   height: auto;
+  max-width: min(76vw, 390px);
+  max-height: 65vh;
   object-fit: contain;
   padding: 0;
   user-select: none;
