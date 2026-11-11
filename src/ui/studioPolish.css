@@ -1,0 +1,191 @@
+/* BRS workspace/chat polish: small overrides kept outside the legacy App.css. */
+
+/* Workspace switcher is now the sidebar's header; the name opens the menu. */
+.sidebar .workspace-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 3px 15px;
+}
+.sidebar .brand-workspace-switcher {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sidebar .brand-workspace-switcher .workspace-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--sidebar-bg));
+  color: var(--ctp-text);
+  font-size: 12px;
+  font-weight: 720;
+}
+.brand-workspace-switcher .workspace-button:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, var(--sidebar-bg));
+}
+.brand-workspace-switcher .studio-icon-image,
+.brand-workspace-switcher .studio-icon-emoji {
+  width: 24px; height: 24px; flex-basis: 24px; font-size: 23px;
+}
+.sidebar-collapse-button {
+  display: grid; place-items: center; flex: 0 0 29px; width: 29px; height: 34px;
+  border: 1px solid transparent; border-radius: 8px;
+  color: var(--muted); background: transparent; cursor: pointer;
+}
+.sidebar-collapse-button:hover { color: var(--accent); background: var(--surface-hover); }
+.sidebar-collapse-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sidebar .workspace-brand-icon-editor { flex: 0 0 25px; }
+
+/* Taller user photo + footer, without losing access to Settings/Collections. */
+.sidebar .sidebar-footer {
+  min-height: 86px;
+  padding: 14px 4px 9px;
+  gap: 7px;
+}
+.sidebar .sidebar-footer .profile-avatar {
+  flex: 0 0 54px;
+  width: 54px;
+  height: 68px;
+  border-radius: 10px;
+}
+.sidebar .sidebar-profile-trigger { gap: 10px; }
+.sidebar .profile-copy { min-width: 0; }
+.sidebar .profile-name { font-size: 12px; }
+
+/* Compact rail: the entire workspace remains reachable, avatar stays at the bottom. */
+.app-shell.sidebar-is-collapsed .sidebar {
+  padding: 13px 6px 8px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .workspace-brand {
+  flex-direction: column; gap: 4px; padding: 4px 0 11px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .brand-workspace-switcher { flex: 0 0 auto; width: 100%; }
+.app-shell.sidebar-is-collapsed .sidebar .workspace-button {
+  width: 100%; justify-content: center; padding: 8px 0; min-height: 43px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .workspace-button-name,
+.app-shell.sidebar-is-collapsed .sidebar .workspace-switcher-chevron,
+.app-shell.sidebar-is-collapsed .sidebar .workspace-brand-icon-editor { display: none; }
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-collapse-button { width: 100%; }
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-section:not(.scenes-section) {
+  margin: 10px 0 0; padding: 0;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-section:not(.scenes-section) .section-heading,
+.app-shell.sidebar-is-collapsed .sidebar .scenes-section { display: none; }
+.app-shell.sidebar-is-collapsed .sidebar .nav-item {
+  display: flex; justify-content: center; align-items: center;
+  width: 100%; min-height: 43px;
+  font-size: 0; padding: 8px 2px; gap: 0;
+}
+.app-shell.sidebar-is-collapsed .sidebar .nav-item .nav-icon {
+  display: inline-grid; place-items: center; flex: 0 0 24px;
+  width: 24px; font-size: 20px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-footer {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 9px 0 5px; gap: 8px; min-height: 0;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-profile-trigger {
+  flex: 0 0 auto; order: 3; width: 100%; justify-content: center;
+  margin-top: 5px; padding: 4px 0;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-footer .profile-copy { display: none; }
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-footer .profile-avatar {
+  flex: 0 0 44px; width: 44px; height: 55px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-footer > .icon-button {
+  order: 1; display: grid; place-items: center; flex: 0 0 33px;
+  width: 38px; height: 33px;
+}
+.app-shell.sidebar-is-collapsed .sidebar .sidebar-resize-handle { display: none; }
+
+/* Tree: indentation without lines, with a new-folder action beside rename/delete. */
+.roleplay-tree .category-children,
+.roleplay-tree .folder-scenes {
+  border-left: none !important;
+  box-shadow: none;
+}
+.roleplay-tree .tree-folder-create,
+.roleplay-tree .tree-icon-editor {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+.roleplay-tree .category-row:hover > .tree-folder-create,
+.roleplay-tree .category-row:focus-within > .tree-folder-create,
+.roleplay-tree .folder-row:hover > .tree-icon-editor,
+.roleplay-tree .folder-row:focus-within > .tree-icon-editor,
+.roleplay-tree .scene-row:hover > .tree-icon-editor,
+.roleplay-tree .scene-row:focus-within > .tree-icon-editor {
+  opacity: 1; visibility: visible; pointer-events: auto;
+}
+.roleplay-tree .tree-folder-create {
+  display: grid; place-items: center; flex: 0 0 24px;
+  width: 24px; height: 25px; padding: 2px;
+  border: 1px solid transparent; border-radius: 7px;
+  background: transparent; color: var(--muted);
+}
+.roleplay-tree .tree-folder-create:hover { background: var(--surface-hover); color: var(--accent); }
+.roleplay-tree .tree-icon-editor .studio-icon-trigger { width: 24px; height: 24px; }
+.roleplay-tree .scene-icon .studio-icon-image,
+.roleplay-tree .scene-icon .studio-icon-emoji,
+.scene-heading-icon .studio-icon-image,
+.scene-heading-icon .studio-icon-emoji { width: 100%; height: 100%; }
+.roleplay-tree .folder-select-button .studio-icon-image,
+.roleplay-tree .folder-select-button .studio-icon-emoji { width: 15px; height: 15px; flex-basis: 15px; font-size: 14px; }
+@media (hover: none) {
+  .roleplay-tree .tree-folder-create,.roleplay-tree .tree-icon-editor {
+    opacity: 1; visibility: visible; pointer-events: auto;
+  }
+}
+
+/* Scene header melts into the conversation instead of a solid horizontal box. */
+.main-panel > .topbar,
+.main-panel.has-scene-background > .topbar {
+  border-bottom-color: transparent;
+  background: linear-gradient(180deg,
+    var(--sidebar-bg) 0%,
+    color-mix(in srgb, var(--sidebar-bg) 93%, transparent) 38%,
+    color-mix(in srgb, var(--sidebar-bg) 42%, transparent) 78%,
+    transparent 100%);
+}
+.main-panel.has-scene-background .scene-background-layer { inset: 0; }
+
+/* Theme-aware Send passage button: no inherited Catppuccin purple hover. */
+.composer .send-button {
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 77%, var(--ctp-text));
+  color: var(--ctp-base);
+  box-shadow: 0 2px 11px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+.composer .send-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, var(--ctp-text));
+  border-color: var(--accent);
+}
+.composer .send-button:disabled {
+  background: var(--ctp-surface1);
+  border-color: var(--border);
+  color: var(--muted);
+  box-shadow: none;
+  opacity: .62;
+}
+
+/* The running application logo follows the theme accent instead of fixed lavender. */
+.titlebar-logo .borealis-moon-mark { color: var(--accent); }
+.titlebar-logo .borealis-moon-mark path {
+  fill: var(--accent);
+  stroke: var(--ctp-crust);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roleplay-tree .tree-folder-create,.roleplay-tree .tree-icon-editor { transition: none; }
+}
