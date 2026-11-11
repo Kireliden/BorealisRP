@@ -133,7 +133,7 @@ export default function SceneBackgroundSettings({
         <footer className="scene-background-footer">
           <button type="button" onClick={onClose} disabled={busy}>Cancel</button>
           <button type="button" className="scene-background-apply" onClick={() => void apply()} disabled={busy || (!hasImage && !remove)}>
-            {busy ? "Saving…" : "Apply background"}
+            {busy ? "Saving…" : remove ? "Remove background" : "Apply background"}
           </button>
         </footer>
         {sourcePickerOpen && <ImageSourceDialog
