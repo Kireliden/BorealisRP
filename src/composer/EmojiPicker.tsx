@@ -1,6 +1,9 @@
 import AppSelect from "../ui/AppSelect";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Smile } from "lucide-react";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
+import { LUCIDE_PAGE_SIZE, lucideOptions } from "../ui/lucideCatalogue";
+import { hydrateLucideInlineIcons, makeLucideInlineIcon } from "./lucideInline";
 import openMojiData from "openmoji/data/openmoji.json";
 import "./EmojiPicker.css";
 
@@ -23,7 +26,7 @@ type EmojiItem = {
   searchText: string;
 };
 
-type EmojiStyle = "color" | "linework" | "system";
+type EmojiStyle = "color" | "linework" | "system" | "lucide";
 type Props = { editorRef: RefObject<HTMLDivElement | null> };
 const RECENT_LIMIT = 32;
 const EMOJI_PAGE_SIZE = 140;
@@ -31,6 +34,7 @@ const RECENT_KEY: Record<EmojiStyle, string> = {
   color: "borealis.emoji-recent.color",
   linework: "borealis.emoji-recent.linework",
   system: "borealis.emoji-recent.system",
+  lucide: "borealis.emoji-recent.lucide",
 };
 
 // OpenMoji SVGs are copied to public/openmoji by the predev/prebuild script.
@@ -78,6 +82,7 @@ export default function EmojiPicker({ editorRef }: Props) {
     color: readRecent("color"),
     linework: readRecent("linework"),
     system: readRecent("system"),
+    lucide: readRecent("lucide"),
   }));
   const rootRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
@@ -106,9 +111,9 @@ export default function EmojiPicker({ editorRef }: Props) {
     if (editor.contains(range.commonAncestorContainer)) savedRangeRef.current = range.cloneRange();
   }
 
-  function trackRecent(item: EmojiItem) {
+  function trackRecent(id: string) {
     setRecent((current) => {
-      const nextForStyle = [item.hexcode, ...current[source].filter((hex) => hex !== item.hexcode)].slice(0, RECENT_LIMIT);
+      const nextForStyle = [id, ...current[source].filter((recentId) => recentId !== id)].slice(0, RECENT_LIMIT);
       const next = { ...current, [source]: nextForStyle };
       try {
         localStorage.setItem(RECENT_KEY[source], JSON.stringify(nextForStyle));
@@ -119,7 +124,7 @@ export default function EmojiPicker({ editorRef }: Props) {
     });
   }
 
-  function insertEmoji(item: EmojiItem) {
+  function insertNode(node: HTMLElement, recentId: string, eventData: string) {
     const editor = editorRef.current;
     if (!editor) return;
     editor.focus();
@@ -138,6 +143,19 @@ export default function EmojiPicker({ editorRef }: Props) {
     const activeRange = selection?.rangeCount ? selection.getRangeAt(0) : null;
     if (!activeRange) return;
     activeRange.deleteContents();
+    activeRange.insertNode(node);
+    activeRange.setStartAfter(node);
+    activeRange.collapse(true);
+    selection?.removeAllRanges();
+    selection?.addRange(activeRange);
+    savedRangeRef.current = activeRange.cloneRange();
+    editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: eventData }));
+    trackRecent(recentId);
+    setIsOpen(false);
+    setQuery("");
+  }
+
+  function insertEmoji(item: EmojiItem) {
     const node = document.createElement(source === "system" || source === "linework" ? "span" : "img");
     if (source === "color") {
       node.setAttribute("src", item.colorImage);
@@ -147,8 +165,8 @@ export default function EmojiPicker({ editorRef }: Props) {
       node.setAttribute("contenteditable", "false");
     } else if (source === "linework") {
       node.setAttribute("data-openmoji-src", item.image);
-      (node as HTMLElement).style.maskImage = `url("${item.image}")`;
-      (node as HTMLElement).style.webkitMaskImage = `url("${item.image}")`;
+      node.style.maskImage = `url("${item.image}")`;
+      node.style.webkitMaskImage = `url("${item.image}")`;
       node.setAttribute("aria-label", item.emoji);
       node.setAttribute("title", item.name);
       node.className = "message-openmoji-linework";
@@ -157,16 +175,12 @@ export default function EmojiPicker({ editorRef }: Props) {
       node.textContent = item.emoji;
       node.className = "message-system-emoji";
     }
-    activeRange.insertNode(node);
-    activeRange.setStartAfter(node);
-    activeRange.collapse(true);
-    selection?.removeAllRanges();
-    selection?.addRange(activeRange);
-    savedRangeRef.current = activeRange.cloneRange();
-    editor.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: item.emoji }));
-    trackRecent(item);
-    setIsOpen(false);
-    setQuery("");
+    insertNode(node, item.hexcode, item.emoji);
+  }
+
+  function insertLucide(name: IconName) {
+    insertNode(makeLucideInlineIcon(name), name, name);
+    if (editorRef.current) hydrateLucideInlineIcons(editorRef.current);
   }
 
   const filteredItems = useMemo(() => openMojiItems.filter((item) => {
@@ -176,7 +190,7 @@ export default function EmojiPicker({ editorRef }: Props) {
   }), [query, selectedGroup]);
 
   useEffect(() => {
-    setVisibleLimit(EMOJI_PAGE_SIZE);
+    setVisibleLimit(source === "lucide" ? LUCIDE_PAGE_SIZE : EMOJI_PAGE_SIZE);
   }, [isOpen, source, query, selectedGroup]);
 
   const recentItems = recent[source]
@@ -190,6 +204,28 @@ export default function EmojiPicker({ editorRef }: Props) {
 
   const nonRecentItems = filteredItems.filter((item) => !visibleRecent.some((recentItem) => recentItem.hexcode === item.hexcode));
   const displayedItems = nonRecentItems.slice(0, visibleLimit);
+
+  const filteredLucideItems = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase();
+    return q ? lucideOptions.filter((item) => item.search.includes(q)) : lucideOptions;
+  }, [query]);
+  const recentLucideItems = recent.lucide
+    .map((name) => lucideOptions.find((item) => item.name === name))
+    .filter((item): item is (typeof lucideOptions)[number] => Boolean(item))
+    .filter((item) => !query.trim() || item.search.includes(query.trim().toLocaleLowerCase()));
+  const nonRecentLucideItems = filteredLucideItems.filter((item) =>
+    !recentLucideItems.some((recentItem) => recentItem.name === item.name));
+  const displayedLucideItems = nonRecentLucideItems.slice(0, visibleLimit);
+
+  function renderLucide(item: (typeof lucideOptions)[number]) {
+    return (
+      <button key={item.name} type="button" className="emoji-picker-item" title={item.label}
+        aria-label={item.label} onMouseDown={(event) => event.preventDefault()}
+        onClick={() => insertLucide(item.name)}>
+        <DynamicIcon name={item.name} className="emoji-picker-lucide" size={28} strokeWidth={1.8} aria-hidden="true" />
+      </button>
+    );
+  }
 
   function renderEmoji(item: EmojiItem) {
     return (
@@ -213,39 +249,52 @@ export default function EmojiPicker({ editorRef }: Props) {
       </button>
       {isOpen && (
         <section className="emoji-picker-popover" role="dialog" aria-label="Emoji picker">
-          <div className="emoji-picker-heading"><strong>Emojis</strong><span>{openMojiItems.length.toLocaleString()} available</span></div>
+          <div className="emoji-picker-heading"><strong>Emojis & icons</strong><span>{(source === "lucide" ? lucideOptions.length : openMojiItems.length).toLocaleString()} available</span></div>
           <div className="emoji-picker-source" role="group" aria-label="Emoji style">
             <button type="button" className={source === "color" ? "active" : ""} aria-pressed={source === "color"} onClick={() => setSource("color")}>Color</button>
             <button type="button" className={source === "linework" ? "active" : ""} aria-pressed={source === "linework"} onClick={() => setSource("linework")}>Linework</button>
             <button type="button" className={source === "system" ? "active" : ""} aria-pressed={source === "system"} onClick={() => setSource("system")}>System</button>
+            <button type="button" className={source === "lucide" ? "active" : ""} aria-pressed={source === "lucide"} onClick={() => setSource("lucide")}>Lucide</button>
           </div>
           <input className="emoji-picker-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search emojis…" aria-label="Search emojis" autoFocus />
-          <label className="emoji-picker-category-label" htmlFor="emoji-picker-category">Category</label>
-          <AppSelect id="emoji-picker-category" className="emoji-picker-category" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
-            <option value="All">All categories</option>
-            {groups.map((group) => <option key={group} value={group}>{group}</option>)}
-          </AppSelect>
+          {source !== "lucide" && <>
+            <label className="emoji-picker-category-label" htmlFor="emoji-picker-category">Category</label>
+            <AppSelect id="emoji-picker-category" className="emoji-picker-category" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
+              <option value="All">All categories</option>
+              {groups.map((group) => <option key={group} value={group}>{group}</option>)}
+            </AppSelect>
+          </>}
           <div className="emoji-picker-grid-wrap">
-            {visibleRecent.length > 0 && (
+            {(source === "lucide" ? recentLucideItems.length > 0 : visibleRecent.length > 0) && (
               <div className="emoji-picker-section">
                 <h3>Recently used</h3>
-                <div className="emoji-picker-grid">{visibleRecent.map(renderEmoji)}</div>
+                <div className="emoji-picker-grid">
+                  {source === "lucide" ? recentLucideItems.map(renderLucide) : visibleRecent.map(renderEmoji)}
+                </div>
               </div>
             )}
             <div className="emoji-picker-section">
-              <h3>{selectedGroup === "All" ? "All emojis" : selectedGroup}</h3>
+              <h3>{source === "lucide" ? "All icons" : selectedGroup === "All" ? "All emojis" : selectedGroup}</h3>
               <div className="emoji-picker-grid">
-                {displayedItems.map(renderEmoji)}
-                {!filteredItems.length && <p className="emoji-picker-empty">No emojis found.</p>}
-                {nonRecentItems.length > displayedItems.length && (
-                  <button type="button" className="emoji-picker-load-more" onClick={() => setVisibleLimit((limit) => limit + EMOJI_PAGE_SIZE)}>
-                    Load more ({(nonRecentItems.length - displayedItems.length).toLocaleString()} remaining)
+                {source === "lucide" ? displayedLucideItems.map(renderLucide) : displayedItems.map(renderEmoji)}
+                {(source === "lucide" ? !filteredLucideItems.length : !filteredItems.length) &&
+                  <p className="emoji-picker-empty">No icons found.</p>}
+                {(source === "lucide"
+                  ? nonRecentLucideItems.length > displayedLucideItems.length
+                  : nonRecentItems.length > displayedItems.length) && (
+                  <button type="button" className="emoji-picker-load-more"
+                    onClick={() => setVisibleLimit((limit) => limit + (source === "lucide" ? LUCIDE_PAGE_SIZE : EMOJI_PAGE_SIZE))}>
+                    Load more ({(source === "lucide"
+                      ? nonRecentLucideItems.length - displayedLucideItems.length
+                      : nonRecentItems.length - displayedItems.length).toLocaleString()} remaining)
                   </button>
                 )}
               </div>
             </div>
           </div>
-          <p className="emoji-picker-footnote">{source === "color" ? "Full-colour OpenMoji illustrations" : source === "linework" ? "Accent-tinted OpenMoji linework" : "System emoji style"}</p>
+          <p className="emoji-picker-footnote">{source === "color" ? "Full-colour OpenMoji illustrations"
+            : source === "linework" ? "Accent-tinted OpenMoji linework"
+            : source === "lucide" ? "Lucide vector icons, tinted to the message text" : "System emoji style"}</p>
         </section>
       )}
     </div>
