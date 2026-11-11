@@ -235,6 +235,6 @@
   max-width: 1020px;
   padding-left: 176px; /* 164px character panel + 12px layout gap */
 }
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .composer-context { padding-left: 172px; } /* layout gap becomes 8px */
 }
