@@ -412,6 +412,7 @@ function sanitiseHtml(html: string) {
     try { return localStorage.getItem("brs.sidebar-collapsed") === "true"; } catch { return false; }
   });
   const [workspaceIcon, setWorkspaceIcon] = useState("om:1F319");
+  const [workspaceSwitcherOpenRequest, setWorkspaceSwitcherOpenRequest] = useState(0);
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const [enteringMessageId, setEnteringMessageId] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -1769,22 +1770,31 @@ function sanitiseHtml(html: string) {
       <div className="app-content" style={{ "--sidebar-width": `${sidebarCollapsed ? 76 : sidebarWidth}px` } as CSSProperties}>
         <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`}>
           <div className="brand workspace-brand">
-            <div className="workspace-switcher-slot brand-workspace-switcher">
-              <WorkspaceSwitcher activeWorkspace={activeWorkspace} icon={workspaceIcon}
-                compact={sidebarCollapsed}
-                onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
-                onAddNew={() => setIsWorkspaceManagerOpen(true)} />
+            <div className="workspace-selector-row">
+              <div className="workspace-switcher-slot brand-workspace-switcher">
+                <WorkspaceSwitcher activeWorkspace={activeWorkspace} icon={workspaceIcon}
+                  compact={sidebarCollapsed} openRequest={workspaceSwitcherOpenRequest}
+                  onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
+                  onAddNew={() => setIsWorkspaceManagerOpen(true)} />
+              </div>
             </div>
-            <StudioIconPicker className="workspace-brand-icon-editor" value={workspaceIcon}
-              onChange={changeWorkspaceIcon} title="Change workspace icon"
-              disabled={!activeWorkspace} compact />
-            <button type="button" className="sidebar-collapse-button"
-              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-expanded={!sidebarCollapsed}>
-              {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            </button>
+            <div className="workspace-header-row">
+              <StudioIconPicker className="workspace-hero-icon" value={workspaceIcon}
+                onChange={changeWorkspaceIcon} title="Workspace options"
+                compact workspaceActions={{
+                  canChangeIcon: Boolean(activeWorkspace),
+                  onSwitchWorkspace: () => setWorkspaceSwitcherOpenRequest((request) => request + 1),
+                  onCreateWorkspace: () => setIsWorkspaceManagerOpen(true),
+                }} />
+              <div className="workspace-header-label" title={activeWorkspace?.manifest.name ?? "No workspace selected"}>Workspace</div>
+              <button type="button" className="sidebar-collapse-button"
+                onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-expanded={!sidebarCollapsed}>
+                {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              </button>
+            </div>
           </div>
           
           <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className={`nav-item ${activeLibraryPage === "projects" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("projects")}><span className="nav-icon">▦</span>Projects</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button><button className={`nav-item ${activeLibraryPage === "favourites" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("favourites")}><span className="nav-icon"><Heart size={17} /></span>Favourites</button><button type="button" className="nav-item sidebar-search-nav" onClick={() => setIsGlobalSearchOpen(true)} title="Search characters and resources" aria-label="Search characters and resources"><span className="nav-icon"><Search size={17} /></span>Search</button></div>
