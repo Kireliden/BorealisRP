@@ -250,7 +250,7 @@ fn safe_markdown_export_name(name: &str) -> String {
     let cleaned = name
         .trim()
         .chars()
-        .map(|ch| if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') { '-' } else { ch })
+        .map(|ch| if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' | '#' | '^' | '[' | ']') { '-' } else { ch })
         .take(72)
         .collect::<String>();
     let trimmed = cleaned.trim().trim_matches('.').trim().to_string();
