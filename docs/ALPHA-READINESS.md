@@ -42,6 +42,8 @@ Use a disposable/copy of the workspace for destructive tests; **never experiment
 
 **Blocker policy:** data loss/corruption, cross-workspace bleed, unsendable messages, unrecoverable drafts, an application that will not open/build, or installers that cannot access workspaces **block the alpha**. Cosmetic imperfections may be logged as non-blocking if they do not impede use.
 
+**Restore checkpoint:** the About page now includes a ZIP importer with confirmation, a pre-restore archive and restart. The acceptance gate must include a genuine restore on disposable settings, proof that the safety ZIP can be reopened, and proof that user Workspaces are unchanged. Code presence is not a passed test.
+
 ### Core settings-backup smoke test
 
 The About page now has a **Create settings backup** action (source implemented, runtime acceptance pending). Verify the ZIP manifest, four app-local stores, images, and manual restoration using a disposable app-data copy. This does **not replace** the full Workspace copy/restore gate above. See `docs/SETTINGS-BACKUP.md`.
