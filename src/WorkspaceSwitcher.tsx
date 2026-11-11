@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { load } from "@tauri-apps/plugin-store";
 import { Check, ChevronDown, FolderOpen, Plus } from "lucide-react";
 import { inspectWorkspace } from "./workspace/workspaceStorage";
+import { StudioIcon } from "./ui/StudioIconPicker";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import "./WorkspaceSwitcher.css";
 
@@ -16,6 +17,8 @@ type Props = {
   activeWorkspace: WorkspaceInfo | null;
   onSelect: (workspace: WorkspaceInfo) => void;
   onAddNew: () => void;
+  icon?: string;
+  compact?: boolean;
 };
 
 const RECENTS_FILE = "recent-workspaces.json";
@@ -51,7 +54,7 @@ async function rememberWorkspace(workspace: WorkspaceInfo): Promise<RecentWorksp
   return next;
 }
 
-export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew }: Props) {
+export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew, icon, compact }: Props) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
   const [busyPath, setBusyPath] = useState<string | null>(null);
@@ -109,7 +112,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew 
   }
 
   return (
-    <div className="workspace-switcher" ref={rootRef}>
+    <div className={`workspace-switcher ${compact ? "is-compact" : ""}`} ref={rootRef}>
       <button
         className="workspace-button"
         type="button"
@@ -118,7 +121,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew 
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="workspace-dot" />
+        <StudioIcon value={icon} />
         <span className="workspace-button-name">{activeWorkspace?.manifest.name ?? "Choose workspace"}</span>
         <ChevronDown className={open ? "workspace-switcher-chevron open" : "workspace-switcher-chevron"} size={16} />
       </button>
