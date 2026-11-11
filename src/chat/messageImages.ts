@@ -44,10 +44,15 @@ export async function saveMessageImages(
 export async function loadMessageImages(
   workspacePath: string, images: MessageImage[],
 ): Promise<Record<string, string>> {
-  const entries = await Promise.all(images.map(async (image) => {
-    const bytes = await readWorkspaceFile(workspacePath, image.relativePath);
-    const copy = Uint8Array.from(bytes);
-    return [image.id, URL.createObjectURL(new Blob([copy.buffer], { type: image.mimeType }))] as const;
+  const results = await Promise.all(images.map(async (image) => {
+    try {
+      const bytes = await readWorkspaceFile(workspacePath, image.relativePath);
+      const copy = Uint8Array.from(bytes);
+      return [image.id, URL.createObjectURL(new Blob([copy.buffer], { type: image.mimeType }))] as const;
+    } catch (reason) {
+      console.warn(`Could not load chat image ${image.fileName}:`, reason);
+      return null;
+    }
   }));
-  return Object.fromEntries(entries);
+  return Object.fromEntries(results.filter((entry): entry is readonly [string, string] => entry !== null));
 }
