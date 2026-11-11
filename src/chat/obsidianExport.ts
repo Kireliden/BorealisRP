@@ -23,6 +23,33 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+/** Inline HTML is necessary for underlines/colours that CommonMark cannot express.
+ * Rebuild only a small safe set of elements, never raw arbitrary HTML attributes. */
+function safeInlineHtml(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return escapeHtml(node.textContent ?? "");
+  if (node.nodeType !== Node.ELEMENT_NODE) return "";
+  const element = node as HTMLElement;
+  const children = Array.from(element.childNodes, safeInlineHtml).join("");
+  const tag = element.tagName;
+  if (tag === "BR") return "<br>";
+  if (tag === "IMG") return escapeHtml(element.getAttribute("alt") || "");
+  if (tag === "SPAN" && element.classList.contains("message-openmoji-linework")) {
+    return escapeHtml(element.getAttribute("aria-label") || element.title || "");
+  }
+  const allowed: Record<string, string> = {
+    B: "strong", STRONG: "strong", I: "em", EM: "em",
+    U: "u", S: "s", DEL: "s", CODE: "code",
+  };
+  if (allowed[tag]) return `<${allowed[tag]}>${children}</${allowed[tag]}>`;
+  if (tag === "SPAN") {
+    const color = element.style.color;
+    if (color && /^(?:#[0-9a-f]{3,8}|rgba?\\([\\d\\s,.%]+\\)|[a-z]+)$/i.test(color)) {
+      return `<span style="color: ${color}">${children}</span>`;
+    }
+  }
+  return children;
+}
+
 /** Convert BRS's existing rich HTML message content into portable Markdown.
  * Text the user typed as Markdown is retained, not double-escaped. */
 export function richTextToMarkdown(html: string): string {
@@ -42,7 +69,7 @@ export function richTextToMarkdown(html: string): string {
       case "EM": return content ? `*${content}*` : "";
       case "S":
       case "DEL": return content ? `~~${content}~~` : "";
-      case "U": return content ? `<u>${escapeHtml(element.textContent ?? "")}</u>` : "";
+      case "U": return content ? `<u>${Array.from(element.childNodes, safeInlineHtml).join("")}</u>` : "";
       case "CODE": {
         const ticks = "`".repeat(Math.max(1, ...(content.match(/`+/g)?.map((match) => match.length + 1) ?? [1])));
         return `${ticks}${content}${ticks}`;
@@ -55,7 +82,7 @@ export function richTextToMarkdown(html: string): string {
         // Obsidian supports inline HTML for coloured rich-text runs.
         const color = element.style.color;
         if (color && /^(?:#[0-9a-f]{3,8}|rgba?\([\d\s,.%]+\)|[a-z]+)$/i.test(color)) {
-          return `<span style="color: ${color}">${escapeHtml(element.textContent ?? "")}</span>`;
+          return `<span style="color: ${color}">${Array.from(element.childNodes, safeInlineHtml).join("")}</span>`;
         }
         return content;
       }
