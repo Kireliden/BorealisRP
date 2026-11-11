@@ -208,3 +208,28 @@
 .special-title-moon-icon { display: block; width: 13px; height: 13px; }
 .borealis-moon-mark { display: block; width: 100%; height: 100%; }
 .brand-mark { display: grid; place-items: center; }
+
+/* Profile hero: let the banner bleed into the identity area instead of stopping
+   above the display name. The lower gradient fades into the profile surface. */
+.profile-banner {
+  flex-basis: 248px;
+  min-height: 248px;
+}
+.profile-banner-overlay {
+  background: linear-gradient(180deg,
+    rgb(18 18 30 / 4%) 0%,
+    rgb(18 18 30 / 8%) 29%,
+    color-mix(in srgb, var(--panel-bg) 13%, transparent) 49%,
+    color-mix(in srgb, var(--panel-bg) 74%, transparent) 70%,
+    var(--panel-bg) 100%);
+}
+.profile-identity {
+  z-index: 2;
+  margin-top: -64px;
+}
+.profile-avatar-column { margin-top: -76px; }
+@media (max-width: 560px) {
+  .profile-banner { flex-basis: 195px; min-height: 195px; }
+  .profile-identity { margin-top: -38px; }
+  .profile-avatar-column { margin-top: -54px; }
+}
