@@ -35,4 +35,4 @@ target/
 public/openmoji/
 
 # Optional locally provided soundtrack for THE LAMBDA (do not distribute via Git)
-public/easter-eggs/path_of_borealis_clip.mp3
+src/easter-eggs/assets/path_of_borealis_clip.mp3
