@@ -46,6 +46,8 @@ export default function StudioIconPicker({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const firstActionRef = useRef<HTMLButtonElement>(null);
+  const switchActionRef = useRef<HTMLButtonElement>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase();
@@ -69,6 +71,13 @@ export default function StudioIconPicker({
 
   useEffect(() => {
     if (!open) return;
+    if (panelView === "icons") searchRef.current?.focus();
+    else if (workspaceActions?.canChangeIcon) firstActionRef.current?.focus();
+    else switchActionRef.current?.focus();
+  }, [open, panelView, workspaceActions?.canChangeIcon]);
+
+  useEffect(() => {
+    if (!open) return;
     const pointer = (event: PointerEvent) => {
       if (!buttonRef.current?.contains(event.target as Node) &&
           !panelRef.current?.contains(event.target as Node)) setOpen(false);
@@ -86,7 +95,6 @@ export default function StudioIconPicker({
     document.addEventListener("pointerdown", pointer, true);
     window.addEventListener("scroll", scroll, true);
     window.addEventListener("resize", place);
-    searchRef.current?.focus();
     return () => {
       window.removeEventListener("keydown", escape, true);
       document.removeEventListener("pointerdown", pointer, true);
@@ -121,11 +129,11 @@ export default function StudioIconPicker({
           </header>
           {workspaceActions && panelView === "actions" && (
             <div className="studio-workspace-actions">
-              <button type="button" disabled={!workspaceActions.canChangeIcon}
+              <button ref={firstActionRef} type="button" disabled={!workspaceActions.canChangeIcon}
                 onClick={() => setPanelView("icons")}>
                 <Pencil size={16} /><span>Change icon</span>
               </button>
-              <button type="button" onClick={() => {
+              <button ref={switchActionRef} type="button" onClick={() => {
                 setOpen(false);
                 workspaceActions.onSwitchWorkspace();
               }}>
