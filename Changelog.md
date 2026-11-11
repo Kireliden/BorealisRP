@@ -6,6 +6,15 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Single workspace header correction
+
+- Removed the redundant small active-workspace capsule above the sidebar hero header altogether; the sidebar has **one** workspace header again.
+- The hero title now reads the **actual active workspace name** from `activeWorkspace.manifest.name`, with a sensible “Choose workspace” fallback when none is selected.
+- Re-centred the hero OpenMoji/system-emoji artwork inside a 47×47 px themed icon button using a true CSS grid, zero padding and consistent rendered artwork dimensions.
+- Clicking that single large icon retains the **Change icon**, **Switch workspace**, and **Create workspace** menu. To keep the existing recent-workspace list without rendering a duplicate button, `WorkspaceSwitcher` now supports a headless popup anchored to the hero header.
+- The collapsed sidebar continues to display the same icon and its actions menu, with the expand button beneath it. Existing workspace icon persistence and creation flows are unchanged.
+- **Pending user validation:** `npm run build`, visual centring in the actual WebView, and the Switch workspace action from the single hero header in expanded and collapsed layouts.
+
 ## 2026-11-11 — Two-tier workspace sidebar header
 
 - Aligned the workspace sidebar header with the annotated layout: **retained the compact active-workspace capsule at the top**, with a separate prominent icon and "Workspace" heading directly beneath it, plus the collapse control on the far right.
