@@ -118,9 +118,9 @@ export const themes: ThemeDefinition[] = [
   },
   {
     id: "coral-bloom",
-    name: "Coral Bloom",
-    description: "Dark plum wrapped in soft coral.",
-    quote: "A little warmth in the dark.",
+    name: "Sakura Dusk",
+    description: "Dusky plum and coral-pink cherry blossoms.",
+    quote: "Even the blossoms glow after sundown.",
     icon: "✿",
     colors: {
       base: "#241A20",
@@ -251,16 +251,9 @@ export const THEME_COLLECTIONS: ThemeCollection[] = [
   {
     id: "sakura",
     name: "Sakura Collection",
-    subtitle: "Soft petals and a little springtime magic.",
+    subtitle: "Cherry blossoms from daydreams to dusk.",
     icon: "❀",
-    themeIds: ["sakura-dreams"],
-  },
-  {
-    id: "coral",
-    name: "Coral Collection",
-    subtitle: "Warm coral tones for late-night stories.",
-    icon: "✿",
-    themeIds: ["coral-bloom"],
+    themeIds: ["sakura-dreams", "coral-bloom"],
   },
   {
     id: "emerald",
