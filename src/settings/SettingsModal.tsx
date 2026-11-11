@@ -35,6 +35,7 @@ type SettingsCategory =
 interface SettingsModalProps {
   onClose: () => void;
   initialCategory?: SettingsCategory;
+  workspacePath?: string | null;
 }
 
 const applicationCategories = [
@@ -65,12 +66,12 @@ const categoryLabels: Record<SettingsCategory, string> = {
   about: "About",
 };
 
-export default function SettingsModal({ onClose, initialCategory = "appearance" }: SettingsModalProps) {
+export default function SettingsModal({ onClose, initialCategory = "appearance", workspacePath }: SettingsModalProps) {
   const [activeCategory, setActiveCategory] = useState<SettingsCategory>(initialCategory);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !document.querySelector(".image-source-backdrop, .resource-image-picker-backdrop")) onClose();
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -147,7 +148,7 @@ export default function SettingsModal({ onClose, initialCategory = "appearance" 
             {activeCategory === "appearance" ? <AppearanceSettings /> :
              activeCategory === "accessibility" ? <AccessibilitySettings /> :
              activeCategory === "themes" ? <ThemesSettings /> :
-             activeCategory === "profile" ? <ProfileSettings /> :
+             activeCategory === "profile" ? <ProfileSettings workspacePath={workspacePath} /> :
              activeCategory === "chat" ? <ChatSettings /> :
              activeCategory === "about" ? <AboutSettings /> : (
               <div className="settings-placeholder">
