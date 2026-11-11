@@ -1,65 +1,76 @@
-# Borealis Roleplay Studio — Settings backup
+# Borealis Roleplay Studio — Settings backup and restore
 
-**Implemented:** 11 November 2026  
-**Scope:** First-generation **export-only** settings backup in **Settings → About → Backups**.  
-**Status:** Code committed to `feature/workspace-persistence`; end-to-end desktop backup/restore tests remain required.
+**Updated:** 11 November 2026  
+**UI:** **Settings → About → Backups**, below Check for updates.  
+**Status:** Export and import implemented in source on `feature/workspace-persistence`; complete desktop restore acceptance is still pending.
 
-## User workflow
+## What is included
 
-1. Open **Settings → About**.
-2. Below **Check for updates**, find **Backups** and click **Create settings backup**.
-3. Select a destination for `Borealis-Settings-YYYY-MM-DD.zip` using the native Save dialog.
-4. Borealis flushes the current in-memory preferences, then creates the ZIP using a native Rust command. A success message includes the file count and destination. Cancelling the dialog makes no changes.
+Backups are `Borealis-Settings-YYYY-MM-DD.zip` archives with format `borealis-settings-backup`, schema version 1, application identifier `com.borealis.rp`.
 
-The ZIP is a real compressed archive, not merely a renamed JSON file. It contains:
+| Included | Examples |
+| --- | --- |
+| App preferences | Theme, appearance, scale, font, editor/chat, accessibility, profile metadata |
+| Workspace UI preferences | Recent/last workspace references and workspace icon choices |
+| Collections | Achievements and discoveries |
+| Local profile artwork | Imported profile photos, banners, sidebar avatar thumbnail |
+| Optional window state | Only if the store exists at the app-data location |
 
-- `backup-manifest.json` — format `borealis-settings-backup`, schema version 1, app identifier/version, timestamp and included file names.
-- `RESTORE-INSTRUCTIONS.txt` — manual restoration and exclusions.
-- `AppData/preferences.json` — saved preferences: theme, scale, fonts, accessibility, profile fields, composer/chat configuration, etc., if present.
-- `AppData/workspace-icons.json` — workspace icon preference, keyed by workspace ID, if present.
-- `AppData/recent-workspaces.json` — last active workspace/recent locations, if present.
-- `AppData/collections.json` — discovered collection/easter-egg data, if present.
-- `AppData/window-state.json` — if that store exists at the same location.
-- `AppData/media/*` — regular profile media files/thumbnail under the app-owned `media` directory, if present.
+The ZIP contains `backup-manifest.json`, `RESTORE-INSTRUCTIONS.txt` and an `AppData/` directory with the included files. Missing optional stores are not invented.
 
-Optional files are omitted if they do not yet exist. Existing archives are not replaced. The archive is first written to a temporary file in the chosen directory and only moved to its final name once completed. Compression runs off the main UI thread.
+**Not included:** Workspace folders (scenes, chats, messages, folders, characters, resources, expressions, drafts); WebView localStorage/IndexedDB caches and unrelated third-party files. Workspaces require a separate copy/restore of their entire folder. This archive is not a full-system image or a complete migration of every browser-local setting.
 
-## Not included
+## Export
 
-**This does NOT back up Workspaces.** Characters, messages, scenes, folders, resources, expression assets and drafts live in user-selected workspace directories. Make a separate full copy of each workspace folder with Borealis closed, or use a future workspace-backup tool.
+1. Click **Create settings backup**.
+2. Choose a new ZIP filename in the native Save dialog.
+3. Borealis flushes current React preferences to `preferences.json` and creates the archive off the UI thread.
+4. The UI shows either the path and number of included files or a meaningful error. Cancel means no changes.
 
-The snapshot also does not export WebView caches, arbitrary browser localStorage/IndexedDB data, external application files or third-party installations. In particular, some nonessential UI recents/states kept in WebView storage may not be included. Treat the backup as **core app settings + profile media**, not a full OS/app image.
+The output is staged and moved into place only after success. Existing ZIP files are never silently replaced. The file may include your personal information and local folder paths; store it privately.
 
-The archive may contain personal details and local paths. Keep it somewhere private.
+## Restore
 
-## Manual restore in the current version
+1. Click **Restore settings backup** and choose a ZIP from the native Open dialog.
+2. Borealis validates the archive and presents its creation date, application version, file count and image count.
+3. Confirm the overwrite. The dialogue explicitly says that the application **will restart automatically** and Workspace folders are not modified.
+4. The Rust backend validates the archive again, stages the data, saves current app settings as a **safety ZIP**, then applies the contained settings and images.
+5. The app requests a native restart so plugin-store caches and React state are discarded and the restored settings load on the next launch.
 
-Automatic **Restore backup** UI is not implemented yet.
+**Safety copy:** `%APPDATA%\com.borealis.rp\settings-backups\before-restore-<UUID>.zip` on Windows, or the corresponding app-data directory on another supported desktop platform. It is deliberately not included in future settings exports.
 
-1. Close Borealis completely (including any developer build).
-2. Preserve a copy of your current Borealis app-data folder before replacing anything.
-3. Unzip the `AppData/` folder contents into the application's data directory; on standard Windows installations this is typically `%APPDATA%\\com.borealis.rp`.
-4. Reopen Borealis and verify the appearance, profile and recent Workspaces.
-5. If restored on another Windows user/account or computer, an absolute avatar/banner path within `preferences.json` may need to be adjusted, and old recent workspace paths may no longer exist. The ZIP includes the profile media bytes but does not rewrite absolute paths automatically.
+**Restore semantics:** Files listed in the chosen backup replace their corresponding app-local files; stores absent from that backup are left untouched. Files already on disk but no longer referenced by the restored profile are also left in place. The importer does not delete arbitrary files or user Workspace directories.
 
-**Never restore ZIP files by extracting into Program Files.** Application binaries and app/user data live in separate places. Do not overwrite Workspace folders with settings backups.
+The restore implementation is intentionally strict:
+- Requires a valid `backup-manifest.json` with supported format/schema, expected app identifier and consistent entry list.
+- Only accepts the small allowlist of app preference files and simple non-nested media filenames; rejects unexpected paths, directories, symlinks, duplicates and oversized entries.
+- Checks each settings JSON parses as an object and enforces total and per-file decompression limits.
+- Writes to a temporary staging folder first; makes an emergency ZIP of current settings before modifying them.
+- On a write failure, attempts to roll back files already touched using preserved copies; reports the safety ZIP location if manual recovery is needed.
+- Rewrites the two known imported profile image absolute paths when the corresponding image is in the archive (useful for backups moved between Windows accounts/computers).
+- Avoids UI-thread ZIP operations.
 
-## Developer implementation
+**If a restore cannot complete:** do not guess or manually delete files. Read the error. The pre-restore ZIP is intended for recovery; if rollback was incomplete, it also retains temporary recovery material. Report the error message before making more changes.
 
-- UI: `src/settings/AboutSettings.tsx` and `AboutSettings.css`; separate section immediately below Updates.
-- Snapshot trigger: `src/preferences/storage.ts`'s `savePreferences` flushes the latest React preference state before export.
-- Rust: `src-tauri/src/settings_backup.rs`, registered as `create_settings_backup` by `src-tauri/src/lib.rs`. Uses `zip` crate and `app.path().app_data_dir()`.
-- Fixed allowlist of settings stores, nonrecursive regular media files, symlinks avoided, size/file-count limits, failure cleanup and no overwriting old ZIPs.
-- The destination path comes from the native Save dialog. The backend also validates its absolute path and `.zip` extension.
+## Technical files
 
-## Verification (pending)
+- `src/settings/AboutSettings.tsx`, `AboutSettings.css`: export and import actions, native file selection, validation preview and themed confirmation.
+- `src/ui/AppDialogProvider.tsx`: existing application confirmation modal.
+- `src-tauri/src/settings_backup.rs`: creation, validation, staging, local safety snapshot, restore/rollback and restart request.
+- `src-tauri/src/lib.rs`: `create_settings_backup`, `inspect_settings_backup`, `restore_settings_backup` commands.
+- `src-tauri/capabilities/default.json`: existing `dialog:allow-open` and `dialog:allow-save` permissions, scoped to the main window.
+- `src-tauri/Cargo.toml`: ZIP compression dependency.
 
-- [ ] `npm run build` and `npm run tauri build -- --bundles nsis` on the newest commit.
-- [ ] Create backup with changed theme and freshly imported profile image; check ZIP contains exact expected entries.
-- [ ] Cancel the Save dialog; verify no archive is written.
-- [ ] Try an existing target filename; error should leave the old backup intact.
-- [ ] On a disposable Windows account or with an app-data copy, manually restore backup and verify preferences and media.
-- [ ] Confirm workspace files are unaffected and not accidentally bundled in ZIP.
-- [ ] Linux smoke test and check WebView-independent settings persistence.
+## Validation checklist
 
-Do not label this **backup + restore** until an explicit in-app restore workflow with validation, rollback and restart behaviour has been implemented and tested.
+- [ ] Build exact branch head: frontend, Rust and Windows NSIS package.
+- [ ] Export changes to appearance/profile; inspect archive manifest and media, and verify create/cancel behaviour.
+- [ ] Restore a backup into a **disposable app-data profile** and compare its settings with source. Test native restart and preference persistence after reopening.
+- [ ] Confirm cancelled/invalid/wrong-version/extra-file/oversized backups do not modify settings.
+- [ ] Confirm a **before-restore** ZIP is created and can itself be inspected/restored.
+- [ ] Test backup transferred between user profiles; avatar/banner paths should point to restored copies.
+- [ ] Simulate a write failure using disposable settings; verify rollback and diagnostics.
+- [ ] Test that active Workspace files never change, and that legacy WebView-local data are not mistakenly described as backed up.
+- [ ] Test Linux desktop restoration before declaring cross-platform support.
+
+**Before relying on this for important settings:** keep a separate manual copy of the app-data folder, and run the tests above. Implementation alone is not evidence of tested data safety.
