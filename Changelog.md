@@ -6,6 +6,13 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Export settings backups from About
+
+- Added **Settings → About → Backups** directly underneath Check for updates. **Create settings backup** opens the OS save dialog and reports success/error in the themed panel.
+- Added `src-tauri/src/settings_backup.rs` and a native `create_settings_backup` Tauri command that writes a real ZIP containing saved app preferences, workspace icon preferences, recent-workspace references, collections, optional window state and imported profile media. The ZIP contains a versioned manifest and manual recovery instructions.
+- Before the snapshot, the React settings panel flushes the current preferences to disk; native compression runs off the UI thread. A new archive is prepared under a temporary filename and never replaces an existing ZIP. Workspace files and WebView caches are intentionally **not included**.
+- This is **export only**; automated restore is a future feature. Manual recovery steps and test cases are in `docs/SETTINGS-BACKUP.md`. Fresh build, creation, ZIP inspection and restore on a disposable profile are still pending verification.
+
 ## 2026-11-11 — Program Files installation and branded uninstaller
 
 - Switched the Windows NSIS installer from per-user `currentUser` (`%LOCALAPPDATA%`) to machine-wide `perMachine`, defaulting to `C:\Program Files\Borealis Roleplay Studio` with administrator consent during installation.
