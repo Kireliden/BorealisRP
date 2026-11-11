@@ -46,12 +46,12 @@ Use a disposable/copy of the workspace for destructive tests; **never experiment
 
 ### Core settings-backup smoke test
 
-The About page now has a **Create settings backup** action (source implemented, runtime acceptance pending). Verify the ZIP manifest, four app-local stores, images, and manual restoration using a disposable app-data copy. This does **not replace** the full Workspace copy/restore gate above. See `docs/SETTINGS-BACKUP.md`.
+The About page now has **Create settings backup** and **Restore settings backup** actions (source implemented, runtime acceptance pending). Verify the ZIP manifest, app-local stores, images, confirmation, rollback and automatic restart using disposable app data. This does **not replace** the full Workspace copy/restore gate above. See `docs/SETTINGS-BACKUP.md`.
 
 ## Known candidates for follow-up investigation
 
 - **Markdown/Obsidian export and inline Lucide:** export currently processes rich HTML but does not have an explicit `data-lucide-icon` fallback. Verify that icon-only messages are not silently exported as blank; implement a readable substitute if needed.
-- **Storage/schema:** version-1 schema exists; future migration/recovery and automated ZIP backup/restore are not established. Full ZIP UI can remain a post-alpha feature **if complete manual folder-copy restore is verified and documented**.
+- **Storage/schema:** version-1 workspace schema exists; future workspace migration/recovery and automated **Workspace ZIP** backup/restore are not established. The new settings-only ZIP does not replace workspace backups. Full Workspace ZIP UI can remain a post-alpha feature **if complete manual folder-copy restore is verified and documented**.
 - **Brand consistency:** the configured desktop package still says *Borealis Roleplay Studio*, although product naming is BRD. Choose whether to reconcile before distributing.
 - **Cross-platform:** no claim of verified Linux portability until packaged and launched on Linux.
 
