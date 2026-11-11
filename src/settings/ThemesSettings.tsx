@@ -12,7 +12,7 @@ export default function ThemesSettings() {
   const { preferences, resolvedTheme, systemIsDark, updatePreferences } = usePreferences();
   const appearance = preferences.appearance;
   const selectedTheme = resolvedTheme;
-  const [discoveredIds, setDiscoveredIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [discoveredIds, setDiscoveredIds] = useState<ReadonlySet<string>>(() => new Set<string>());
 
   useEffect(() => {
     let mounted = true;
