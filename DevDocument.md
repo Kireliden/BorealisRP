@@ -8,7 +8,25 @@
 **Frontend:** React + TypeScript + Vite 8  
 **Desktop framework:** Tauri 2  
 **Project root:** `C:\Dev\BorealisRP`  
-**Document status:** Initial development baseline — 16 October 2026
+**Document status:** **Historical development baseline from 16 October 2026**; reviewed and indexed 11 November 2026. This document preserves early planning context, not the present release status.
+
+---
+
+## Current development reference — November 2026
+
+**Official product-facing name:** Borealis Roleplay Den (**BRD**). *Borealis Roleplay Studio / BRS* remains in legacy documentation, package metadata and some code strings. Do not interpret these as separate projects.
+
+This document was written when several now-implemented features were only plans. **The October status table, roadmap and acceptance checkboxes below are retained as historical planning material; they must not be read as the current truth.** For up-to-date details:
+
+- **`CurrentState.md`:** present features, user-verified flows, known limitations and immediate priorities.
+- **`Architecture.md`:** actual modules, workspace-owned storage and frontend/native data flows.
+- **`Changelog.md`:** dated implemented work and verification notes.
+- **`docs/ALPHA-READINESS.md`:** candidate release scope, acceptance gates and blocker criteria.
+- **`docs/WorkspaceIsolationAndPersistenceAudit.md`:** prior workspace migration/isolation code audit and remaining runtime tests.
+
+**11 November 2026 snapshot:** Desktop UI, multiple user-owned workspaces, persisted scenes/drafts/messages, character and resource libraries, expression tools, relationship map, themes, profile, rich-text chat, favourites, media, scene Markdown export and easter eggs are present. Workspace icon selection supports OpenMoji / system emoji / Lucide; composer emoji selection supports Color / Linework / System / Lucide, and the developer confirmed inline icon rendering and sending in the running app. Folder and scene icon editor controls were intentionally removed for now, preserving stored data.
+
+**Release status:** internal **alpha candidate**, not a built, packaged or tagged alpha release. The next step is stabilisation and recovery smoke tests, not a new feature wave.
 
 ---
 
@@ -37,7 +55,7 @@ The project should retain its identity as Borealis even if the subtitle or prese
 
 ---
 
-## 2. Current development status
+## 2. Original development status (16 October 2026 snapshot)
 
 The statuses below reflect the development information available when this document was prepared. They are not a substitute for inspecting the current source code and testing the application.
 
@@ -494,7 +512,7 @@ These are development commands, not a complete production packaging procedure.
 
 ---
 
-## 10. Current priorities
+## 10. Original priorities (16 October 2026 snapshot)
 
 The recommended immediate priorities are:
 
@@ -513,7 +531,7 @@ The ordering can be adjusted when inspection reveals dependencies, but the deskt
 
 ---
 
-## 11. Open decisions and verification checklist
+## 11. Original open decisions and verification checklist
 
 These items should remain explicitly unresolved until confirmed.
 
@@ -547,7 +565,7 @@ The Android companion, advanced synchronization and additional conveniences can 
 
 ---
 
-## 13. Project status summary
+## 13. Original project status summary (16 October 2026)
 
 Borealis Roleplay Studio has progressed beyond the initial concept: the React/TypeScript desktop application exists, the Tauri shell and custom title bar are in place, and a substantial theme and preferences foundation has been built.
 
