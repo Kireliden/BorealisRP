@@ -6,6 +6,16 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Two-tier workspace sidebar header
+
+- Aligned the workspace sidebar header with the annotated layout: **retained the compact active-workspace capsule at the top**, with a separate prominent icon and "Workspace" heading directly beneath it, plus the collapse control on the far right.
+- Removed the duplicate standalone tiny icon editor beside the capsule. The **large workspace icon** now opens a themed actions popup with **Change icon**, **Switch workspace**, and **Create workspace**.
+- Change icon reveals the existing searchable OpenMoji/system-emoji picker inside the same popup. Saved icons still use the existing `workspace-icons.json` preference, and the top capsule and recent-workspaces list reflect changes.
+- Switch workspace opens the existing portalled recent-workspace list, including external opening from the icon actions popup. Clicking the upper capsule continues to open the same list directly.
+- Create workspace opens the workspace manager **directly in its Create view**, bypassing an unnecessary extra click; other entry points continue using the normal home view.
+- Preserved the existing themed capsule styling, collapse persistence and compact sidebar navigation, with separate responsive layout rules in `src/ui/studioPolish.css`.
+- **Pending local verification:** `npm run build` and testing both popups, click/keyboard focus, compact sidebar, colour-theme changes, and creating/selecting workspaces in the running Tauri app.
+
 ## 2026-11-11 — Sidebar, editor and profile polish
 
 - Added **/expression commands** to the rich composer (`/smile`, `/cry`, `/smirk`, `/angry`, `/flushed`, `/neutral`, plus aliases `/sad`, `/blush`, `/mad`). Commands are suggested while typed; pressing Enter or adding a trailing space changes the selected character expression without submitting an empty message. Regular passages and manual avatar-expression selection remain intact.
