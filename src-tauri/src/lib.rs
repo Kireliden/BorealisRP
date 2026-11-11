@@ -330,6 +330,42 @@ fn import_profile_media(app: AppHandle, source_path: String) -> Result<String, S
 }
 
 
+/// Makes a durable app-owned copy of an image picked from Resources (not a filesystem path).
+#[tauri::command]
+fn import_profile_media_bytes(app: AppHandle, file_name: String, bytes: Vec<u8>) -> Result<String, String> {
+    let extension = Path::new(&file_name)
+        .extension()
+        .and_then(|value| value.to_str())
+        .map(str::to_ascii_lowercase)
+        .ok_or_else(|| "The selected image has no supported extension.".to_string())?;
+    if !["png", "jpg", "jpeg", "webp", "gif"].contains(&extension.as_str()) {
+        return Err("Choose a PNG, JPG, WebP or GIF image.".into());
+    }
+    if bytes.is_empty() || bytes.len() > 25 * 1024 * 1024 {
+        return Err("Images must be between 1 byte and 25 MiB.".into());
+    }
+    let signature_ok = match extension.as_str() {
+        "png" => bytes.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]),
+        "jpg" | "jpeg" => bytes.starts_with(&[0xff, 0xd8, 0xff]),
+        "gif" => bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a"),
+        "webp" => bytes.starts_with(b"RIFF") && bytes.get(8..12) == Some(b"WEBP".as_slice()),
+        _ => false,
+    };
+    if !signature_ok {
+        return Err("The selected file does not match its image format.".into());
+    }
+    let app_data = app.path().app_data_dir()
+        .map_err(|error| format!("Could not locate BRS application storage: {error}"))?;
+    let media_dir = app_data.join("media");
+    fs::create_dir_all(&media_dir)
+        .map_err(|error| format!("Could not create BRS media storage: {error}"))?;
+    let destination = media_dir.join(format!("{}.{}", Uuid::new_v4(), extension));
+    fs::write(&destination, bytes)
+        .map_err(|error| format!("Could not import resource image: {error}"))?;
+    Ok(destination.to_string_lossy().into_owned())
+}
+
+
 #[tauri::command]
 fn profile_sidebar_thumbnail_path(app: AppHandle) -> Result<String, String> {
     let path = app.path().app_data_dir().map_err(|error| format!("Could not locate BRS application storage: {error}"))?.join("media").join("profile-sidebar-avatar.png");
@@ -505,6 +541,7 @@ pub fn run() {
             write_workspace_file,
             delete_workspace_file,
             import_profile_media,
+            import_profile_media_bytes,
             profile_sidebar_thumbnail_path,
             save_profile_sidebar_thumbnail,
             remove_profile_sidebar_thumbnail,
