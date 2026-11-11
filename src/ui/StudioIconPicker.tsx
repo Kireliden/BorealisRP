@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Search, Smile, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, FolderOpen, Pencil, Plus, Search, Smile, X } from "lucide-react";
 import openMojiData from "openmoji/data/openmoji.json";
 import "./StudioIconPicker.css";
 
@@ -30,12 +30,15 @@ type Props = {
   disabled?: boolean;
   compact?: boolean;
   className?: string;
+  /** In the workspace hero, open actions first, then reuse this icon picker. */
+  workspaceActions?: { onSwitchWorkspace: () => void; onCreateWorkspace: () => void; canChangeIcon: boolean };
 };
 
 export default function StudioIconPicker({
-  value, onChange, title = "Choose icon", disabled, compact, className = "",
+  value, onChange, title = "Choose icon", disabled, compact, className = "", workspaceActions,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [panelView, setPanelView] = useState<"actions" | "icons">("icons");
   const [mode, setMode] = useState<"openmoji" | "emoji">("openmoji");
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(LIMIT);
@@ -99,7 +102,7 @@ export default function StudioIconPicker({
         disabled={disabled}
         onClick={() => {
           if (open) setOpen(false);
-          else { place(); setMode(isOpenMoji(value ?? "") ? "openmoji" : "emoji"); setOpen(true); }
+          else { place(); setPanelView(workspaceActions ? "actions" : "icons"); setMode(isOpenMoji(value ?? "") ? "openmoji" : "emoji"); setOpen(true); }
         }}>
         <StudioIcon value={value} />
         {!compact && <ChevronDown size={12} aria-hidden="true" />}
@@ -108,20 +111,45 @@ export default function StudioIconPicker({
         <div className="studio-icon-panel" ref={panelRef} role="dialog"
           aria-label={title} style={{ position: "fixed", ...position } as CSSProperties}
           onPointerDown={(event) => event.stopPropagation()}>
-          <header><strong>Choose an icon</strong>
+          <header>
+            {workspaceActions && panelView === "icons" && (
+              <button type="button" onClick={() => setPanelView("actions")}
+                title="Back to workspace options" aria-label="Back to workspace options"><ArrowLeft size={15}/></button>
+            )}
+            <strong>{workspaceActions && panelView === "actions" ? "Workspace options" : "Choose an icon"}</strong>
             <button type="button" onClick={() => setOpen(false)} title="Close picker" aria-label="Close picker"><X size={15}/></button>
           </header>
-          <div className="studio-icon-picker-modes" role="group" aria-label="Icon style">
+          {workspaceActions && panelView === "actions" && (
+            <div className="studio-workspace-actions">
+              <button type="button" disabled={!workspaceActions.canChangeIcon}
+                onClick={() => setPanelView("icons")}>
+                <Pencil size={16} /><span>Change icon</span>
+              </button>
+              <button type="button" onClick={() => {
+                setOpen(false);
+                workspaceActions.onSwitchWorkspace();
+              }}>
+                <FolderOpen size={16} /><span>Switch workspace</span>
+              </button>
+              <button type="button" onClick={() => {
+                setOpen(false);
+                workspaceActions.onCreateWorkspace();
+              }}>
+                <Plus size={16} /><span>Create workspace</span>
+              </button>
+            </div>
+          )}
+          {panelView === "icons" && <div className="studio-icon-picker-modes" role="group" aria-label="Icon style">
             <button type="button" className={mode === "openmoji" ? "active" : ""}
               aria-pressed={mode === "openmoji"} onClick={() => setMode("openmoji")}>OpenMoji</button>
             <button type="button" className={mode === "emoji" ? "active" : ""}
               aria-pressed={mode === "emoji"} onClick={() => setMode("emoji")}>System emoji</button>
-          </div>
-          <label className="studio-icon-search"><Search size={14} aria-hidden="true" />
+          </div>}
+          {panelView === "icons" && <label className="studio-icon-search"><Search size={14} aria-hidden="true" />
             <input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)}
               placeholder="Search icons…" aria-label="Search icons" />
-          </label>
-          <div className="studio-icon-grid" role="group" aria-label="Available icons">
+          </label>}
+          {panelView === "icons" && <div className="studio-icon-grid" role="group" aria-label="Available icons">
             {filtered.slice(0,limit).map((item) => (
               <button key={item.hex} type="button" title={item.label}
                 className={(mode === "openmoji" ? "openmoji" : "emoji") +
@@ -133,12 +161,12 @@ export default function StudioIconPicker({
               </button>
             ))}
             {filtered.length === 0 && <p className="studio-icon-empty">No matching icons found.</p>}
-          </div>
-          {filtered.length > limit &&
+          </div>}
+          {panelView === "icons" && filtered.length > limit &&
             <button type="button" className="studio-icon-more" onClick={() => setLimit((n) => n + LIMIT)}>
               Show more ({filtered.length - limit} remaining)
             </button>}
-          <small><Smile size={12} /> {mode === "openmoji" ? "Colour artwork by OpenMoji" : "Uses your system emoji font"}</small>
+          {panelView === "icons" && <small><Smile size={12} /> {mode === "openmoji" ? "Colour artwork by OpenMoji" : "Uses your system emoji font"}</small>}
         </div>, document.body,
       )}
     </span>
