@@ -6,7 +6,8 @@ import "./LambdaEgg.css";
 
 const LAMBDA_ID = "lambda-signal";
 const WORD_PATTERN = /\blambda\b/i;
-const DURATION_MS = 9500;
+const FALLBACK_DURATION_MS = 13500;
+const MAX_DURATION_MS = 30000;
 const FADE_IN_MS = 1900;
 const FADE_OUT_MS = 1500;
 const MAX_VOLUME = 0.65;
@@ -76,11 +77,14 @@ function wordPosition(target: EventTarget | null, text: string): WordPosition {
 
 export default function LambdaEgg() {
   const [active, setActive] = useState(false);
+  const [durationMs, setDurationMs] = useState(FALLBACK_DURATION_MS);
   const [origin, setOrigin] = useState<WordPosition>({ x: 0, y: 0, fontSize: 17 });
   const activeRef = useRef(false);
   const discoveryRef = useRef(false);
   const textPresenceRef = useRef<WeakMap<EventTarget, boolean>>(new WeakMap());
   const timerRef = useRef<number | null>(null);
+  const durationRef = useRef(FALLBACK_DURATION_MS);
+  const startedAtRef = useRef(0);
   const fadeFrameRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -99,9 +103,34 @@ export default function LambdaEgg() {
     setActive(false);
   }, []);
 
+  /** The clip determines the cinematic's length, so a 13-second MP3 plays to the end.
+   * Unknown/unavailable audio keeps a 13.5-second silent fallback. */
+  const syncAudioDuration = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const nextDuration = Math.min(MAX_DURATION_MS, Math.max(1000, Math.round(audio.duration * 1000)));
+    if (nextDuration === durationRef.current) return;
+    durationRef.current = nextDuration;
+    setDurationMs(nextDuration);
+
+    if (activeRef.current) {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+      const remaining = Math.max(0, nextDuration - (performance.now() - startedAtRef.current));
+      timerRef.current = window.setTimeout(endSequence, remaining);
+    }
+  }, [endSequence]);
+
   const beginSequence = useCallback((position: WordPosition) => {
     if (activeRef.current) return;
     activeRef.current = true;
+    startedAtRef.current = performance.now();
+
+    const audio = audioRef.current;
+    const knownDuration = audio && Number.isFinite(audio.duration) && audio.duration > 0
+      ? Math.min(MAX_DURATION_MS, Math.max(1000, Math.round(audio.duration * 1000)))
+      : FALLBACK_DURATION_MS;
+    durationRef.current = knownDuration;
+    setDurationMs(knownDuration);
     setOrigin(position);
     setActive(true);
 
@@ -113,31 +142,35 @@ export default function LambdaEgg() {
       });
     }
 
-    const audio = audioRef.current;
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
       audio.volume = 0;
+      // Play immediately in the input gesture; metadata can arrive afterwards.
       void audio.play().catch(() => {
-        // The clip is supplied by the user later; the cinematic must still play silently.
+        // Unavailable/blocked audio must not interrupt the cinematic.
       });
-      const startedAt = performance.now();
-      const fadeAudio = (now: number) => {
-        if (!activeRef.current || !audioRef.current) return;
-        const elapsed = now - startedAt;
-        const inGain = Math.min(1, Math.max(0, elapsed / FADE_IN_MS));
-        const outGain = Math.min(1, Math.max(0, (DURATION_MS - elapsed) / FADE_OUT_MS));
-        audio.volume = Math.min(1, MAX_VOLUME * inGain * outGain);
-        if (elapsed < DURATION_MS) fadeFrameRef.current = window.requestAnimationFrame(fadeAudio);
+      const fadeAudio = () => {
+        if (!activeRef.current || audioRef.current !== audio) return;
+        const playedMs = audio.currentTime * 1000;
+        const fadeIn = Math.min(1, Math.max(0, playedMs / FADE_IN_MS));
+        const fadeOut = Math.min(1, Math.max(0, (durationRef.current - playedMs) / FADE_OUT_MS));
+        audio.volume = Math.min(1, MAX_VOLUME * fadeIn * fadeOut);
+        fadeFrameRef.current = window.requestAnimationFrame(fadeAudio);
       };
       fadeFrameRef.current = window.requestAnimationFrame(fadeAudio);
     }
-    timerRef.current = window.setTimeout(endSequence, DURATION_MS);
+    timerRef.current = window.setTimeout(endSequence, knownDuration);
   }, [endSequence]);
 
   useEffect(() => {
     const audio = LAMBDA_AUDIO_URL ? new Audio(LAMBDA_AUDIO_URL) : null;
-    if (audio) audio.preload = "none";
+    if (audio) {
+      audio.preload = "metadata";
+      audio.addEventListener("loadedmetadata", syncAudioDuration);
+      audio.addEventListener("durationchange", syncAudioDuration);
+      audio.addEventListener("ended", endSequence);
+    }
     audioRef.current = audio;
 
     const onInput = (event: Event) => {
@@ -156,11 +189,16 @@ export default function LambdaEgg() {
       document.removeEventListener("input", onInput);
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
       if (fadeFrameRef.current !== null) window.cancelAnimationFrame(fadeFrameRef.current);
-      audio?.pause();
+      if (audio) {
+        audio.removeEventListener("loadedmetadata", syncAudioDuration);
+        audio.removeEventListener("durationchange", syncAudioDuration);
+        audio.removeEventListener("ended", endSequence);
+        audio.pause();
+      }
       audioRef.current = null;
       activeRef.current = false;
     };
-  }, [beginSequence]);
+  }, [beginSequence, syncAudioDuration, endSequence]);
 
   useEffect(() => {
     if (!active) return;
@@ -178,6 +216,7 @@ export default function LambdaEgg() {
 
   return createPortal(
     <div className="lambda-egg" role="dialog" aria-modal="true" aria-label="The Lambda easter egg"
+      style={{ "--lambda-duration": `${durationMs}ms` } as CSSProperties}
       onMouseDown={(event) => { if (event.target === event.currentTarget) endSequence(); }}>
       <div className="lambda-egg-veil" aria-hidden="true" />
       <span className="lambda-egg-glitch" data-word="LAMBDA" aria-hidden="true"
