@@ -28,6 +28,8 @@ export type WorkspaceFolder = {
   id: string;
   name: string;
   categoryId?: string | null;
+  /** Optional OpenMoji (om:HEX) or Unicode emoji icon. */
+  icon?: string;
 };
 
 export type WorkspaceScene = {
