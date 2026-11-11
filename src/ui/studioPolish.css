@@ -47,7 +47,8 @@
   background: color-mix(in srgb, var(--accent) 19%, var(--surface));
 }
 .sidebar .workspace-hero-icon .studio-icon-image,
-.sidebar .workspace-hero-icon .studio-icon-emoji {
+.sidebar .workspace-hero-icon .studio-icon-emoji,
+.sidebar .workspace-hero-icon .studio-icon-lucide {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +59,7 @@
   margin: 0;
   padding: 0;
   object-fit: contain;
-  font-size: 30px;
+  font-size: 26px;
   line-height: 1;
   text-align: center;
   transform: none;
@@ -197,8 +198,10 @@
 .roleplay-tree .tree-icon-editor .studio-icon-trigger { width: 24px; height: 24px; }
 .roleplay-tree .scene-icon .studio-icon-image,
 .roleplay-tree .scene-icon .studio-icon-emoji,
+.roleplay-tree .scene-icon .studio-icon-lucide,
 .scene-heading-icon .studio-icon-image,
-.scene-heading-icon .studio-icon-emoji { width: 100%; height: 100%; }
+.scene-heading-icon .studio-icon-emoji,
+.scene-heading-icon .studio-icon-lucide { width: 100%; height: 100%; }
 .roleplay-tree .folder-select-button .studio-icon-image,
 .roleplay-tree .folder-select-button .studio-icon-emoji { width: 15px; height: 15px; flex-basis: 15px; font-size: 14px; }
 @media (hover: none) {
