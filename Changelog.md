@@ -10,12 +10,12 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 ### First cinematic pass (build/runtime verification pending)
 - Added `LambdaEgg.tsx` and modular CSS. Typing the standalone word **lambda** in any editable field, case-insensitively, triggers a visual glitch at the word's location and a dark, blurred cinematic overlay featuring a stylised orange lambda emblem.
-- The sequence lasts 9.5 seconds, has a gentle visual entry/exit, can be skipped with Esc, and respects the existing animation-off and system reduced-motion settings. Original text is never changed or deleted.
-- Added an optional user-supplied audio slot at `src/easter-eggs/assets/path_of_borealis_clip.mp3`; playback starts at zero volume, fades in over 1.9 seconds, fades out over the final 1.5 seconds, and is stopped after 9.5 seconds. Without the asset, the visual easter egg still plays silently.
-- The secret registers via `collectionStorage.registerDiscovery("lambda-signal")`, and appears as the third entry in Collections, with a temporary λ glyph in place of future sticker artwork.
+- The visual sequence follows the MP3's actual duration (13-second clips are no longer truncated), with a 13.5-second silent fallback and a 30-second safety limit. It can be skipped with Esc and respects animation-off / reduced-motion settings. Original typed text remains untouched.
+- The optional user-supplied audio at `src/easter-eggs/assets/path_of_borealis_clip.mp3` starts at zero volume, fades in over 1.9 seconds, fades out over its final 1.5 seconds, and ends with the actual clip; without the asset, the cinematic still plays silently.
+- The secret registers via `collectionStorage.registerDiscovery("lambda-signal")`, and is the third entry in Collections. Its collectible uses optional animated `src/easter-eggs/assets/ee_03.gif` in both the card and holographic viewer, falling back to λ until the GIF is supplied.
 - Re-triggering is possible after a full sequence when the word is removed and typed again. The effect is isolated from other eggs and does not interfere with workspace storage.
-- **Not included:** the actual soundtrack audio or a licensed artwork asset; add a clip you have rights to use and future sticker image separately.
-- **Pending validation:** `npm run build`, application runtime, contrast/readability and audio fade on Windows/Linux; check triggering from the composer, a text input and pasted text.
+- **Not included in Git:** the actual soundtrack audio or the future custom `ee_03.gif`; both are loaded from the shared easter egg asset directory when supplied.
+- **Pending validation:** `npm run build`, app runtime, full 13-second audio playback and fade on Windows/Linux, and animated `ee_03.gif` display in Collections and the holographic viewer.
 
 ## 2026-11-11 — Markdown / Obsidian chat export
 
