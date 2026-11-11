@@ -354,6 +354,7 @@ function sanitiseHtml(html: string) {
   const [draftHtml, setDraftHtml] = useState("");
   const [composerImages, setComposerImages] = useState<ComposerImage[]>([]);
   const [messageImageUrls, setMessageImageUrls] = useState<Record<string, string>>({});
+  const [messageImagesLoading, setMessageImagesLoading] = useState(false);
   const composerImageUrlsRef = useRef<Set<string>>(new Set());
   const [imageSourceOpen, setImageSourceOpen] = useState(false);
   const [systemImageToSave, setSystemImageToSave] = useState<File | null>(null);
@@ -535,15 +536,22 @@ function sanitiseHtml(html: string) {
     let disposed = false;
     let urls: Record<string, string> = {};
     setMessageImageUrls({});
+    const images = messages.flatMap((message) => message.images ?? []);
+    setMessageImagesLoading(Boolean(activeWorkspace && images.length));
     if (activeWorkspace) {
-      const images = messages.flatMap((message) => message.images ?? []);
       void loadMessageImages(activeWorkspace.path, images)
         .then((loaded) => {
           urls = loaded;
           if (disposed) Object.values(loaded).forEach((url) => URL.revokeObjectURL(url));
-          else setMessageImageUrls(loaded);
+          else {
+            setMessageImageUrls(loaded);
+            setMessageImagesLoading(false);
+          }
         })
-        .catch((reason) => console.warn("Could not load chat images:", reason));
+        .catch((reason) => {
+          if (!disposed) setMessageImagesLoading(false);
+          console.warn("Could not load chat images:", reason);
+        });
     }
     return () => {
       disposed = true;
@@ -1610,7 +1618,7 @@ function sanitiseHtml(html: string) {
                   {!!message.images?.length && <div className="message-image-gallery">
                     {message.images.map((image) => messageImageUrls[image.id]
                       ? <img key={image.id} src={messageImageUrls[image.id]} alt={image.fileName} title={image.fileName} loading="lazy" />
-                      : <span className="message-image-unavailable" key={image.id}>{image.fileName} · image unavailable</span>)}
+                      : <span className="message-image-unavailable" key={image.id}>{image.fileName} · {messageImagesLoading ? "Loading image…" : "Image unavailable"}</span>)}
                   </div>}
                 </div><div className="message-actions">
                 <button className="message-menu" type="button" title="Message actions" aria-label={`Message actions for ${displayAuthor}`} aria-expanded={openMessageActionsId === message.id} onClick={() => setOpenMessageActionsId((current) => current === message.id ? null : message.id)}><MoreHorizontal size={17} /></button>
