@@ -33,7 +33,7 @@ import { type ComposerImage, loadMessageImages, saveMessageImages } from "./chat
 import "./chat/messageImages.css";
 import ChatImageLightbox, { type ChatLightboxImage } from "./chat/ChatImageLightbox";
 import SceneBackgroundSettings from "./chat/SceneBackgroundSettings";
-import { loadSceneBackgroundUrl, safeSceneBackground, saveSceneBackgroundFile, type SceneBackground, type SceneBackgroundAdjustments } from "./chat/sceneBackground";
+import { isLightOverlay, overlayRgb, loadSceneBackgroundUrl, safeSceneBackground, saveSceneBackgroundFile, type SceneBackground, type SceneBackgroundAdjustments } from "./chat/sceneBackground";
 import "./chat/sceneBackground.css";
 import FavouritesPage from "./favourites/FavouritesPage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
@@ -1752,11 +1752,13 @@ function sanitiseHtml(html: string) {
           }}
         />
 
-        <section className={`main-panel ${backgroundImageUrl && sceneBackground ? "has-scene-background" : ""}`}>
+        <section className={`main-panel ${backgroundImageUrl && sceneBackground ? "has-scene-background" : ""}`}
+          data-scene-overlay-tone={backgroundImageUrl && sceneBackground ? (isLightOverlay(sceneBackground) ? "light" : "dark") : undefined}>
           <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
           {backgroundImageUrl && sceneBackground && <div className="scene-background-layer" aria-hidden="true"
             style={{
               "--scene-bg-dim": sceneBackground.dim / 100,
+              "--scene-overlay-rgb": overlayRgb(sceneBackground),
               "--scene-bg-blur": `${sceneBackground.blur}px`,
               "--scene-bg-zoom": sceneBackground.zoom / 100,
             } as CSSProperties}>
