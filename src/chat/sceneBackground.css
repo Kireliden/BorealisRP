@@ -1,0 +1,258 @@
+/* Per-scene chat backgrounds: isolated under the content, never the sidebar or titlebar. */
+.main-panel.has-scene-background {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.main-panel.has-scene-background > .topbar {
+  position: relative;
+  z-index: 2;
+  background: var(--panel-bg);
+}
+.main-panel.has-scene-background > .scene-toolbar,
+.main-panel.has-scene-background > .demo-notice,
+.main-panel.has-scene-background > .conversation,
+.main-panel.has-scene-background > .composer-area {
+  position: relative;
+  z-index: 1;
+}
+.scene-background-layer {
+  position: absolute;
+  z-index: 0;
+  inset: 57px 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--panel-bg);
+}
+.scene-background-layer-image {
+  position: absolute;
+  inset: -22px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: blur(var(--scene-bg-blur, 0px));
+  transform: scale(var(--scene-bg-zoom, 1));
+  transform-origin: center center;
+}
+.scene-background-layer-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(12 15 28 / 15%), transparent 42%, rgb(12 15 28 / 35%)),
+    rgb(12 15 28 / var(--scene-bg-dim, .56));
+}
+
+/* A soft glass surface over the image keeps the composer readable in all themes. */
+.main-panel.has-scene-background .composer {
+  background: color-mix(in srgb, var(--ctp-mantle) 85%, transparent);
+  border-color: color-mix(in srgb, var(--ctp-text) 35%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.main-panel.has-scene-background .demo-notice {
+  background: color-mix(in srgb, var(--ctp-mantle) 75%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.main-panel.has-scene-background .scene-heading h1,
+.main-panel.has-scene-background .scene-heading p,
+.main-panel.has-scene-background .message-rich-content,
+.main-panel.has-scene-background .message-body p,
+.main-panel.has-scene-background .date-divider p,
+.main-panel.has-scene-background .composer-context,
+.main-panel.has-scene-background .composer-footnote {
+  color: #f3f4ff;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 75%);
+}
+.main-panel.has-scene-background .message-meta strong,
+.main-panel.has-scene-background .message-meta time {
+  text-shadow: 0 1px 4px rgb(0 0 0 / 65%);
+}
+.scene-background-button { cursor: pointer; }
+.scene-background-button.is-custom { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+
+/* Editor, above normal BRS UI but below the shared Resources/system chooser. */
+.scene-background-backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 16px;
+  background: color-mix(in srgb, var(--ctp-crust) 78%, transparent);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+.scene-background-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(650px, 100%);
+  max-height: min(94vh, 850px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--app-bg);
+  color: var(--ctp-text);
+  box-shadow: 0 20px 80px rgb(0 0 0 / 38%);
+}
+.scene-background-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 19px 23px 15px;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar-bg);
+}
+.scene-background-header small {
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+.scene-background-header h2 { margin: 6px 0 2px; font-size: 20px; }
+.scene-background-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-background-header > button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ctp-text);
+  cursor: pointer;
+}
+.scene-background-content { overflow-y: auto; padding: 18px 23px 12px; }
+.scene-background-preview {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 184px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel-bg);
+}
+.scene-background-preview-image {
+  position: absolute;
+  inset: -20px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform-origin: center;
+}
+.scene-background-preview-dim { position: absolute; inset: 0; }
+.scene-background-preview-chat {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  padding: 18px 22px;
+  color: #f4f4ff;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+}
+.scene-background-preview-chat > span { font-size: 9px; font-weight: 800; letter-spacing: 1.2px; opacity: .8; }
+.scene-background-preview-chat > strong { font-size: 18px; }
+.scene-background-preview-chat > p {
+  margin: 0;
+  max-width: 90%;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.scene-background-preview-empty {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 7px;
+  background: var(--panel-bg);
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+.scene-background-preview-empty svg { margin: 0 auto; color: var(--accent); }
+.scene-background-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 13px 0 19px;
+}
+.scene-background-file-actions > span {
+  flex: 1 1 130px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ctp-subtext1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.scene-background-file-actions button,
+.scene-background-controls-header button,
+.scene-background-footer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ctp-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.scene-background-file-actions button:hover,
+.scene-background-controls-header button:hover,
+.scene-background-footer button:hover:not(:disabled) { border-color: var(--accent); }
+.scene-background-file-actions .scene-background-remove { color: var(--ctp-red); }
+.scene-background-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+.scene-background-controls-header > strong { font-size: 12px; }
+.scene-background-controls-header button { padding: 6px 8px; color: var(--muted); font-size: 10px; }
+.scene-background-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 20px; }
+.scene-background-control { display: grid; gap: 8px; min-width: 0; }
+.scene-background-control > span { display: flex; justify-content: space-between; gap: 8px; color: var(--ctp-subtext1); font-size: 11px; }
+.scene-background-control output { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+.scene-background-control input { width: 100%; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.scene-background-note { margin: 18px 0 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.scene-background-error { color: var(--ctp-red); font-size: 11px; }
+.scene-background-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 13px 23px;
+  border-top: 1px solid var(--border);
+  background: var(--sidebar-bg);
+}
+.scene-background-footer .scene-background-apply {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+  font-weight: 700;
+}
+.scene-background-dialog button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 580px) {
+  .scene-background-controls { grid-template-columns: 1fr; }
+  .scene-background-header, .scene-background-content, .scene-background-footer { padding-left: 13px; padding-right: 13px; }
+  .scene-background-file-actions > span { flex-basis: 100%; }
+  .scene-background-preview { min-height: 160px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene-background-button { transition: none; }
+}
