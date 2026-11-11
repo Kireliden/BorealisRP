@@ -16,6 +16,9 @@ export type WorkspaceMessage = {
   history?: string[];
   source?: string;
   images?: MessageImage[];
+  /** Saved inside this workspace, not in a separate global favourites database. */
+  favourite?: boolean;
+  favouritedAt?: number;
 };
 
 export type WorkspaceCategory = { id: string; name: string; };
@@ -32,6 +35,8 @@ export type WorkspaceScene = {
   icon: string;
   messages: WorkspaceMessage[];
   folderId?: string | null;
+  favourite?: boolean;
+  favouritedAt?: number;
 };
 
 export type WorkspaceContent = {
