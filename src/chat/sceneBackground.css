@@ -319,6 +319,12 @@
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgb(255 255 255 / 5%);
 }
+.scene-overlay-auto-info {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
 .scene-overlay-custom-colour {
   display: flex;
   align-items: center;
