@@ -1,9 +1,18 @@
 # Borealis Roleplay Studio — Installer Art Direction & Implementation Brief
 
 **Created:** 11 November 2026  
-**Status:** Visual design approved in conversation; **concepts only**. No production installer UI has been implemented, packaged or validated by this document.  
+**Status (11 November 2026):** **First actual Windows NSIS configuration implemented**, with checked-in Frappé installer bitmap assets and an automated Windows packaging workflow. The richly illustrated full-window mockups remain **conceptual**; no successful installer build or installation acceptance test has yet been confirmed.  
 **Target:** First privately distributable Windows alpha; Linux packages later.  
 **Branding decision for installer:** **Borealis Roleplay Studio** (not “Den”). Preserve the existing real application icon, an OpenMoji crescent moon **without additional sparkle in the actual logo**. Decorative celestial effects around the illustration are separate.
+
+## 0. Implemented installer baseline (11 November 2026)
+
+- **Current implementation:** `src-tauri/tauri.conf.json` now configures `bundle.windows.nsis` using `installMode: "currentUser"`, `installerIcon: "icons/icon.ico"`, `sidebarImage: "windows/installer/sidebar.bmp"`, `headerImage: "windows/installer/header.bmp"`, `startMenuFolder: "Borealis"` and `compression: "lzma"`. Non-Windows bundling targets were **not** removed.
+- **Checked-in graphics:** `src-tauri/windows/installer/sidebar.bmp` (164×314, native 24-bit BMP) and `header.bmp` (150×57, native 24-bit BMP). These are original procedural Frappé celestial illustrations, not baked screenshots of interface controls.
+- **Automated Windows packaging:** `.github/workflows/windows-installer.yml` builds the NSIS `-setup.exe` on a Windows runner and uploads it as a workflow artifact. It is triggered by relevant pushes to `feature/workspace-persistence` or by manual workflow dispatch when available. The workflow was added but **its first run has not been confirmed successful**.
+- **Optional original-concept artwork:** the conversation also provides a separate downloadable BMP artwork pack cropped from the approved illustration mockups; replacing the two same-named BMP files locally before packaging applies those visuals. The GitHub branch contains its own self-sufficient art by default.
+- **Scope:** This is a **real, branded standard NSIS installer**. The four custom large illustrated screens are still art direction, not a custom native window implementation. Programmatic progress is handled by NSIS.
+- **Installer testing still required:** compile `npm run tauri -- build --bundles nsis`, examine the real wizard, test fresh install, shortcuts, launch, upgrade and uninstall, and verify existing workspace directories are not affected.
 
 ## 1. Creative direction
 
