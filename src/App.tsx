@@ -2201,7 +2201,7 @@ function sanitiseHtml(html: string) {
                   </button>
 
 <NudgeEgg />
-                  <EmojiPicker editorRef={editorRef} />
+                  <EmojiPicker editorRef={editorRef} onInserted={handleDraftInput} />
 
 <span className="toolbar-spacer" />
 <span className="toolbar-spacer" />
