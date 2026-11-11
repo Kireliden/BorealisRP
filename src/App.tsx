@@ -680,6 +680,7 @@ function sanitiseHtml(html: string) {
     setEditingMessageId(null);
     setOpenMessageActionsId(null);
     setIsSceneOptionsOpen(false);
+    setMarkdownExportNotice(null);
     setBackgroundSettingsOpen(false);
     setFavouriteJump(null);
     setChatLightbox(null);
