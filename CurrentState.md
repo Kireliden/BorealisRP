@@ -54,6 +54,11 @@ Legacy browser localStorage/IndexedDB libraries have migration paths into a firs
 - A new **Settings → About → Backups → Create settings backup** action writes a ZIP containing core application stores and imported profile artwork. It does **not** include the user's workspace folders or all WebView localStorage data.
 - The ZIP contains manual recovery instructions. **There is no in-app Restore action yet.** The feature is implemented in source but not accepted as reliable until a fresh build and actual ZIP creation/manual recovery test pass. See `docs/SETTINGS-BACKUP.md`.
 
+### Restoring app settings (11 November update)
+
+- **Settings → About → Backups** now offers both **Create settings backup** and **Restore settings backup**. Import previews the ZIP, requires a confirmation, writes a safety copy of current app settings, and requests a restart after restoration. Workspace content stays separate.
+- The restore flow is implemented in source but **not yet runtime-verified**; test against disposable settings before depending on it as an alpha recovery feature. See `docs/SETTINGS-BACKUP.md`.
+
 ## 4. Open limitations / not release-verified
 
 - No complete green **fresh checkout → `npm ci` → frontend build → Tauri package** run has been documented for the latest head.
