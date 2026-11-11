@@ -1673,6 +1673,7 @@ function sanitiseHtml(html: string) {
     const isEditingMessage = editingMessageId !== null;
     const editor = editorRef.current;
     const plainText = editor?.innerText.trim() ?? "";
+    if (!isEditingMessage && applyExpressionCommand(plainText)) return;
     if (!plainText && !composerImages.length) return;
     let savedImages;
     try {
@@ -2133,7 +2134,19 @@ function sanitiseHtml(html: string) {
 <span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
-                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && composerImages.length === 0 && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && composerImages.length === 0 && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); if (!applyExpressionCommand(event.currentTarget.innerText ?? "")) event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                {expressionSlashQuery !== null && editingMessageId === null && selectedCharacter !== "You" && (
+                  <div className="expression-command-menu" role="group" aria-label="Expression commands">
+                    <span className="expression-command-hint">EXPRESSIONS · type the command + Space or press Enter</span>
+                    {EXPRESSION_COMMANDS.filter((entry) => entry.command.slice(1).includes(expressionSlashQuery)).map((entry) => (
+                      <button key={entry.command} type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => applyExpressionCommand(entry.command)}>
+                        <strong>{entry.command}</strong><span>{entry.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {composerImages.length > 0 && <div className="composer-image-previews" aria-label="Attached images">
                   {composerImages.map((image) => <div className="composer-image-preview" key={image.id}>
                     {(image.previewUrl ?? messageImageUrls[image.id]) && <img src={image.previewUrl ?? messageImageUrls[image.id]} alt="" />}
