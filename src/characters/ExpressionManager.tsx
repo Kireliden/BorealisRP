@@ -1,4 +1,5 @@
 import AppSelect from "../ui/AppSelect";
+import { useAppDialog } from "../ui/AppDialogProvider";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Check, FileImage, FolderOpen, Pencil, Save, Upload } from "lucide-react";
 import { loadCharacters } from "./characters.storage";
@@ -18,6 +19,7 @@ type VaultTarget = { kind: "individual" | "sheet" } | { kind: "slot"; key: Chara
 const blank = (): Slot[] => CHARACTER_EXPRESSION_SLOTS.map(s => ({ ...s, blob: null, url: null, fileName: "" }));
 
 export default function ExpressionManager({ onClose, characters: workspaceCharacters, workspacePath }: Props) {
+ const { confirm } = useAppDialog();
  const characters = (workspaceCharacters ?? loadCharacters()).filter(c => c.name.trim());
  const [step,setStep] = useState<Step>("welcome");
  const [characterId,setCharacterId] = useState("");
@@ -146,7 +148,7 @@ export default function ExpressionManager({ onClose, characters: workspaceCharac
  {step==="review"&&<>{back("character")}<h1>Review expressions</h1><p>{character?.name??"Choose a character"} · {loadingExpressions?"Loading saved expressions…":`${6-missing}/6 ready`}. Edit any image before saving.</p><div className="expression-review-grid">{slots.map(s=><article key={s.key} className="expression-review-card"><header><b>{s.label}</b><button onClick={()=>setEditing(editing===s.key?null:s.key)}><Pencil size={13}/> Edit</button></header><div className="expression-crop-preview">{s.url?<img src={s.url} alt={s.label}/>:<span><FileImage/> Image missing</span>}</div><small>{s.fileName||"No image assigned"}</small>{editing===s.key&&<div className="expression-replace-actions"><button type="button" onClick={()=>setVaultTarget({kind:"slot",key:s.key})}><FolderOpen size={13}/> From Resources</button><label>From device<input type="file" accept="image/*" onChange={e=>{assignSingle(s.key,e.target.files?.[0],slots,setSlots,setEditing);setSaved(false);}} /></label></div>}</article>)}</div></>}
  </div>
  {error&&<p className="expression-error-banner" role="alert">{error}</p>}
- {step==="review"&&<div className="expression-save-actions"><span>Imported originals remain untouched. Saving replaces this character's six expressions only after confirmation.</span><button disabled={busy||loadingExpressions||missing>0||!characterId} onClick={()=>{if(window.confirm("Save these expressions for "+(character?.name??"this character")+"? Existing expressions will be replaced."))void save();}}><Save size={15}/>{busy?"Saving…":"Save expressions"}</button>{saved&&<p><Check size={15}/> Saved all six expressions for {character?.name}.</p>}</div>}
+ {step==="review"&&<div className="expression-save-actions"><span>Imported originals remain untouched. Saving replaces this character's six expressions only after confirmation.</span><button disabled={busy||loadingExpressions||missing>0||!characterId} onClick={()=>{void (async()=>{if(await confirm("Save these expressions for "+(character?.name??"this character")+"? Existing expressions will be replaced.", { title: "Replace expressions", confirmLabel: "Replace" })) await save();})();}}><Save size={15}/>{busy?"Saving…":"Save expressions"}</button>{saved&&<p><Check size={15}/> Saved all six expressions for {character?.name}.</p>}</div>}
  </main>
  {vaultTarget&&<ResourceImagePicker
   workspacePath={workspacePath}
