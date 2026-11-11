@@ -14,14 +14,26 @@ The cinematic now adapts to the clip's actual metadata duration (up to a 30-seco
 
 The MP3 is **optional**: if you have not added it, BRS compiles and the visual cinematic runs silently for 13.5 seconds.
 
-## THE LAMBDA animated collectible
+## THE LAMBDA collectible (egg 003)
 
-The third Collections sticker uses your animated file:
+The third Collections sticker currently uses:
 
 ```
-src/easter-eggs/assets/ee_003.gif
+src/easter-eggs/assets/egg_003.png
 ```
 
-Its card and full-size holographic viewer display the actual GIF animation. The GIF is optional until you supply it; when absent, Collections displays a lambda glyph placeholder instead. Add the file to this folder before running `npm run build` or `npm run tauri dev`.
+This is the temporary static artwork while the animated holographic treatment is on hold. Existing GIF support in the holographic viewer remains available for future eggs.
+
+## THE PLUMBOB (egg 004)
+
+Type the standalone secret word `tiranipeuti` (case-insensitively) in an editable field to unlock the fourth collectible and display its reveal.
+
+The fourth Collections sticker and its reveal use:
+
+```
+src/easter-eggs/assets/egg_004.png
+```
+
+Its artwork is bundled with the app. No external audio is required.
 
 Use only audio and artwork you have permission to use. The MP3 is ignored by Git and should not be committed to a publicly shared repository without appropriate rights.
