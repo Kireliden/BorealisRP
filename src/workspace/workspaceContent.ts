@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { MessageImage } from "../chat/messageImages";
+import type { SceneBackground } from "../chat/sceneBackground";
 
 export type WorkspaceMessage = {
   id: number;
@@ -37,6 +38,8 @@ export type WorkspaceScene = {
   folderId?: string | null;
   favourite?: boolean;
   favouritedAt?: number;
+  /** Optional scene-specific artwork behind the chat, saved in Chats/Backgrounds. */
+  background?: SceneBackground;
 };
 
 export type WorkspaceContent = {
