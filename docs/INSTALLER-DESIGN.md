@@ -78,7 +78,7 @@ These are **design targets**, not claims about features already wired into the c
 - Optional shortcuts: **Create desktop shortcut**, **Create Start Menu shortcut**.
 - **Launch after installation** belongs on the final/finish screen if the chosen NSIS template supports it; do not imply the application can launch before files are installed.
 - Primary action: **Install**; secondary: **Back**.
-- **Important:** Tauri NSIS uses `currentUser` by default and installs under `%LOCALAPPDATA%`, not `C:\Program Files`. The concepts' Program Files path is a visual placeholder unless `perMachine` or a user-selected custom installation directory is intentionally supported.
+- **Current implementation:** This project explicitly uses `perMachine`, so it defaults to `C:\Program Files\Borealis Roleplay Studio` and asks for administrator permission. Tauri's upstream default would otherwise be `currentUser` under `%LOCALAPPDATA%`.
 - No “automatic updates” checkbox until updater support is genuinely implemented, configured and tested. Never advertise it merely because the concept included it.
 
 ### C. Installing
@@ -133,7 +133,7 @@ Use Tauri's standard Windows NSIS `-setup.exe` target and brand the real install
 }
 ```
 
-Paths in this sample are illustrative. Create and verify the asset files and check their path resolution before using the configuration. `installMode: "perMachine"` is intended to avoid unnecessary administrator elevation for the first alpha.
+Paths in this sample are illustrative. Create and verify the asset files and check their path resolution before using the configuration. `installMode: "perMachine"` requires administrator approval on installation, unlike the original per-user setup.
 
 **This produces a branded standard installer, not a pixel-perfect recreation of the illustrated mockups.** The Windows installer still owns native page layout and widgets.
 
