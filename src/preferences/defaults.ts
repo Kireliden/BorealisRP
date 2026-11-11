@@ -6,6 +6,9 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
 
   appearance: {
     theme: "frappe",
+    themeMode: "manual",
+    systemLightTheme: "latte",
+    systemDarkTheme: "frappe",
     accentColor: null,
     uiScale: 100,
     density: "comfortable",
