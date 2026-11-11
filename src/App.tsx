@@ -17,7 +17,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
+import { Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, FileDown, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -33,6 +33,8 @@ import SaveImageToResourcesDialog from "./resources/SaveImageToResourcesDialog";
 import { type ComposerImage, loadMessageImages, saveMessageImages } from "./chat/messageImages";
 import "./chat/messageImages.css";
 import ChatImageLightbox, { type ChatLightboxImage } from "./chat/ChatImageLightbox";
+import { exportScenesToMarkdown } from "./chat/obsidianExport";
+import "./chat/obsidianExport.css";
 import SceneBackgroundSettings from "./chat/SceneBackgroundSettings";
 import { isLightOverlay, overlayRgb, loadSceneBackgroundUrl, safeSceneBackground, saveSceneBackgroundFile, type SceneBackground, type SceneBackgroundAdjustments } from "./chat/sceneBackground";
 import "./chat/sceneBackground.css";
@@ -373,6 +375,8 @@ function sanitiseHtml(html: string) {
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
+  const [markdownExportBusy, setMarkdownExportBusy] = useState(false);
+  const [markdownExportNotice, setMarkdownExportNotice] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [favouriteBusy, setFavouriteBusy] = useState(false);
   const favouritePendingRef = useRef(false);
   const [favouriteJump, setFavouriteJump] = useState<{ sceneId: string; messageId: number } | null>(null);
@@ -1072,6 +1076,30 @@ function sanitiseHtml(html: string) {
     }
   }
 
+  async function exportChatMarkdown(allScenes: boolean) {
+    if (!activeWorkspace || workspaceLoading || markdownExportBusy) return;
+    const selected = allScenes ? scenes : activeScene ? [activeScene] : [];
+    if (!selected.length) return;
+    const path = activeWorkspace.path;
+    const name = activeWorkspace.manifest.name;
+    setIsSceneOptionsOpen(false);
+    setMarkdownExportNotice(null);
+    setMarkdownExportBusy(true);
+    try {
+      const exportedFolder = await exportScenesToMarkdown(path, name, selected);
+      if (exportedFolder && activeWorkspacePathRef.current === path) {
+        setMarkdownExportNotice({ kind: "success", text: exportedFolder });
+      }
+    } catch (reason) {
+      if (activeWorkspacePathRef.current === path) {
+        setMarkdownExportNotice({ kind: "error",
+          text: reason instanceof Error ? reason.message : String(reason) });
+      }
+    } finally {
+      setMarkdownExportBusy(false);
+    }
+  }
+
   async function toggleFavourite(sceneId: string, messageId?: number) {
     if (!activeWorkspace || workspaceLoading || favouritePendingRef.current) return;
     const scene = scenes.find((entry) => entry.id === sceneId);
@@ -1756,7 +1784,21 @@ function sanitiseHtml(html: string) {
 
         <section className={`main-panel ${backgroundImageUrl && sceneBackground ? "has-scene-background" : ""}`}
           data-scene-overlay-tone={backgroundImageUrl && sceneBackground ? (isLightOverlay(sceneBackground, themeIsLight) ? "light" : "dark") : undefined}>
-          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
+          <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button>
+            <button type="button" role="menuitem" disabled={markdownExportBusy || workspaceLoading || !activeScene}
+              onClick={() => void exportChatMarkdown(false)}><FileDown size={15} /><span>Export scene as Markdown</span></button>
+            <button type="button" role="menuitem" disabled={markdownExportBusy || workspaceLoading || scenes.length === 0}
+              onClick={() => void exportChatMarkdown(true)}><FileDown size={15} /><span>Export all scenes as Markdown</span></button>
+            <div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
+          {markdownExportNotice && <div className={`markdown-export-notice ${markdownExportNotice.kind}`}
+            role={markdownExportNotice.kind === "error" ? "alert" : "status"}>
+            <span><strong>{markdownExportNotice.kind === "error" ? "Markdown export failed." : "Markdown export complete."}</strong>
+            {markdownExportNotice.kind === "success" ? " Saved to: " : " "}
+            <span className="markdown-export-path" title={markdownExportNotice.text}>{markdownExportNotice.text}</span></span>
+            <button type="button" aria-label="Dismiss export notice" title="Dismiss" onClick={() => setMarkdownExportNotice(null)}>
+              <X size={15} />
+            </button>
+          </div>}
           {backgroundImageUrl && sceneBackground && <div className="scene-background-layer" aria-hidden="true"
             style={{
               "--scene-bg-dim": sceneBackground.dim / 100,
