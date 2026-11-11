@@ -417,6 +417,7 @@ function sanitiseHtml(html: string) {
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const [enteringMessageId, setEnteringMessageId] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const editorColourSelectionRef = useRef<Range | null>(null);
   const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftLoadRequestRef = useRef(0);
   const characterPanelRef = useRef<HTMLElement>(null);
@@ -981,11 +982,36 @@ function sanitiseHtml(html: string) {
     if (editorRef.current) setDraftHtml(editorRef.current.innerHTML);
   }
 
+  function rememberEditorColourSelection() {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection?.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) {
+      editorColourSelectionRef.current = range.cloneRange();
+    }
+  }
+
   function changeTextColour(colour: string) {
-    if (!colour) return;
-    editorRef.current?.focus();
+    const editor = editorRef.current;
+    if (!colour || !editor) return;
+    const savedRange = editorColourSelectionRef.current;
+    editor.focus({ preventScroll: true });
+    const selection = window.getSelection();
+    if (selection && savedRange &&
+        editor.contains(savedRange.startContainer) &&
+        editor.contains(savedRange.endContainer)) {
+      try {
+        selection.removeAllRanges();
+        selection.addRange(savedRange.cloneRange());
+      } catch {
+        // The saved nodes may have been replaced by another edit.
+        editorColourSelectionRef.current = null;
+      }
+    }
     document.execCommand("foreColor", false, colour);
-    if (editorRef.current) setDraftHtml(editorRef.current.innerHTML);
+    rememberEditorColourSelection();
+    setDraftHtml(editor.innerHTML);
   }
 
   function beginEditingMessage(message: Message) {
@@ -2130,7 +2156,13 @@ function sanitiseHtml(html: string) {
                   <button type="button" title="Italic" aria-label="Italic" onMouseDown={(event) => event.preventDefault()} onClick={() => formatText("italic")}><em>I</em></button>
                   <button type="button" title="Underline" aria-label="Underline" onMouseDown={(event) => event.preventDefault()} onClick={() => formatText("underline")}><u>U</u></button>
                   <span className="toolbar-divider" />
-                  <div className="colour-picker" title="Text colour"><AppColorPicker aria-label="Text colour" defaultValue="#babbf1" onChange={(event) => changeTextColour(event.target.value)} /></div>
+                  <div className="colour-picker" title="Text colour">
+                     <AppColorPicker aria-label="Text colour" variant="text"
+                       defaultValue="#babbf1"
+                       onBeforeOpen={rememberEditorColourSelection}
+                       closeOnFocusOutside={false}
+                       onChange={(event) => changeTextColour(event.target.value)} />
+                   </div>
                   <span className="toolbar-divider" />
                   <button
                     type="button"
