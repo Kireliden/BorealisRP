@@ -15,7 +15,7 @@
   background: radial-gradient(ellipse at center, rgb(15 18 16 / 91%) 0%, rgb(2 5 7 / 97%) 84%);
   backdrop-filter: blur(17px) saturate(.38);
   -webkit-backdrop-filter: blur(17px) saturate(.38);
-  animation: lambda-blackout 9.5s ease both;
+  animation: lambda-blackout var(--lambda-duration, 13.5s) ease both;
 }
 .lambda-egg::after {
   content: "";
@@ -70,7 +70,7 @@
   justify-content: center;
   gap: 21px;
   pointer-events: none;
-  animation: lambda-centre-appear 9.5s ease both;
+  animation: lambda-centre-appear var(--lambda-duration, 13.5s) ease both;
 }
 .lambda-egg-halo {
   position: absolute;
