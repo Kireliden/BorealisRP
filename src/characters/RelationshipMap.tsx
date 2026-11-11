@@ -1,3 +1,4 @@
+import AppSelect from "../ui/AppSelect";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { GitFork, Search, ZoomIn, ZoomOut, Maximize2, Users, Heart, Sparkles, ArrowUpRight, ChevronLeft, ChevronRight, Palette } from "lucide-react";
 import type { CharacterRecord, RelationshipKind } from "./characters.types";
@@ -221,7 +222,7 @@ export default function RelationshipMap({ characters, portraitUrls, imageResourc
       <div className="relationship-stats"><span><Users size={15}/><strong>{characters.length.toString().padStart(2, "0")}</strong> characters</span><span><GitFork size={15}/><strong>{connectionCount.toString().padStart(2, "0")}</strong> connections</span></div>
     </div>
     <div className="relationship-toolbar">
-      <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label><label className="relationship-map-sort"><span>Sort</span><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}><option value="newest">Recently created</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="updated">Recently updated</option></select></label>
+      <label className="relationship-search"><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a character…" /></label><label className="relationship-map-sort"><span>Sort</span><AppSelect value={sortOrder} onChange={(event) => setSortOrder(event.target.value as typeof sortOrder)}><option value="newest">Recently created</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option><option value="updated">Recently updated</option></AppSelect></label>
       <div className={`relationship-filter-strip ${filterStripState.canScrollLeft ? "can-scroll-left" : ""} ${filterStripState.canScrollRight ? "can-scroll-right" : ""}`} onMouseMove={handleFilterStripMouseMove}>
         <button className="relationship-filter-scroll relationship-filter-scroll-left" type="button" aria-label="Scroll relationship types left" disabled={!filterStripState.canScrollLeft} onClick={() => { if (filterStripRef.current) filterStripRef.current.scrollBy({ left: -180, behavior: "smooth" }); }}><ChevronLeft size={15}/></button>
         <div className="relationship-filters" ref={filterStripRef} onScroll={updateFilterStripState}>{relationshipFilters.map((item) => <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => setFilter(item)}>{item}</button>)}</div>
