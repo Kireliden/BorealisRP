@@ -956,10 +956,11 @@ function sanitiseHtml(html: string) {
       scene.id === sceneId ? { ...scene, messages: nextMessages } : scene,
     );
     const content: WorkspaceContent = { schemaVersion: 1, scenes: nextScenes, folders, categories };
-    setScenes(nextScenes);
-    setMessages(nextMessages);
     try {
       await saveWorkspaceContent(workspacePath, content);
+      if (activeWorkspacePathRef.current !== workspacePath) return false;
+      setScenes(nextScenes);
+      setMessages(nextMessages);
       if (activeWorkspacePathRef.current === workspacePath) setWorkspaceError("");
       return true;
     } catch (reason) {
@@ -1394,7 +1395,6 @@ function sanitiseHtml(html: string) {
           ? { ...message, content, source, images: savedImages, history: [...(message.history ?? []), message.content] }
           : message,
       );
-      setEditingMessageId(null);
     } else {
       const newMessageId = Date.now();
       nextMessages = [
@@ -1426,6 +1426,7 @@ function sanitiseHtml(html: string) {
     const saved = await persistSceneMessages(nextMessages);
     if (!saved) return;
     clearComposerImages();
+    if (isEditingMessage) setEditingMessageId(null);
     if (!isEditingMessage) {
       try {
         await saveWorkspaceDraft(workspacePath, sceneId, "");
@@ -1758,7 +1759,7 @@ function sanitiseHtml(html: string) {
 <span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
-                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && composerImages.length === 0 && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.closest("form")?.requestSubmit(); } }} />
                 {composerImages.length > 0 && <div className="composer-image-previews" aria-label="Attached images">
                   {composerImages.map((image) => <div className="composer-image-preview" key={image.id}>
                     {(image.previewUrl ?? messageImageUrls[image.id]) && <img src={image.previewUrl ?? messageImageUrls[image.id]} alt="" />}
