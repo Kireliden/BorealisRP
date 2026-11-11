@@ -1,80 +1,84 @@
-# Borealis Roleplay Studio — Current State
+# Borealis Roleplay Den — Current State
 
-**Last updated:** 16 October 2026  
-**Status:** Working development baseline; verify against the current source before relying on every item.
+**Updated:** 11 November 2026  
+**Branch reviewed:** `feature/workspace-persistence`  
+**Status:** Feature-rich local desktop **internal alpha candidate**; not a tested, tagged or distributed alpha release.  
+**Naming:** Product-facing name is **Borealis Roleplay Den (BRD)**. Some repository documents, internal strings and the Tauri package still say *Borealis Roleplay Studio / BRS*; those are legacy identifiers, not a second product.
 
-## 1. What works today
+This is a current-code snapshot plus specific interactive outcomes confirmed by the developer. **Implemented**, **user-verified**, and **release-verified** are distinct statuses.
 
-The following items are confirmed by the development notes available for this document. “Implemented” does not automatically mean every edge case has been tested.
+## 1. Implemented foundation
 
-- React + TypeScript frontend using Vite 8.
-- Tauri 2 desktop application shell.
-- Custom window title bar and main application layout.
-- Settings modal with separate **Appearance** and **Themes** categories.
-- Nine selectable themes:
-  - Catppuccin Latte
-  - Catppuccin Frappé (**default**)
-  - Catppuccin Macchiato
-  - Catppuccin Mocha
-  - Crimson Void
-  - Coral Bloom
-  - Sakura Dreams
-  - Moon Light
-  - Moon Shadow
-- Theme selection updates the document theme and is persisted through the existing preferences system.
-- Appearance controls for interface font, chat font size, global UI scale and density.
-- Preferences context, typed preference definitions, defaults and storage module.
-- Debounced automatic saving of preferences.
-- Global scale is applied to `.app-content`; the custom title bar is intended to retain its standard size.
-- Existing project root: `C:\Dev\BorealisRP`.
-- Known development commands:
-  ```powershell
-  npm run build
-  npm run tauri dev
-  ```
+- Tauri 2 desktop shell, React 19, TypeScript, Vite 8, custom title bar, window size/state handling, sidebar navigation and UI scale.
+- App-owned dialogs, dropdowns and colour picker; separate Appearance, Themes, Accessibility and other settings.
+- Twelve registered theme palettes across Catppuccin, Moonlight, Crimson, Sakura and unlockable Emerald collections; Catppuccin Frappé remains the default.
+- Local, user-selected **workspace folders**, with native manifest validation, create/open/rename/switch, recent-workspace tracking and last-active workspace restoration.
+- Roleplay Space with categories, folders, scenes, drag/reordering, scene navigation and context actions. Folder icons are currently fixed; older saved folder-icon fields are retained for compatibility. Scene icons remain visible but **their inline icon-change buttons are temporarily removed**.
+- Workspace hero header shows the active workspace name and a customisable icon. Supported icon sources: OpenMoji, system emoji and Lucide; the icon can open Change / Switch / Create workspace actions.
+- Workspace-owned scenes, messages, dialogue/narration presentation, rich-text formatting and text colours, drafts, edits/history, 24-hour deletion window, favourites, message media and scene backgrounds.
+- Composer supports four picker styles: **Color OpenMoji**, **Linework OpenMoji**, **System emoji** and **Lucide**. Lucide inline icons are saved by validated name and rendered with the library's `DynamicIcon`.
+- Workspace-oriented character gallery/editor, relationship map and editable relationship types; portrait and expression management.
+- Workspace resource gallery with media import/preview, folders, tags, selection and bulk operations; workspace-scoped search of characters and resources.
+- Obsidian-oriented Markdown export for scenes and message attachments.
+- Collections/achievements and four integrated easter-egg modules: Potato, Nudge, Lambda and Plumbob.
 
-## 2. What is broken or not yet verified
+## 2. Recently verified in the running app
 
-There is no confirmed list of currently reproducible bugs in the available notes. The items below are therefore **verification tasks**, not claims that the features are definitely broken.
+The developer confirmed the following flows after the 11 November changes:
 
-- Test the title bar and content at 90%, 100%, 110%, 125% and 150% UI scale.
-- Check for clipping, overflow or awkward spacing at larger scales.
-- Verify that every density mode affects the intended components consistently.
-- Check that chat text size remains independent of global UI scale.
-- Earlier CSS contained duplicate `.message-body p` rules, with a later fixed `12px` declaration overriding the preference. The stylesheet was discussed as needing correction; inspect the current file to confirm whether this was fixed.
-- Verify preference restoration after fully closing and reopening the app.
-- Verify which project, scene, character and message data are actually persisted. Do not assume these workflows are durable just because preference persistence exists.
-- Character selection, expression selection, full editor behavior, message editing/version history, and the complete project/scene workflow need source inspection and practical testing before being marked complete.
-- Production packaging, backup/recovery behavior and Android synchronization are not confirmed as implemented.
+- Sidebar workspace header layout and actual workspace name.
+- Rich-text colour picker, carrying colour into the sent chat message.
+- Pasting chat text back into the composer without unwanted background highlighting; revised header gradient.
+- Removing unwanted folder/scene icon-edit buttons and their overlap.
+- Workspace OpenMoji/system/Lucide icon selection and corrected relative size.
+- Composer Lucide picker renders its candidates; after fixes, **inline Lucide icons display and can be sent**, including icon-only passages.
 
-## 3. Next objective
+These confirmations cover the tested interactive paths, **not** every theme, OS, restart, export format or failure case.
 
-**Recommended next milestone: inspect and complete the character-to-composer workflow.**
+## 3. Storage summary
 
-1. Inspect the current character panel, character model and composer before changing code.
-2. Confirm which pieces already work.
-3. Make character selection affect the message being composed and published.
-4. Verify the behavior in the running app.
-5. Run `npm run build` and fix any regressions before moving on.
+| Data | Present location / owner |
+| --- | --- |
+| Workspace identity | `workspace.json` at workspace root |
+| Scenes, folders, categories, messages and edits | `Chats/workspace-content.json` (`schemaVersion: 1`) |
+| Per-scene composer drafts | `Chats/Drafts/<scene-id>.json` |
+| Character records and custom relationship kinds | `Characters/characters.json`, `Characters/relationship-kinds.json` |
+| Expression assets | `Characters/Expressions/` and its manifest |
+| Workspace resources | `Resources/manifest.json` and `Resources/Files/` |
+| App-wide preferences, workspace recents/icons and collections | Tauri app-local stores; not portable workspace-owned data |
 
-Keep this as one small implementation task at a time. Do not rewrite unrelated files or mark a feature complete based on compilation alone.
+Legacy browser localStorage/IndexedDB libraries have migration paths into a first workspace. Do not mistake these compatibility stores for the authoritative active-workspace data.
 
-## 4. Development workflow
+## 4. Open limitations / not release-verified
 
-From `C:\Dev\BorealisRP`:
+- No complete green **fresh checkout → `npm ci` → frontend build → Tauri package** run has been documented for the latest head.
+- No complete regression pass for restart recovery, two-workspace isolation, storage failures, imported media, corrupted data, or large/long-running sessions.
+- No verified full ZIP backup/restore UI or documented migration strategy for future workspace schema versions. A manual copy of the complete closed workspace folder is the interim backup approach; restore must be tested.
+- Windows packaging/clean-install acceptance and Linux packaging/runtime acceptance remain open.
+- App metadata still uses `0.1.0` and some *Borealis Roleplay Studio* identifiers. No Git alpha release/tag is implied.
+- The Markdown exporter should be explicitly checked for **Lucide-only message bodies**: rich-text Lucide markers are not necessarily represented in plain Markdown output.
+- Keyboard/accessibility coverage and theme contrast have not received a systematic final pass.
+- Scene and folder icon customisation controls are intentionally absent for now; do not treat that as a regression.
+
+## 5. Immediate next objective
+
+**Freeze feature additions for one alpha-candidate test pass**, not a new subsystem. Follow `docs/ALPHA-READINESS.md`:
+
+1. Build and package the exact candidate commit.
+2. Validate the roleplay writing loop, drafts, restart and multiple-workspace isolation.
+3. Run destructive/recovery checks against **copies**, never irreplaceable data.
+4. Verify a recoverable backup and the built app on Windows; test Linux before claiming Linux support.
+5. Fix blockers, retest, then deliberately version/tag `v0.1.0-alpha.1` (proposed; not created).
+
+## 6. Local workflow
 
 ```powershell
+cd C:\Dev\BorealisRP
+npm ci
 npm run build
 npm run tauri dev
+# Release candidate packaging when ready:
+npm run tauri build
 ```
 
-Recommended cycle: inspect → make one focused change → build → test in the running app → update documentation.
-
-## 5. Status labels used here
-
-- **Implemented:** a feature exists according to the available development notes.
-- **Needs verification:** source inspection or runtime testing is still required.
-- **Planned:** a future feature or architectural decision.
-- **Broken:** use only when a reproducible failure has been observed and documented.
-
-Update this file whenever a meaningful feature or bug status changes.
+Update this document after major features, confirmed bugs or milestones. Do not promote an internal alpha candidate to a shipped alpha without a reproducible acceptance pass.
