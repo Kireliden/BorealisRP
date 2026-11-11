@@ -37,7 +37,7 @@
 .studio-icon-grid button:hover,.studio-icon-grid button.selected { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-color: var(--accent); }
 .studio-icon-grid img { width: 27px; height: 27px; object-fit: contain; }
 .studio-icon-grid button.lucide { color: var(--ctp-text); }
-.studio-icon-grid button.lucide svg { width: 24px; height: 24px; }
+.studio-icon-grid button.lucide svg { width: 27px; height: 27px; }
 .studio-icon-grid span { font-size: 25px; }
 .studio-icon-empty { grid-column: 1/-1; color: var(--muted); text-align: center; font-size: 11px; }
 .studio-icon-more { flex: 0 0 auto; padding: 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--accent); font-size: 11px; cursor: pointer; }
