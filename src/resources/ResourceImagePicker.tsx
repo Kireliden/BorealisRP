@@ -88,7 +88,7 @@ export default function ResourceImagePicker({
 
   useEffect(() => {
     function keyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !busy) {
         event.preventDefault();
         event.stopPropagation();
         onCancel();
@@ -96,7 +96,7 @@ export default function ResourceImagePicker({
     }
     window.addEventListener("keydown", keyDown);
     return () => window.removeEventListener("keydown", keyDown);
-  }, [onCancel]);
+  }, [onCancel, busy]);
 
   function toggle(id: string) {
     setSelectedIds((current) => multiple
