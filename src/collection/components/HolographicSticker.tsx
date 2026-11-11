@@ -86,12 +86,13 @@ export default function HolographicSticker({
 
         {title && <p className="holographic-title">{title}</p>}
 
-        <div
-          className="holographic-stage"
-          onPointerMove={handlePointerMove}
-          onPointerLeave={resetPointer}
-        >
-          <div className={`holographic-card${isAnimatedSticker ? " holographic-card--animated" : ""}`} style={stickerStyle}>
+        <div className="holographic-stage">
+          <div
+            className={`holographic-card${isAnimatedSticker ? " holographic-card--animated" : ""}`}
+            style={stickerStyle}
+            onPointerMove={handlePointerMove}
+            onPointerLeave={resetPointer}
+          >
             {isAnimatedSticker && (
               <svg className="holographic-animated-filter-defs" aria-hidden="true" focusable="false">
                 <defs>
