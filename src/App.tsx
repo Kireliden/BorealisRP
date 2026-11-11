@@ -1,7 +1,7 @@
 import AppColorPicker from "./ui/AppColorPicker";
 import AppSelect from "./ui/AppSelect";
 import { useAppDialog } from "./ui/AppDialogProvider";
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type CSSProperties, type FormEvent } from "react";
 import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { usePreferences } from "./preferences/PreferencesContext";
@@ -1642,6 +1642,27 @@ function sanitiseHtml(html: string) {
     return true;
   }
 
+  function handleComposerPaste(event: ClipboardEvent<HTMLDivElement>) {
+    const clipboardHtml = event.clipboardData.getData("text/html");
+    if (!clipboardHtml) return; // Native plain-text paste is already safe.
+
+    // WebView's default rich paste can import background/highlight CSS from
+    // the chat (or another app), even though BRS never saves those styles.
+    // Use the SAME allowlist as saved messages: text colour and basic formatting
+    // survive, while pasted background colours and other foreign CSS do not.
+    event.preventDefault();
+    const cleaned = sanitiseHtml(clipboardHtml);
+    if (cleaned && document.execCommand("insertHTML", false, cleaned)) {
+      handleDraftInput(event.currentTarget.innerHTML);
+      rememberEditorColourSelection();
+      return;
+    }
+    // Fallback: insert only clipboard text, never unsanitised rich HTML.
+    document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
+    handleDraftInput(event.currentTarget.innerHTML);
+    rememberEditorColourSelection();
+  }
+
   function handleDraftInput(html: string) {
     const text = editorRef.current?.textContent ?? "";
     if (editingMessageId === null && selectedCharacter !== "You") {
@@ -2192,7 +2213,7 @@ function sanitiseHtml(html: string) {
 <span className="toolbar-spacer" />
                   <span className="editor-mode-label">RICH TEXT</span>
                 </div>
-                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onMouseUp={rememberEditorColourSelection} onKeyUp={rememberEditorColourSelection} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && composerImages.length === 0 && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); if (!applyExpressionCommand(event.currentTarget.innerText ?? "")) event.currentTarget.closest("form")?.requestSubmit(); } }} />
+                <div ref={editorRef} className="rich-editor" contentEditable suppressContentEditableWarning role="textbox" aria-label={editingMessageId !== null ? "Edit roleplay message" : "Write a roleplay message"} aria-multiline="true" data-placeholder={editingMessageId !== null ? "Edit your passage..." : !activeWorkspace ? "Choose a workspace first..." : !activeScene ? "Create a scene before writing..." : "Write your next passage..."} onInput={(event) => handleDraftInput(event.currentTarget.innerHTML)} onPaste={handleComposerPaste} onMouseUp={rememberEditorColourSelection} onKeyUp={rememberEditorColourSelection} onKeyDown={(event) => { if (!activeWorkspace || !activeSceneId || workspaceLoading) return; if (event.key === "ArrowUp" && composerImages.length === 0 && !(event.currentTarget.innerText ?? "").trim()) { const latestMessage = messages[messages.length - 1]; if (latestMessage) { event.preventDefault(); beginEditingMessage(latestMessage); } return; } if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); if (!applyExpressionCommand(event.currentTarget.innerText ?? "")) event.currentTarget.closest("form")?.requestSubmit(); } }} />
                 {expressionSlashQuery !== null && editingMessageId === null && selectedCharacter !== "You" && (
                   <div className="expression-command-menu" role="group" aria-label="Expression commands">
                     <span className="expression-command-hint">EXPRESSIONS · type the command + Space or press Enter</span>
