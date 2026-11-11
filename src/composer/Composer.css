@@ -156,6 +156,14 @@
   white-space: pre-wrap;
 }
 
+/* Previously saved drafts may already contain pasted external highlight CSS.
+   The composer does not support text backgrounds, so never display them. */
+.rich-editor [style*="background" i],
+.rich-editor mark {
+  background: transparent !important;
+  background-image: none !important;
+}
+
 .rich-editor:empty::before {
   color: var(--ctp-overlay1);
   content: attr(data-placeholder);
