@@ -226,3 +226,15 @@
 .composer-layout > .composer .rich-editor {
   min-height: 90px;
 }
+
+
+/* The context label starts at the same left edge as the composer box, not the portrait. */
+.composer-context {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1020px;
+  padding-left: 176px; /* 164px character panel + 12px layout gap */
+}
+@media (max-width: 900px) {
+  .composer-context { padding-left: 172px; } /* layout gap becomes 8px */
+}
