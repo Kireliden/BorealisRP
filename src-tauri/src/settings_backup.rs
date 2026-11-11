@@ -44,6 +44,9 @@ fn collect_settings_files(app_data: &Path) -> Result<Vec<(PathBuf, String)>, Str
         if !meta.file_type().is_file() {
             return Err(format!("The settings entry {name} is not a regular file."));
         }
+        if meta.len() > MAX_JSON_FILE_BYTES {
+            return Err(format!("The settings file {name} is unusually large."));
+        }
         total_bytes = total_bytes.checked_add(meta.len())
             .ok_or_else(|| "Settings backup is too large.".to_string())?;
         files.push((path, format!("AppData/{name}")));
@@ -74,9 +77,15 @@ fn collect_settings_files(app_data: &Path) -> Result<Vec<(PathBuf, String)>, Str
             }
             let filename = entry.file_name().into_string()
                 .map_err(|_| "A profile media file has an unsupported name.".to_string())?;
+            let archived_name = format!("AppData/media/{filename}");
+            if !is_known_backup_path(&archived_name) {
+                // Skip unrelated files instead of producing a ZIP that cannot
+                // later pass our own strict importer.
+                continue;
+            }
             total_bytes = total_bytes.checked_add(meta.len())
                 .ok_or_else(|| "Settings backup is too large.".to_string())?;
-            files.push((entry.path(), format!("AppData/media/{filename}")));
+            files.push((entry.path(), archived_name));
             if files.len() > MAX_MEDIA_FILES + STORE_FILES.len() {
                 return Err("There are too many profile media files to back up.".to_string());
             }
