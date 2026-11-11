@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Holographic sticker aspect-ratio alignment
+
+- Fixed visible holographic foil/glare leakage to either side of tall, narrow stickers (notably the Plumbob PNG) caused by the foil mask covering the full-width card while `object-fit: contain` letterboxed the artwork.
+- The holographic card and its absolute overlay layers now shrink-wrap the image's *actual displayed aspect ratio*. The sticker image scales proportionally within the same maximum width/height limits, without distorting the alpha mask.
+- Mouse-position calculations now use the sticker/card bounds, keeping its reactive highlight aligned even on unusually narrow art.
+- Existing PNG holographic foil, glare and sparkles are retained, and the separately filtered GIF pathway remains unchanged apart from the card's responsive sizing.
+- **Pending user validation:** real app screenshot after Pull; local TypeScript/Vite and WebView runtime checks were not executable through the GitHub connector.
+
 ## 2026-11-11 — Easter egg 004: THE PLUMBOB and Lambda art swap
 
 - Added **THE PLUMBOB** as the fourth Collections secret, triggered when the word `tiranipeuti` is typed in any app editable field (case-insensitive, whole word).
