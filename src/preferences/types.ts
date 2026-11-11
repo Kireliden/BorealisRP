@@ -8,7 +8,9 @@ export type CatppuccinFlavor =
   | "coral-bloom"
   | "sakura-dreams"
   | "moon-light"
-  | "moon-shadow";
+  | "moon-shadow"
+  | "emerald-glade"
+  | "emerald-nocturne";
 
 export type UiDensity = "compact" | "comfortable" | "spacious";
 
