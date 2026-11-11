@@ -433,6 +433,7 @@ function sanitiseHtml(html: string) {
 
 
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
+  const [workspaceManagerInitialView, setWorkspaceManagerInitialView] = useState<"home" | "create">("home");
   const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | "favourites" | null>(null);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
@@ -1775,7 +1776,7 @@ function sanitiseHtml(html: string) {
                 <WorkspaceSwitcher activeWorkspace={activeWorkspace} icon={workspaceIcon}
                   compact={sidebarCollapsed} openRequest={workspaceSwitcherOpenRequest}
                   onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
-                  onAddNew={() => setIsWorkspaceManagerOpen(true)} />
+                  onAddNew={() => { setWorkspaceManagerInitialView("home"); setIsWorkspaceManagerOpen(true); }} />
               </div>
             </div>
             <div className="workspace-header-row">
@@ -1784,7 +1785,10 @@ function sanitiseHtml(html: string) {
                 compact workspaceActions={{
                   canChangeIcon: Boolean(activeWorkspace),
                   onSwitchWorkspace: () => setWorkspaceSwitcherOpenRequest((request) => request + 1),
-                  onCreateWorkspace: () => setIsWorkspaceManagerOpen(true),
+                  onCreateWorkspace: () => {
+                    setWorkspaceManagerInitialView("create");
+                    setIsWorkspaceManagerOpen(true);
+                  },
                 }} />
               <div className="workspace-header-label" title={activeWorkspace?.manifest.name ?? "No workspace selected"}>Workspace</div>
               <button type="button" className="sidebar-collapse-button"
@@ -2408,7 +2412,8 @@ function sanitiseHtml(html: string) {
       )}
       {isWorkspaceManagerOpen && (
         <WorkspaceManagerModal
-          onClose={() => setIsWorkspaceManagerOpen(false)}
+          initialView={workspaceManagerInitialView}
+          onClose={() => { setIsWorkspaceManagerOpen(false); setWorkspaceManagerInitialView("home"); }}
           activeWorkspace={activeWorkspace}
           onSelect={(workspace: WorkspaceInfo) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
         />
