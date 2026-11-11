@@ -2,7 +2,7 @@
 
 ## Scope
 
-This milestone replaces the hard-coded scene/message preview with workspace-owned scene data and persistent messages. It intentionally does not yet implement character-file management, resource management, scene deletion/renaming, or rich workspace settings.
+This document records the **original workspace-content milestone**: replacing hard-coded scenes/messages with workspace-owned persistent data. Its original scope excluded character files, resources and scene management at that time; those areas have **subsequently been implemented**, so do not use the original exclusion as a present-day feature list. For the current implementation and alpha gates, consult `CurrentState.md`, `Architecture.md` and `docs/ALPHA-READINESS.md` from the repository root.
 
 ## Storage
 
