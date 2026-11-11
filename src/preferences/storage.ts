@@ -19,6 +19,8 @@ const VALID_THEMES = [
   "sakura-dreams",
   "moon-light",
   "moon-shadow",
+  "emerald-glade",
+  "emerald-nocturne",
 ] as const;
 
 type UnknownRecord = Record<string, unknown>;
