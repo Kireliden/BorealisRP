@@ -1,0 +1,44 @@
+/* Discreet slash-command hints, deliberately separate from the rich text. */
+.composer { position: relative; }
+.expression-command-menu {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 5px;
+  margin: 3px 9px 8px;
+  padding: 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 9px;
+  background: var(--ctp-mantle);
+  box-shadow: 0 5px 18px rgb(0 0 0 / 13%);
+}
+.expression-command-hint {
+  grid-column: 1 / -1;
+  padding: 0 4px 4px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .55px;
+}
+.expression-command-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  color: var(--ctp-text);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.expression-command-menu button strong { color: var(--accent); font-size: 11px; }
+.expression-command-menu button span { color: var(--muted); font-size: 10px; }
+.expression-command-menu button:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+}
+.expression-command-menu button:focus-visible { outline: 2px solid var(--accent); }
+@media (max-width: 600px) { .expression-command-menu { grid-template-columns: repeat(2, minmax(0,1fr)); } }
