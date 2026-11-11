@@ -36,8 +36,16 @@
 .scene-background-layer-shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgb(12 15 28 / 15%), transparent 42%, rgb(12 15 28 / 35%)),
-    rgb(12 15 28 / var(--scene-bg-dim, .56));
+  /* The vignette and the main tint use the SAME preset/custom colour.
+     Both follow overlay strength instead of leaving a dark gradient on Light. */
+  background:
+    linear-gradient(
+      180deg,
+      rgb(var(--scene-overlay-rgb, 12 15 28) / calc(var(--scene-bg-dim, .56) * .27)),
+      transparent 42%,
+      rgb(var(--scene-overlay-rgb, 12 15 28) / calc(var(--scene-bg-dim, .56) * .63))
+    ),
+    rgb(var(--scene-overlay-rgb, 12 15 28) / var(--scene-bg-dim, .56));
 }
 
 /* A soft glass surface over the image keeps the composer readable in all themes. */
@@ -66,6 +74,30 @@
 .main-panel.has-scene-background .message-meta time {
   text-shadow: 0 1px 4px rgb(0 0 0 / 65%);
 }
+/* Light overlays need a matching ink colour, including narration and the context pill.
+   Dark (the legacy default) keeps its existing pale typography unchanged. */
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .scene-heading h1,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .scene-heading p,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .message-rich-content,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .message-body p,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .date-divider p,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .composer-context,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .composer-footnote {
+  color: #232634;
+  text-shadow: 0 1px 3px rgb(255 255 255 / 70%);
+}
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .message-meta strong,
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .message-meta time {
+  color: #303446;
+  text-shadow: 0 1px 3px rgb(255 255 255 / 70%);
+}
+.main-panel.has-scene-background[data-scene-overlay-tone="light"] .composer-context .composer-scene-pill {
+  color: #303446;
+  background: color-mix(in srgb, white 81%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  text-shadow: none;
+}
+
 .scene-background-button { cursor: pointer; }
 .scene-background-button.is-custom { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
 
@@ -150,7 +182,20 @@
   background-repeat: no-repeat;
   transform-origin: center;
 }
-.scene-background-preview-dim { position: absolute; inset: 0; }
+.scene-background-preview-dim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgb(var(--scene-overlay-rgb, 12 15 28) / calc(var(--scene-bg-dim, .56) * .27)),
+      transparent 42%,
+      rgb(var(--scene-overlay-rgb, 12 15 28) / calc(var(--scene-bg-dim, .56) * .63))),
+    rgb(var(--scene-overlay-rgb, 12 15 28) / var(--scene-bg-dim, .56));
+}
+.scene-background-preview[data-scene-overlay-tone="light"] .scene-background-preview-chat {
+  color: #232634;
+  text-shadow: 0 1px 3px rgb(255 255 255 / 75%);
+}
 .scene-background-preview-chat {
   position: relative;
   z-index: 1;
@@ -226,6 +271,69 @@
 }
 .scene-background-controls-header > strong { font-size: 12px; }
 .scene-background-controls-header button { padding: 6px 8px; color: var(--muted); font-size: 10px; }
+.scene-overlay-picker {
+  min-width: 0;
+  margin: 0 0 17px;
+  padding: 0;
+  border: 0;
+}
+.scene-overlay-picker legend {
+  margin-bottom: 10px;
+  padding: 0;
+  color: var(--ctp-subtext1);
+  font-size: 11px;
+}
+.scene-overlay-presets { display: flex; gap: 8px; }
+.scene-overlay-presets button {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 8px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ctp-subtext1);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.scene-overlay-presets button:hover { border-color: var(--accent); }
+.scene-overlay-presets button.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+  color: var(--ctp-text);
+  font-weight: 700;
+}
+.scene-overlay-swatch {
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgb(130 125 153 / 38%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 5%);
+}
+.scene-overlay-custom-colour {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 11px;
+  color: var(--ctp-subtext1);
+  font-size: 11px;
+}
+.scene-overlay-custom-colour > span { flex: 1; }
+.scene-overlay-custom-colour input[type="color"] {
+  width: 47px;
+  height: 31px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.scene-overlay-custom-colour output { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
 .scene-background-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 20px; }
 .scene-background-control { display: grid; gap: 8px; min-width: 0; }
 .scene-background-control > span { display: flex; justify-content: space-between; gap: 8px; color: var(--ctp-subtext1); font-size: 11px; }
