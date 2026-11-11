@@ -1,3 +1,5 @@
+mod settings_backup;
+
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, OpenOptions},
@@ -698,7 +700,8 @@ pub fn run() {
             save_profile_sidebar_thumbnail,
             remove_profile_sidebar_thumbnail,
             read_dropped_resource_files,
-            delete_confirmed_original_resource_file
+            delete_confirmed_original_resource_file,
+            settings_backup::create_settings_backup
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
