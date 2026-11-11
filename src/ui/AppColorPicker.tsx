@@ -4,7 +4,8 @@ import { Check, Palette, X } from "lucide-react";
 import "./AppColorPicker.css";
 
 type Props = {
-  value: string;
+  value?: string;
+  defaultValue?: string;
   onChange: (event: { target: { value: string } }) => void;
   "aria-label"?: string;
   disabled?: boolean;
@@ -51,15 +52,21 @@ function hslHex(h: number, s: number, l: number): string {
 }
 
 /** App-rendered replacement for browser's platform-dependent input[type=color] dialog. */
-export default function AppColorPicker({ value, onChange, "aria-label": ariaLabel = "Choose colour", disabled }: Props) {
+export default function AppColorPicker({ value, defaultValue = "#babbf1", onChange, "aria-label": ariaLabel = "Choose colour", disabled }: Props) {
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
+  const currentValue = value ?? uncontrolledValue;
   const [open, setOpen] = useState(false);
-  const [hexDraft, setHexDraft] = useState(value);
+  const [hexDraft, setHexDraft] = useState(currentValue);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-  const [hue, sat, light] = asHsl(value);
+  const [hue, sat, light] = asHsl(currentValue);
 
-  const move = (newColor: string) => onChange({ target: { value: safeHex(newColor) } });
+  const move = (newColor: string) => {
+    const next = safeHex(newColor);
+    if (value === undefined) setUncontrolledValue(next);
+    onChange({ target: { value: next } });
+  };
   const placement = () => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -70,7 +77,7 @@ export default function AppColorPicker({ value, onChange, "aria-label": ariaLabe
       left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) });
   };
 
-  useEffect(() => { if (!open) setHexDraft(value.toUpperCase()); }, [value, open]);
+  useEffect(() => { if (!open) setHexDraft(currentValue.toUpperCase()); }, [currentValue, open]);
   useEffect(() => {
     if (!open) return;
     const outside = (event: PointerEvent) => {
@@ -103,7 +110,7 @@ export default function AppColorPicker({ value, onChange, "aria-label": ariaLabe
         disabled={disabled} aria-label={ariaLabel} title={ariaLabel}
         aria-haspopup="dialog" aria-expanded={open}
         onClick={() => { if (open) setOpen(false); else { placement(); setOpen(true); } }}>
-        <span style={{ background: safeHex(value) }} />
+        <span style={{ background: safeHex(currentValue) }} />
         <Palette size={11} aria-hidden="true" />
       </button>
       {open && createPortal(
@@ -116,9 +123,9 @@ export default function AppColorPicker({ value, onChange, "aria-label": ariaLabe
           <div className="app-color-swatches">
             {SWATCHES.map((color) => (
               <button type="button" key={color} title={color} aria-label={"Select " + color}
-                aria-pressed={safeHex(value) === color}
+                aria-pressed={safeHex(currentValue) === color}
                 style={{ background: color }} onClick={() => move(color)}>
-                {safeHex(value) === color && <Check size={14} />}
+                {safeHex(currentValue) === color && <Check size={14} />}
               </button>
             ))}
           </div>
@@ -136,14 +143,14 @@ export default function AppColorPicker({ value, onChange, "aria-label": ariaLabe
             ))}
           </div>
           <div className="app-color-hex">
-            <span className="app-color-current" style={{ background: safeHex(value) }} />
+            <span className="app-color-current" style={{ background: safeHex(currentValue) }} />
             <span>#</span>
             <input value={hexDraft.replace(/^#/, "")} maxLength={6} spellCheck={false}
               aria-label="Hexadecimal colour" onChange={(event) => {
                 const next = "#" + event.target.value.replace(/[^0-9a-f]/gi, "");
                 setHexDraft(next);
                 if (/^#[0-9a-f]{6}$/i.test(next)) move(next);
-              }} onBlur={() => setHexDraft(safeHex(value).toUpperCase())} />
+              }} onBlur={() => setHexDraft(safeHex(currentValue).toUpperCase())} />
           </div>
         </div>, document.body,
       )}
