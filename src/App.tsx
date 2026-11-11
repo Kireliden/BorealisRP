@@ -15,7 +15,7 @@ import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
+import { Cog, Trophy, Heart, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -30,6 +30,8 @@ import ImageSourceDialog from "./resources/ImageSourceDialog";
 import SaveImageToResourcesDialog from "./resources/SaveImageToResourcesDialog";
 import { type ComposerImage, loadMessageImages, saveMessageImages } from "./chat/messageImages";
 import "./chat/messageImages.css";
+import ChatImageLightbox, { type ChatLightboxImage } from "./chat/ChatImageLightbox";
+import FavouritesPage from "./favourites/FavouritesPage";
 import { CHARACTER_EXPRESSION_SLOTS, getCharacterExpressionBlob } from "./characters/characterExpressions.storage";
 import { ensureWorkspaceCharacterExpressions, getWorkspaceCharacterExpressionBlob } from "./characters/workspaceCharacterExpressions.storage";
 import CharacterPortraitArt, { characterPortraitStyle } from "./characters/CharacterPortraitArt";
@@ -354,6 +356,7 @@ function sanitiseHtml(html: string) {
   const [draftHtml, setDraftHtml] = useState("");
   const [composerImages, setComposerImages] = useState<ComposerImage[]>([]);
   const [messageImageUrls, setMessageImageUrls] = useState<Record<string, string>>({});
+  const [chatLightbox, setChatLightbox] = useState<{ images: ChatLightboxImage[]; startIndex: number } | null>(null);
   const [messageImagesLoading, setMessageImagesLoading] = useState(false);
   const composerImageUrlsRef = useRef<Set<string>>(new Set());
   const [imageSourceOpen, setImageSourceOpen] = useState(false);
@@ -361,6 +364,9 @@ function sanitiseHtml(html: string) {
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [openMessageActionsId, setOpenMessageActionsId] = useState<number | null>(null);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState(false);
+  const [favouriteBusy, setFavouriteBusy] = useState(false);
+  const favouritePendingRef = useRef(false);
+  const [favouriteJump, setFavouriteJump] = useState<{ sceneId: string; messageId: number } | null>(null);
   const [cleanConfirmationStep, setCleanConfirmationStep] = useState<1 | 2 | null>(null);
   const [characters, setCharacters] = useState<Character[]>(charactersFromLibrary);
 
@@ -395,7 +401,7 @@ function sanitiseHtml(html: string) {
 
 
   const [isWorkspaceManagerOpen, setIsWorkspaceManagerOpen] = useState(false);
-  const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | null>(null);
+  const [activeLibraryPage, setActiveLibraryPage] = useState<"projects" | "characters" | "resources" | "favourites" | null>(null);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceInfo | null>(null);
   // Keep async workspace operations aware of the currently visible workspace.
@@ -632,6 +638,8 @@ function sanitiseHtml(html: string) {
     setEditingMessageId(null);
     setOpenMessageActionsId(null);
     setIsSceneOptionsOpen(false);
+    setFavouriteJump(null);
+    setChatLightbox(null);
     setCleanConfirmationStep(null);
     setScenePendingDeletion(null);
     setFolderPendingDeletion(null);
@@ -978,6 +986,68 @@ function sanitiseHtml(html: string) {
       return false;
     }
   }
+
+  async function toggleFavourite(sceneId: string, messageId?: number) {
+    if (!activeWorkspace || workspaceLoading || favouritePendingRef.current) return;
+    const scene = scenes.find((entry) => entry.id === sceneId);
+    if (!scene || (messageId !== undefined && !scene.messages.some((entry) => entry.id === messageId))) return;
+    const workspacePath = activeWorkspace.path;
+    const changedAt = Date.now();
+    const nextScenes = scenes.map((entry) => {
+      if (entry.id !== sceneId) return entry;
+      if (messageId === undefined) {
+        return { ...entry, favourite: !entry.favourite, favouritedAt: entry.favourite ? undefined : changedAt };
+      }
+      return {
+        ...entry,
+        messages: entry.messages.map((message) => message.id === messageId
+          ? { ...message, favourite: !message.favourite, favouritedAt: message.favourite ? undefined : changedAt }
+          : message),
+      };
+    });
+    favouritePendingRef.current = true;
+    setFavouriteBusy(true);
+    try {
+      await saveWorkspaceContent(workspacePath, { schemaVersion: 1, scenes: nextScenes, folders, categories });
+      if (activeWorkspacePathRef.current !== workspacePath) return;
+      setScenes(nextScenes);
+      if (activeSceneId === sceneId) setMessages(nextScenes.find((entry) => entry.id === sceneId)?.messages ?? []);
+      setWorkspaceError("");
+    } catch (reason) {
+      if (activeWorkspacePathRef.current === workspacePath) {
+        setWorkspaceError(`Could not update favourite: ${reason instanceof Error ? reason.message : String(reason)}`);
+      }
+    } finally {
+      favouritePendingRef.current = false;
+      setFavouriteBusy(false);
+    }
+  }
+
+  function openFavourite(sceneId: string, messageId?: number) {
+    const scene = scenes.find((entry) => entry.id === sceneId);
+    if (!scene) return;
+    setFavouriteJump(messageId === undefined ? null : { sceneId, messageId });
+    if (activeSceneId !== sceneId) void selectScene(scene);
+    else setActiveLibraryPage(null);
+  }
+
+  useEffect(() => {
+    if (!favouriteJump || activeLibraryPage !== null || favouriteJump.sceneId !== activeSceneId ||
+        !messages.some((message) => message.id === favouriteJump.messageId)) return;
+    const frame = window.requestAnimationFrame(() => {
+      const target = conversationRef.current?.querySelector<HTMLElement>(
+        `[data-message-id="${favouriteJump.messageId}"]`,
+      );
+      if (!target) return;
+      const reducedMotion = document.documentElement.dataset.animations === "off" ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      target.scrollIntoView({ block: "center", behavior: reducedMotion ? "instant" : "smooth" });
+      target.classList.add("message-favourite-target");
+      window.setTimeout(() => target.classList.remove("message-favourite-target"), 1800);
+      setFavouriteJump(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeLibraryPage, activeSceneId, favouriteJump, messages]);
 
   async function createScene() {
     if (!activeWorkspace || workspaceLoading) return;
@@ -1482,7 +1552,7 @@ function sanitiseHtml(html: string) {
         <aside className="sidebar">
           <div className="brand"><div className="brand-mark" aria-label="Borealis moon"><svg className="borealis-moon-mark" viewBox="0 0 72 72" role="img" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="#c4b5fd" stroke="#1e1e2e" strokeWidth="2.5" strokeLinejoin="round"/></svg></div><div><div className="brand-name">Borealis</div><div className="brand-subtitle">ROLEPLAY STUDIO</div></div><button className="icon-button brand-menu" type="button" title="Workspace menu" aria-label="Open workspace manager" onClick={() => setIsWorkspaceManagerOpen(true)}>⋯</button></div>
           <div className="workspace-switcher-row"><div className="workspace-switcher-slot"><WorkspaceSwitcher activeWorkspace={activeWorkspace} onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }} onAddNew={() => setIsWorkspaceManagerOpen(true)} /></div><button type="button" className="workspace-search-button" title="Search characters and resources" aria-label="Search global libraries" onClick={() => setIsGlobalSearchOpen(true)}><Search size={16} /></button></div>
-          <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className={`nav-item ${activeLibraryPage === "projects" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("projects")}><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button></div>
+          <div className="sidebar-section"><div className="section-heading"><span>WORKSPACE</span></div><button className={`nav-item ${activeLibraryPage === "projects" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("projects")}><span className="nav-icon">▦</span>Projects<span className="nav-count">1</span></button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("characters")}><span className="nav-icon">♧</span>Characters</button><button className="nav-item" type="button" onClick={() => setActiveLibraryPage("resources")}><span className="nav-icon">▧</span>Resources</button><button className={`nav-item ${activeLibraryPage === "favourites" ? "active" : ""}`} type="button" onClick={() => setActiveLibraryPage("favourites")}><span className="nav-icon"><Heart size={17} /></span>Favourites<span className="nav-count">{scenes.reduce((count, scene) => count + Number(Boolean(scene.favourite)) + scene.messages.filter((message) => message.favourite).length, 0)}</span></button></div>
           <div className={`sidebar-section scenes-section ${isScenesCollapsed ? "scenes-collapsed" : ""}`}>
             <div className="section-heading roleplay-space-heading">
               <button type="button" className="scenes-collapse-button" aria-expanded={!isScenesCollapsed} onClick={() => setIsScenesCollapsed((collapsed) => !collapsed)}>
@@ -1598,13 +1668,20 @@ function sanitiseHtml(html: string) {
 
         <section className="main-panel">
           <header className="topbar"><div className="breadcrumbs"><span>{activeWorkspace?.manifest.name ?? "No workspace"}</span><span className="breadcrumb-divider">/</span><span className="current-crumb">{activeScene?.name ?? "No scene selected"}</span></div><div className="topbar-actions"><span className="local-badge"><span className="status-dot" />Local mode</span><div className="scene-options-menu"><button className="icon-button" type="button" title="Scene options" aria-label="Scene options" aria-expanded={isSceneOptionsOpen} disabled={!activeScene || !activeWorkspace || workspaceLoading} onClick={() => setIsSceneOptionsOpen((open) => !open)}>⋯</button>{isSceneOptionsOpen && <div className="scene-options-popover" role="menu"><button type="button" role="menuitem" onClick={() => setIsSceneOptionsOpen(false)}><Share2 size={15} /><span>Share</span></button><div className="scene-options-divider" /><button type="button" role="menuitem" className="scene-clean-action" disabled={!activeScene || !messages.length} title={!messages.length ? "This conversation is already empty." : "Delete all messages in this scene"} onClick={requestCleanConversation}><Broom size={15} /><span>Clean conversation</span></button></div>}</div></div></header>
-          <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button className="secondary-button">♡ <span>Favourite</span></button></div></div>
+          <div className="scene-toolbar"><div className="scene-heading"><div className="scene-heading-icon">{activeScene?.icon ?? "◈"}</div><div><h1>{activeScene?.name ?? "Your next scene"}</h1><p>{activeWorkspace?.manifest.name ?? "Create or choose a workspace"} <span>·</span> Roleplay scene</p></div></div><div className="scene-actions"><button type="button" className={`secondary-button scene-favourite-button ${activeScene?.favourite ? "is-favourite" : ""}`}
+              aria-pressed={Boolean(activeScene?.favourite)}
+              disabled={!activeScene || !activeWorkspace || workspaceLoading || favouriteBusy}
+              title={activeScene?.favourite ? "Remove scene from Favourites" : "Add scene to Favourites"}
+              onClick={() => { if (activeScene) void toggleFavourite(activeScene.id); }}>
+              <Heart size={15} fill={activeScene?.favourite ? "currentColor" : "none"} />
+              <span>{activeScene?.favourite ? "Favourited" : "Favourite"}</span>
+            </button></div></div>
           {showWorkspaceNotice && <div className="demo-notice" role={workspaceError ? "alert" : "status"}><span className="notice-icon" aria-hidden="true">i</span><span className="demo-notice-text"><strong>{!activeWorkspace ? "No workspace selected." : workspaceLoading ? "Loading workspace…" : workspaceError ? "Workspace issue." : !activeScene ? "No scene yet." : "Workspace saved locally."}</strong> {!activeWorkspace ? "Choose or create a workspace to begin." : workspaceLoading ? "Your workspace content is being loaded." : workspaceError ? workspaceError : !activeScene ? "Create your first scene with the New scene button." : "Messages are saved to this workspace as you send or edit them."}</span><button type="button" className="demo-notice-close" onClick={() => setShowWorkspaceNotice(false)} aria-label="Dismiss workspace notice" title="Dismiss notice"><X size={15} /></button></div>}
 
           <section ref={conversationRef} className={`conversation chat-spacing-${preferences.characterDisplayDefaults.messageSpacing}`} aria-label="Scene conversation" onScroll={handleConversationScroll}>
             {activeScene && <div className="date-divider"><span /><p>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}</p><span /></div>}
             {activeScene && !messages.length && !workspaceLoading && <div className="scene-empty-state"><strong>This scene is ready.</strong><span>Your first passage will appear here.</span></div>}
-            {messages.map((message) => { const messageCharacter = characters.find((item) => item.id && item.id === message.characterId) ?? characters.find((item) => item.name === message.author || (!message.characterId && item.formerNames?.includes(message.author))); const displayAuthor = messageCharacter?.id ? messageCharacter.name : message.author; const displayInitials = messageCharacter?.id ? messageCharacter.initials : message.initials; const displayAvatar = messageCharacter?.id ? messageCharacter.avatar : message.avatar; const messagePortraitUrl = displayAuthor === "You" ? profileMediaSource(preferences.profile.avatarAssetPath) : messageCharacter?.portraitResourceId ? characterPortraitUrls[messageCharacter.portraitResourceId] : null; const highlightYouMessage = preferences.characterDisplayDefaults.highlightOwnMessages && message.author === "You" && !message.characterId; return <article className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} ${highlightYouMessage ? "message-user-highlight" : ""} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${displayAvatar}`} style={{ "--character-accent": characterAccentColor(displayAvatar) } as React.CSSProperties} aria-label={`View portrait of ${displayAuthor}`} title={`View ${displayAuthor} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: displayAuthor, initials: displayInitials, avatar: displayAvatar, description: "", avatarAssetPath: displayAuthor === "You" ? preferences.profile.avatarAssetPath : (messageCharacter?.avatarAssetPath ?? null), portraitResourceId: messageCharacter?.portraitResourceId, portraitFit: messageCharacter?.portraitFit, portraitPositionX: messageCharacter?.portraitPositionX, portraitPositionY: messageCharacter?.portraitPositionY, portraitZoom: messageCharacter?.portraitZoom, expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{displayAuthor === "You" ? (messagePortraitUrl ? <img className="message-avatar-profile-image" src={messagePortraitUrl} alt="" /> : displayInitials) : <CharacterPortraitArt initials={displayInitials} imageSrc={messagePortraitUrl} alt={displayAuthor} fit={messageCharacter?.portraitFit ?? "contain"} positionX={messageCharacter?.portraitPositionX ?? 50} positionY={messageCharacter?.portraitPositionY ?? 50} zoom={messageCharacter?.portraitZoom ?? 100} />}{message.characterId && customExpressionUrls[`${message.characterId}:${message.expression}`] && <img className="message-avatar-expression-photo" src={customExpressionUrls[`${message.characterId}:${message.expression}`]} alt="" aria-hidden="true" />}</button><div className="message-body">{highlightYouMessage && <span className="message-user-accent" aria-hidden="true"><EffectLayer effect="particles" intensity="subtle" particleCount={4} className="message-user-particles" /></span>}<div className="message-meta"><strong className={displayAuthor === "You" ? "message-author-user" : undefined}>{displayAuthor}</strong>{displayAuthor !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
+            {messages.map((message) => { const messageCharacter = characters.find((item) => item.id && item.id === message.characterId) ?? characters.find((item) => item.name === message.author || (!message.characterId && item.formerNames?.includes(message.author))); const displayAuthor = messageCharacter?.id ? messageCharacter.name : message.author; const displayInitials = messageCharacter?.id ? messageCharacter.initials : message.initials; const displayAvatar = messageCharacter?.id ? messageCharacter.avatar : message.avatar; const messagePortraitUrl = displayAuthor === "You" ? profileMediaSource(preferences.profile.avatarAssetPath) : messageCharacter?.portraitResourceId ? characterPortraitUrls[messageCharacter.portraitResourceId] : null; const highlightYouMessage = preferences.characterDisplayDefaults.highlightOwnMessages && message.author === "You" && !message.characterId; return <article className={`message ${enteringMessageId === message.id ? "message-entering" : ""} ${message.role === "Narration" ? "message-role-narration" : "message-role-dialogue"} ${highlightYouMessage ? "message-user-highlight" : ""} chat-avatar-${preferences.characterDisplayDefaults.avatarSize} chat-spacing-${preferences.characterDisplayDefaults.messageSpacing} ${preferences.characterDisplayDefaults.showAvatar ? "" : "message-no-avatar"}`} key={message.id} data-message-id={message.id}><button type="button" className={`message-avatar message-avatar-button avatar-${displayAvatar}`} style={{ "--character-accent": characterAccentColor(displayAvatar) } as React.CSSProperties} aria-label={`View portrait of ${displayAuthor}`} title={`View ${displayAuthor} portrait`} onClick={() => { setAvatarPreviewCharacter({ name: displayAuthor, initials: displayInitials, avatar: displayAvatar, description: "", avatarAssetPath: displayAuthor === "You" ? preferences.profile.avatarAssetPath : (messageCharacter?.avatarAssetPath ?? null), portraitResourceId: messageCharacter?.portraitResourceId, portraitFit: messageCharacter?.portraitFit, portraitPositionX: messageCharacter?.portraitPositionX, portraitPositionY: messageCharacter?.portraitPositionY, portraitZoom: messageCharacter?.portraitZoom, expression: message.expression }); setAvatarTilt({ x: 0, y: 0, shineX: 50, shineY: 35 }); setShowAvatarPreview(true); }} >{displayAuthor === "You" ? (messagePortraitUrl ? <img className="message-avatar-profile-image" src={messagePortraitUrl} alt="" /> : displayInitials) : <CharacterPortraitArt initials={displayInitials} imageSrc={messagePortraitUrl} alt={displayAuthor} fit={messageCharacter?.portraitFit ?? "contain"} positionX={messageCharacter?.portraitPositionX ?? 50} positionY={messageCharacter?.portraitPositionY ?? 50} zoom={messageCharacter?.portraitZoom ?? 100} />}{message.characterId && customExpressionUrls[`${message.characterId}:${message.expression}`] && <img className="message-avatar-expression-photo" src={customExpressionUrls[`${message.characterId}:${message.expression}`]} alt="" aria-hidden="true" />}</button><div className="message-body">{highlightYouMessage && <span className="message-user-accent" aria-hidden="true"><EffectLayer effect="particles" intensity="subtle" particleCount={4} className="message-user-particles" /></span>}<div className="message-meta"><strong className={displayAuthor === "You" ? "message-author-user" : undefined}>{displayAuthor}</strong>{displayAuthor !== "You" && preferences.characterDisplayDefaults.showExpression && message.expression && (
                       <span
                         className="message-expression"
                         title="Character expression"
@@ -1617,7 +1694,17 @@ function sanitiseHtml(html: string) {
                     )}{preferences.characterDisplayDefaults.showRoleLabel && <span className={`role-tag role-${message.role.toLowerCase()}`}>{message.role}</span>}<time>{message.time}</time></div>{message.role === "Narration" ? <div className="message-narration-block"><span className="narration-label">✦ NARRATION</span><div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} /></div> : <div className="message-rich-content" dangerouslySetInnerHTML={{ __html: message.content }} />}
                   {!!message.images?.length && <div className="message-image-gallery">
                     {message.images.map((image) => messageImageUrls[image.id]
-                      ? <img key={image.id} src={messageImageUrls[image.id]} alt={image.fileName} title={image.fileName} loading="lazy" />
+                      ? <button type="button" className="message-image-open" key={image.id}
+                        aria-label={`Open ${image.fileName} at full size`}
+                        onClick={() => {
+                          const images = (message.images ?? []).filter((item) => Boolean(messageImageUrls[item.id]))
+                            .map((item) => ({ src: messageImageUrls[item.id], name: item.fileName }));
+                          const startIndex = (message.images ?? []).filter((item) => Boolean(messageImageUrls[item.id]))
+                            .findIndex((item) => item.id === image.id);
+                          setChatLightbox({ images, startIndex: Math.max(0, startIndex) });
+                        }}>
+                        <img src={messageImageUrls[image.id]} alt={image.fileName} title={image.fileName} loading="lazy" />
+                      </button>
                       : <span className="message-image-unavailable" key={image.id}>{image.fileName} · {messageImagesLoading ? "Loading image…" : "Image unavailable"}</span>)}
                   </div>}
                 </div><div className="message-actions">
@@ -1625,6 +1712,7 @@ function sanitiseHtml(html: string) {
                 {openMessageActionsId === message.id && <div className="message-actions-popover" role="menu">
                   <button type="button" role="menuitem" onClick={() => { setOpenMessageActionsId(null); beginEditingMessage(message); }}><Pencil size={14} /><span>Edit message</span></button>
                   <button type="button" role="menuitem" onClick={() => void changeMessageRole(message)}><ArrowLeftRight size={14} /><span>Change to {message.role === "Narration" ? "dialogue" : "narration"}</span></button>
+                  <button type="button" role="menuitem" disabled={favouriteBusy} onClick={() => { setOpenMessageActionsId(null); if (activeSceneId) void toggleFavourite(activeSceneId, message.id); }}><Heart size={14} fill={message.favourite ? "currentColor" : "none"} /><span>{message.favourite ? "Remove favourite" : "Add to favourites"}</span></button>
                   <button type="button" role="menuitem" className="message-delete-action" disabled={!canDeleteMessage(message)} title={!canDeleteMessage(message) ? "Messages can only be deleted within 24 hours of sending; older messages without a timestamp cannot be deleted." : "Delete message"} onClick={() => void deleteMessage(message)}><Trash2 size={14} /><span>Delete message</span>{!canDeleteMessage(message) && <small>24h limit</small>}</button>
                 </div>}
               </div></article>; })}
@@ -1997,6 +2085,7 @@ function sanitiseHtml(html: string) {
           setSystemImageToSave(null);
         }}
       />}
+      {chatLightbox && <ChatImageLightbox images={chatLightbox.images} startIndex={chatLightbox.startIndex} onClose={() => setChatLightbox(null)} />}
       {isSettingsOpen && (
         <SettingsModal initialCategory={settingsInitialCategory} workspacePath={activeWorkspace?.path} onClose={() => setIsSettingsOpen(false)} />
       )}
@@ -2023,6 +2112,12 @@ function sanitiseHtml(html: string) {
       )}
       {activeLibraryPage === "projects" && <section className="projects-coming-soon"><div className="projects-coming-soon-content"><span className="projects-coming-soon-eyebrow">BOREALIS · WORKSPACE</span><h1>Coming soon!</h1><p>Something lovely is taking shape.</p><svg className="projects-coming-soon-moon" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div></section>}{activeLibraryPage === "characters" && <CharactersPage workspacePath={activeWorkspace?.path} onClose={() => { setActiveLibraryPage(null); const refreshCharacters = async () => { const library = activeWorkspace ? await loadWorkspaceCharacters(activeWorkspace.path) : loadCharacters(); const refreshed: Character[] = [...library.map((item) => ({ id: item.id, name: item.name, initials: item.initials, formerNames: item.formerNames, avatar: characterAccentColor(item.accent), description: item.subtitle || item.description, avatarAssetPath: null, portraitResourceId: item.portraitResourceId, portraitFit: item.portraitFit ?? "cover", portraitPositionX: item.portraitPositionX ?? 50, portraitPositionY: item.portraitPositionY ?? 50, portraitZoom: item.portraitZoom ?? 100 })), { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" }]; setCharacters(refreshed); setSelectedCharacter((previousName) => { const previousCharacter = characters.find((item) => item.name === previousName); const matchingId = previousCharacter?.id ? refreshed.find((item) => item.id === previousCharacter.id) : null; return matchingId?.name ?? (refreshed.some((item) => item.name === previousName) ? previousName : refreshed[0]?.name ?? "You"); }); }; void refreshCharacters().catch((reason) => console.error("Could not refresh workspace characters:", reason)); }} />}
       {activeLibraryPage === "resources" && <ResourcesPage onClose={() => setActiveLibraryPage(null)} workspacePath={activeWorkspace?.path} />}
+      {activeLibraryPage === "favourites" && <FavouritesPage
+        workspaceName={activeWorkspace?.manifest.name ?? null} scenes={scenes} busy={favouriteBusy}
+        onClose={() => setActiveLibraryPage(null)} onOpen={openFavourite}
+        onToggleScene={(sceneId) => { void toggleFavourite(sceneId); }}
+        onToggleMessage={(sceneId, messageId) => { void toggleFavourite(sceneId, messageId); }}
+      />}
       {isGlobalSearchOpen && <GlobalSearch workspacePath={activeWorkspace?.path ?? null} onClose={() => setIsGlobalSearchOpen(false)} onOpenCharacters={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("characters"); }} onOpenResources={() => { setIsGlobalSearchOpen(false); setActiveLibraryPage("resources"); }} />}
     </main>
   );
