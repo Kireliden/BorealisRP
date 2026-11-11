@@ -1,6 +1,7 @@
 
 import { load } from "@tauri-apps/plugin-store";
 import { DEFAULT_PREFERENCES } from "./defaults";
+import { LIGHT_THEMES, DARK_THEMES } from "./themeMode";
 import type {
   AppPreferences,
   CharacterDisplayPreferences,
@@ -176,6 +177,21 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
     isOneOf(value, VALID_THEMES),
   defaults.appearance.theme,
 ),
+      themeMode: validOr(
+        appearance.themeMode,
+        (value): value is AppPreferences["appearance"]["themeMode"] => isOneOf(value, ["manual", "system"]),
+        defaults.appearance.themeMode,
+      ),
+      systemLightTheme: validOr(
+        appearance.systemLightTheme,
+        (value): value is AppPreferences["appearance"]["systemLightTheme"] => isOneOf(value, LIGHT_THEMES),
+        defaults.appearance.systemLightTheme,
+      ),
+      systemDarkTheme: validOr(
+        appearance.systemDarkTheme,
+        (value): value is AppPreferences["appearance"]["systemDarkTheme"] => isOneOf(value, DARK_THEMES),
+        defaults.appearance.systemDarkTheme,
+      ),
       accentColor: validOr(
         appearance.accentColor,
         isNullableColor,
