@@ -35,7 +35,7 @@ The output is staged and moved into place only after success. Existing ZIP files
 2. Borealis validates the archive and presents its creation date, application version, file count and image count.
 3. Confirm the overwrite. The dialogue explicitly says that the application **will restart automatically** and Workspace folders are not modified.
 4. The Rust backend validates the archive again, stages the data, saves current app settings as a **safety ZIP**, then applies the contained settings and images.
-5. The app requests a native restart so plugin-store caches and React state are discarded and the restored settings load on the next launch.
+5. In a **packaged release**, the app requests a native process restart. In **`npm run tauri dev`**, it instead reloads the restored Tauri plugin-store caches and refreshes the WebView **without exiting the development process or stopping Vite**. The restored settings then load again.
 
 **Safety copy:** `%APPDATA%\com.borealis.rp\settings-backups\before-restore-<UUID>.zip` on Windows, or the corresponding app-data directory on another supported desktop platform. It is deliberately not included in future settings exports.
 
