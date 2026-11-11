@@ -250,7 +250,7 @@ fn safe_markdown_export_name(name: &str) -> String {
     let cleaned = name
         .trim()
         .chars()
-        .map(|ch| if ch.is_control() || "/\\\\:*?\\"<>|".contains(ch) { '-' } else { ch })
+        .map(|ch| if ch.is_control() || matches!(ch, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') { '-' } else { ch })
         .take(72)
         .collect::<String>();
     let trimmed = cleaned.trim().trim_matches('.').trim().to_string();
@@ -365,8 +365,8 @@ fn export_workspace_markdown(
             }
         }
         if multiple {
-            let title = collection_name.replace(['\r', '\n'], " ");
-            let index_text = format!("# {}\\n\\n{}\\n", title, index_links.join("\\n"));
+            let title = collection_name.replace('\r', " ").replace('\n', " ");
+            let index_text = format!("# {}\n\n{}\n", title, index_links.join("\n"));
             fs::write(target.join("00 - Index.md"), index_text)
                 .map_err(|error| format!("Could not write the export index: {error}"))?;
         }
