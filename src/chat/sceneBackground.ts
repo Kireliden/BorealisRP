@@ -2,7 +2,7 @@ import { readWorkspaceFile, writeWorkspaceFile } from "../workspace/workspaceFil
 import { imageExtension, validateSelectedImage } from "../resources/imageSelection";
 
 /** Persisted per scene; image files live within the workspace, never in browser storage. */
-export type SceneOverlayMode = "dark" | "light" | "custom";
+export type SceneOverlayMode = "auto" | "dark" | "light" | "custom";
 
 export type SceneBackground = {
   relativePath: string;
@@ -27,7 +27,7 @@ export const DEFAULT_SCENE_BACKGROUND: SceneBackgroundAdjustments = {
   positionX: 50,
   positionY: 50,
   zoom: 100,
-  overlayMode: "dark",
+  overlayMode: "auto",
   overlayColor: "#8b81bb",
 };
 
@@ -40,15 +40,17 @@ export function safeOverlayHex(value: unknown): string {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : "#8b81bb";
 }
 
-export function overlayHex(settings: SceneBackgroundAdjustments): string {
-  return settings.overlayMode === "light" ? SCENE_OVERLAY_PRESETS.light
+export function overlayHex(settings: SceneBackgroundAdjustments, themeIsLight = false): string {
+  return settings.overlayMode === "auto"
+    ? (themeIsLight ? SCENE_OVERLAY_PRESETS.light : SCENE_OVERLAY_PRESETS.dark)
+    : settings.overlayMode === "light" ? SCENE_OVERLAY_PRESETS.light
     : settings.overlayMode === "custom" ? safeOverlayHex(settings.overlayColor)
     : SCENE_OVERLAY_PRESETS.dark;
 }
 
 /** A bright overlay needs dark labels rather than the original white text. */
-export function isLightOverlay(settings: SceneBackgroundAdjustments): boolean {
-  const hex = overlayHex(settings);
+export function isLightOverlay(settings: SceneBackgroundAdjustments, themeIsLight = false): boolean {
+  const hex = overlayHex(settings, themeIsLight);
   const channels = [1, 3, 5].map((index) => {
     const component = parseInt(hex.slice(index, index + 2), 16) / 255;
     return component <= 0.04045 ? component / 12.92 : ((component + 0.055) / 1.055) ** 2.4;
@@ -56,8 +58,8 @@ export function isLightOverlay(settings: SceneBackgroundAdjustments): boolean {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722 >= 0.36;
 }
 
-export function overlayRgb(settings: SceneBackgroundAdjustments): string {
-  const hex = overlayHex(settings);
+export function overlayRgb(settings: SceneBackgroundAdjustments, themeIsLight = false): string {
+  const hex = overlayHex(settings, themeIsLight);
   return [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16)).join(" ");
 }
 
@@ -78,7 +80,7 @@ export function safeSceneBackground(background: SceneBackground | undefined): Sc
     positionX: clamp(background.positionX, 0, 100, DEFAULT_SCENE_BACKGROUND.positionX),
     positionY: clamp(background.positionY, 0, 100, DEFAULT_SCENE_BACKGROUND.positionY),
     zoom: clamp(background.zoom, 100, 200, DEFAULT_SCENE_BACKGROUND.zoom),
-    overlayMode: background.overlayMode === "light" || background.overlayMode === "custom" ? background.overlayMode : "dark",
+    overlayMode: background.overlayMode === "auto" || background.overlayMode === "light" || background.overlayMode === "custom" ? background.overlayMode : "dark",
     overlayColor: safeOverlayHex(background.overlayColor),
   };
 }
