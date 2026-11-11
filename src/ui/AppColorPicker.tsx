@@ -93,12 +93,18 @@ export default function AppColorPicker({ value, defaultValue = "#babbf1", onChan
     const scroll = (event: Event) => {
       if (!panelRef.current?.contains(event.target as Node)) setOpen(false);
     };
+    const focusOutside = (event: FocusEvent) => {
+      if (!triggerRef.current?.contains(event.target as Node) &&
+          !panelRef.current?.contains(event.target as Node)) setOpen(false);
+    };
     document.addEventListener("pointerdown", outside, true);
+    document.addEventListener("focusin", focusOutside, true);
     window.addEventListener("keydown", esc, true);
     window.addEventListener("scroll", scroll, true);
     window.addEventListener("resize", placement);
     return () => {
       document.removeEventListener("pointerdown", outside, true);
+      document.removeEventListener("focusin", focusOutside, true);
       window.removeEventListener("keydown", esc, true);
       window.removeEventListener("scroll", scroll, true);
       window.removeEventListener("resize", placement);
