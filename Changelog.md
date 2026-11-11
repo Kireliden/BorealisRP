@@ -6,6 +6,16 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Chat lightbox and workspace favourites
+
+### Implemented (build/runtime verification pending)
+- Chat image attachments now open in a full-size lightbox. Images from the same message can be browsed with arrow buttons or keyboard arrows; Esc and clicking the backdrop close the preview.
+- Enabled the scene-level **Favourite** button and added **Add to favourites / Remove favourite** to each message's `⋯` menu.
+- Added a dedicated **Favourites** button directly beneath Resources in the sidebar. The new library separates saved scenes and messages, offers search/filter views, and links back to the originating scene or highlighted passage.
+- Favourite flags and timestamps are optional fields in the existing workspace content; no duplicate message copies or new global storage format are needed.
+- Repositioned **Writing in…** to align with the composer's left edge, accounting for the character portrait and responsive layout gap.
+- **Pending validation:** TypeScript/Vite build, Tauri runtime checks, favourite persistence after restarting, image lightbox keyboard controls, narrow-window alignment and navigation to saved messages.
+
 ## 2026-11-11 — Profile and composer image integration
 
 ### Implemented (runtime/build verification pending)
