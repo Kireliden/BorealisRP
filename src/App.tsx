@@ -46,6 +46,7 @@ import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import { loadWorkspaceContent, saveWorkspaceContent, type WorkspaceContent, type WorkspaceMessage, type WorkspaceScene, type WorkspaceFolder, type WorkspaceCategory } from "./workspace/workspaceContent";
 import { clearLastWorkspacePath, getLastWorkspacePath, inspectWorkspace, rememberLastWorkspacePath } from "./workspace/workspaceStorage";
 import { loadWorkspaceDraft, saveWorkspaceDraft } from "./workspace/workspaceDrafts.storage";
+import { deleteWorkspaceFile } from "./workspace/workspaceFiles";
 import "./popup-motion.css";
 
 const appWindow = getCurrentWindow();
@@ -1051,6 +1052,13 @@ function sanitiseHtml(html: string) {
       if (activeWorkspacePathRef.current !== workspacePath) return;
       setScenes(nextScenes);
       setWorkspaceError("");
+      const oldPath = existingImage?.relativePath;
+      if (oldPath && oldPath !== nextBackground?.relativePath &&
+        !nextScenes.some((item) => item.background?.relativePath === oldPath)) {
+        // The new workspace manifest is already durable; deleting an orphan is best-effort.
+        await deleteWorkspaceFile(workspacePath, oldPath).catch((reason) =>
+          console.warn("Could not clean up an unused chat background:", reason));
+      }
     } catch (reason) {
       if (activeWorkspacePathRef.current === workspacePath) {
         setWorkspaceError(`Could not save chat background: ${reason instanceof Error ? reason.message : String(reason)}`);
