@@ -25,6 +25,7 @@ import PlumbobEgg from "./easter-eggs/PlumbobEgg";
 import { PanelLeftClose, PanelLeftOpen, Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, FileDown, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import { commandQuery, resolveExpressionCommand, EXPRESSION_COMMANDS } from "./composer/expressionCommands";
+import "./composer/expressionCommands.css";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./WorkspaceSwitcher";
