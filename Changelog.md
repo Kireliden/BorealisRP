@@ -6,6 +6,17 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Follow system themes and synchronised chat overlays
+
+### Implemented (local build/runtime verification pending)
+- Added **Manual / Follow system** in Settings → Themes. Follow system reads the OS light/dark preference via the WebView's `prefers-color-scheme` media query and updates when the OS reports a change; it does not guess sunrise/sunset times.
+- The user can choose **one of the three light palettes** and **one of the six dark palettes** separately. In Follow system mode, selecting a theme card updates its corresponding light/dark slot rather than disabling automation.
+- Persisted `appearance.themeMode`, `systemLightTheme`, and `systemDarkTheme` in preferences, validated on load. Existing saved preferences continue in Manual mode with their previously selected theme.
+- Added **Follow theme** to each scene's background overlay. It uses the currently applied BRS palette's light/dark category, adjusting the overlay colour, vignette and text contrast together without reloading the background image.
+- New backgrounds start with Follow theme. Older saved backgrounds default to their previous fixed Dark mode unless individually changed; explicit Dark, Light and Custom selections remain fixed regardless of OS changes.
+- Kept theme selection inside Themes (not Appearance), and all new styles in the existing modular themes/chat files.
+- **Pending validation:** `npm run build`, Tauri runtime tests on Windows and Linux, live OS theme switching, preview updates, preference persistence and per-scene overlay behaviour.
+
 ## 2026-11-11 — Dark, Light and Custom scene overlays
 
 - Added **Dark / Light / Custom** overlay colours in the per-scene Background editor. Custom uses the system colour picker and displays its hexadecimal value.
