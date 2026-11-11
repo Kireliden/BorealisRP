@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAppDialog } from "../ui/AppDialogProvider";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import type { RelationshipKind } from "./characters.types";
 
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function RelationshipTypeManagerModal({ relationshipKinds, usageCounts, onClose, onSave }: Props) {
+  const { confirm } = useAppDialog();
   const [types, setTypes] = useState<RelationshipKind[]>(relationshipKinds);
   const [originalTypes] = useState<RelationshipKind[]>(relationshipKinds);
   const [newType, setNewType] = useState("");
@@ -40,12 +42,12 @@ export default function RelationshipTypeManagerModal({ relationshipKinds, usageC
     setEditingType(null);
     setError("");
   }
-  function removeType(type: string) {
+  async function removeType(type: string) {
     const count = usageCounts[type] ?? 0;
     const warning = count
       ? `“${type}” is used by ${count} relationship(s). Removing it from the type list will not delete those relationships, but they will keep the old label until you change them. Continue?`
       : `Delete the relationship type “${type}”?`;
-    if (!window.confirm(warning)) return;
+    if (!await confirm(warning, { title: "Delete relationship type", confirmLabel: "Delete", destructive: true })) return;
     setTypes((current) => current.filter((item) => item !== type));
     setRenamedTypes((current) => Object.fromEntries(Object.entries(current).filter(([from, to]) => from !== type && to !== type)));
     if (editingType === type) setEditingType(null);
