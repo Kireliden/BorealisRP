@@ -105,6 +105,82 @@ export default function ThemesSettings() {
           </p>
         </>}
       </section>
+      <section
+        className="themes-detail"
+        style={{
+          "--theme-base": activeTheme.colors.base,
+          "--theme-mantle": activeTheme.colors.mantle,
+          "--theme-surface": activeTheme.colors.surface,
+          "--theme-accent": activeTheme.colors.accent,
+          "--theme-secondary": activeTheme.colors.secondary,
+          "--theme-text": activeTheme.colors.text,
+          "--theme-muted": activeTheme.colors.muted,
+        } as CSSProperties}
+      >
+        <div className="themes-detail-header">
+          <div>
+            <span className="themes-detail-eyebrow">CURRENTLY APPLIED</span>
+            <h4>
+              <span>{activeTheme.icon}</span> {activeTheme.name}
+            </h4>
+            <p>{activeTheme.description}</p>
+          </div>
+          <span className="themes-applied-badge">✓ Applied</span>
+        </div>
+
+        <div className="themes-swatches">
+          {(
+            [
+              ["Base", activeTheme.colors.base],
+              ["Mantle", activeTheme.colors.mantle],
+              ["Surface", activeTheme.colors.surface],
+              ["Accent", activeTheme.colors.accent],
+              ["Secondary", activeTheme.colors.secondary],
+              ["Text", activeTheme.colors.text],
+            ] as const
+          ).map(([label, color]) => (
+            <div className="themes-swatch" key={label}>
+              <span
+                className="themes-swatch-color"
+                style={{ backgroundColor: color }}
+              />
+              <span className="themes-swatch-label">{label}</span>
+              <code>{color.toUpperCase()}</code>
+            </div>
+          ))}
+        </div>
+
+        <div className="themes-live-preview">
+          <aside className="themes-preview-sidebar">
+            <span className="themes-preview-brand">BOREALIS</span>
+            <span className="themes-preview-nav active">✦ The Archive</span>
+            <span className="themes-preview-nav">◈ Characters</span>
+            <span className="themes-preview-nav">◇ Settings</span>
+          </aside>
+
+          <div className="themes-preview-main">
+            <span className="themes-preview-label">A SCENE FROM YOUR NEXT STORY</span>
+            <h5>The space between the stars</h5>
+            <p className="themes-preview-narration">
+              The room fell quiet. Somewhere beyond the window, the city
+              carried on as if nothing had changed.
+            </p>
+            <div className="themes-preview-dialogue">
+              <span className="themes-preview-speaker">Keira</span>
+              “You came back. I wasn't sure you would.”
+            </div>
+            <div className="themes-preview-actions">
+              <span className="themes-preview-button">Continue story ↗</span>
+              <span className="themes-preview-muted">Saved just now</span>
+            </div>
+          </div>
+        </div>
+
+        <blockquote className="themes-signature-quote">
+          “{activeTheme.quote}”
+        </blockquote>
+      </section>
+
       <div className="themes-collections">
         {THEME_COLLECTIONS.map((collection) => {
           const collectionThemes = themes.filter((theme) => collection.themeIds.includes(theme.id));
@@ -203,81 +279,7 @@ export default function ThemesSettings() {
         )}
       </div>
 
-      <section
-        className="themes-detail"
-        style={{
-          "--theme-base": activeTheme.colors.base,
-          "--theme-mantle": activeTheme.colors.mantle,
-          "--theme-surface": activeTheme.colors.surface,
-          "--theme-accent": activeTheme.colors.accent,
-          "--theme-secondary": activeTheme.colors.secondary,
-          "--theme-text": activeTheme.colors.text,
-          "--theme-muted": activeTheme.colors.muted,
-        } as CSSProperties}
-      >
-        <div className="themes-detail-header">
-          <div>
-            <span className="themes-detail-eyebrow">CURRENTLY APPLIED</span>
-            <h4>
-              <span>{activeTheme.icon}</span> {activeTheme.name}
-            </h4>
-            <p>{activeTheme.description}</p>
-          </div>
-          <span className="themes-applied-badge">✓ Applied</span>
-        </div>
 
-        <div className="themes-swatches">
-          {(
-            [
-              ["Base", activeTheme.colors.base],
-              ["Mantle", activeTheme.colors.mantle],
-              ["Surface", activeTheme.colors.surface],
-              ["Accent", activeTheme.colors.accent],
-              ["Secondary", activeTheme.colors.secondary],
-              ["Text", activeTheme.colors.text],
-            ] as const
-          ).map(([label, color]) => (
-            <div className="themes-swatch" key={label}>
-              <span
-                className="themes-swatch-color"
-                style={{ backgroundColor: color }}
-              />
-              <span className="themes-swatch-label">{label}</span>
-              <code>{color.toUpperCase()}</code>
-            </div>
-          ))}
-        </div>
-
-        <div className="themes-live-preview">
-          <aside className="themes-preview-sidebar">
-            <span className="themes-preview-brand">BOREALIS</span>
-            <span className="themes-preview-nav active">✦ The Archive</span>
-            <span className="themes-preview-nav">◈ Characters</span>
-            <span className="themes-preview-nav">◇ Settings</span>
-          </aside>
-
-          <div className="themes-preview-main">
-            <span className="themes-preview-label">A SCENE FROM YOUR NEXT STORY</span>
-            <h5>The space between the stars</h5>
-            <p className="themes-preview-narration">
-              The room fell quiet. Somewhere beyond the window, the city
-              carried on as if nothing had changed.
-            </p>
-            <div className="themes-preview-dialogue">
-              <span className="themes-preview-speaker">Keira</span>
-              “You came back. I wasn't sure you would.”
-            </div>
-            <div className="themes-preview-actions">
-              <span className="themes-preview-button">Continue story ↗</span>
-              <span className="themes-preview-muted">Saved just now</span>
-            </div>
-          </div>
-        </div>
-
-        <blockquote className="themes-signature-quote">
-          “{activeTheme.quote}”
-        </blockquote>
-      </section>
     </section>
   );
 }
