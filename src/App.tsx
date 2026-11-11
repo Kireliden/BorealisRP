@@ -413,6 +413,7 @@ function sanitiseHtml(html: string) {
   });
   const [workspaceIcon, setWorkspaceIcon] = useState("om:1F319");
   const [workspaceSwitcherOpenRequest, setWorkspaceSwitcherOpenRequest] = useState(0);
+  const workspaceHeaderRef = useRef<HTMLDivElement>(null);
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const [enteringMessageId, setEnteringMessageId] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -1771,15 +1772,7 @@ function sanitiseHtml(html: string) {
       <div className="app-content" style={{ "--sidebar-width": `${sidebarCollapsed ? 76 : sidebarWidth}px` } as CSSProperties}>
         <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`}>
           <div className="brand workspace-brand">
-            <div className="workspace-selector-row">
-              <div className="workspace-switcher-slot brand-workspace-switcher">
-                <WorkspaceSwitcher activeWorkspace={activeWorkspace} icon={workspaceIcon}
-                  compact={sidebarCollapsed} openRequest={workspaceSwitcherOpenRequest}
-                  onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
-                  onAddNew={() => { setWorkspaceManagerInitialView("home"); setIsWorkspaceManagerOpen(true); }} />
-              </div>
-            </div>
-            <div className="workspace-header-row">
+            <div className="workspace-header-row" ref={workspaceHeaderRef}>
               <StudioIconPicker className="workspace-hero-icon" value={workspaceIcon}
                 onChange={changeWorkspaceIcon} title="Workspace options"
                 compact workspaceActions={{
@@ -1790,7 +1783,9 @@ function sanitiseHtml(html: string) {
                     setIsWorkspaceManagerOpen(true);
                   },
                 }} />
-              <div className="workspace-header-label" title={activeWorkspace?.manifest.name ?? "No workspace selected"}>Workspace</div>
+              <div className="workspace-header-label" title={activeWorkspace?.manifest.name ?? "No workspace selected"}>
+                {activeWorkspace?.manifest.name ?? "Choose workspace"}
+              </div>
               <button type="button" className="sidebar-collapse-button"
                 onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
                 title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -1798,6 +1793,11 @@ function sanitiseHtml(html: string) {
                 aria-expanded={!sidebarCollapsed}>
                 {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
               </button>
+              <WorkspaceSwitcher activeWorkspace={activeWorkspace} icon={workspaceIcon}
+                compact={sidebarCollapsed} openRequest={workspaceSwitcherOpenRequest}
+                hideTrigger menuAnchorRef={workspaceHeaderRef}
+                onSelect={(workspace) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
+                onAddNew={() => { setWorkspaceManagerInitialView("home"); setIsWorkspaceManagerOpen(true); }} />
             </div>
           </div>
           
