@@ -1,3 +1,4 @@
+import AppSelect from "./ui/AppSelect";
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -1924,7 +1925,7 @@ function sanitiseHtml(html: string) {
                 </div>
                 {showCharacterPicker && <div className="portrait-popover character-picker-popover">
                   <span className="portrait-popover-label">WRITING AS</span>
-                  <select id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => { setSelectedCharacter(event.target.value); setShowExpressions(false); }}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</select>
+                  <AppSelect id="character-select" className="character-select" aria-label="Choose character" value={selectedCharacter} onChange={(event) => { setSelectedCharacter(event.target.value); setShowExpressions(false); }}>{characters.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}</AppSelect>
                 </div>}
                 {showExpressions && selectedCharacter !== "You" && <div className="portrait-popover expression-picker-popover">
                   <span className="portrait-popover-label">EXPRESSION</span>
