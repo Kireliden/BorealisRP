@@ -45,6 +45,7 @@ export default function AppSelect({
   const listId = "app-select-list-" + uid;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const typeaheadRef = useRef({ query: "", lastTyped: 0 });
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [placement, setPlacement] = useState<Placement>({
@@ -158,6 +159,22 @@ export default function AppSelect({
       event.preventDefault();
       event.stopPropagation();
       setOpen(false);
+    } else if (event.key.length === 1 && event.key.trim()) {
+      // Native select-style typeahead: search visible option labels as the
+      // user types, resetting the buffer after a short pause.
+      const now = Date.now();
+      const previous = typeaheadRef.current;
+      const query = (now - previous.lastTyped < 700 ? previous.query : "") +
+        event.key.toLocaleLowerCase();
+      typeaheadRef.current = { query, lastTyped: now };
+      const found = options.findIndex((option) =>
+        !option.disabled && typeof option.label === "string" &&
+        option.label.toLocaleLowerCase().startsWith(query));
+      if (found !== -1) {
+        event.preventDefault();
+        if (!open) openMenu();
+        setActiveIndex(found);
+      }
     }
   };
 
