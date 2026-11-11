@@ -1,3 +1,4 @@
+import AppSelect from "../ui/AppSelect";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent, type PointerEvent } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -600,7 +601,7 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
         <input ref={inputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.currentTarget.value = ""; }} />
         <div className={`resource-dropzone ${dragging ? "is-dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); if (event.dataTransfer.files.length) void addFiles(event.dataTransfer.files); }}><Upload size={19} /><div><strong>Drop anything you want to keep close</strong><span>Images, audio, video and other files · stored in this app's local library</span></div><button type="button" onClick={() => inputRef.current?.click()}>Browse files</button></div>
         {error && <p className="resource-error">{error}</p>}
-        <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><select aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></select><label className="resource-size-control" title={`Thumbnail size: ${cardSize}px`}><span>Size</span><input type="range" min="140" max="420" step="20" value={cardSize} onChange={(event) => setCardSize(Number(event.target.value))} aria-label="Thumbnail size" /><output>{cardSize}px</output></label></div>
+        <div className="resource-controls"><label className="library-search"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search files and tags…" /></label><AppSelect aria-label="Filter resource type" value={kind} onChange={(event) => setKind(event.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="other">Other files</option></AppSelect><label className="resource-size-control" title={`Thumbnail size: ${cardSize}px`}><span>Size</span><input type="range" min="140" max="420" step="20" value={cardSize} onChange={(event) => setCardSize(Number(event.target.value))} aria-label="Thumbnail size" /><output>{cardSize}px</output></label></div>
         <div className="resource-folder-navigation">
           <nav aria-label="Resource folders" className="resource-breadcrumbs">
             <button type="button" className={`resource-library-root-drop ${dragOverFolder === "__root__" ? "resource-drop-target" : ""}`} onClick={() => openFolder(null)}>Library</button>
@@ -673,10 +674,10 @@ export default function ResourcesPage({ onClose, workspacePath }: Props) {
           <h2 id="resource-organise-title">{bulkDialog === "move" ? "Move" : "Copy"} {selectedResourceIds.length} selected files</h2>
           <p>Choose a destination folder in {workspacePath ? "this workspace" : "the app-wide library"}. {bulkDialog === "copy" ? "Original files will be kept." : "Files will be reorganised without changing their original imports."}</p>
           <label className="resource-dialog-folder-label">Destination folder
-            <select value={bulkTargetId ?? ""} onChange={(event) => setBulkTargetId(event.target.value || null)}>
+            <AppSelect value={bulkTargetId ?? ""} onChange={(event) => setBulkTargetId(event.target.value || null)}>
               <option value="">Library root</option>
               {sortedFolders.map((folder) => <option value={folder.id} key={folder.id}>{folderLabel(folder.id)}</option>)}
-            </select>
+            </AppSelect>
           </label>
           <button type="button" className="library-primary" disabled={bulkBusy} onClick={() => void applyBulk(bulkDialog, bulkTargetId)}>{bulkDialog === "move" ? "Move files" : "Copy files"}</button>
           <button type="button" className="resource-delete-cancel" disabled={bulkBusy} onClick={() => setBulkDialog(null)}>Cancel</button>
