@@ -20,6 +20,12 @@ export async function chooseProfileMedia(): Promise<string | null> {
   return invoke<string>("import_profile_media", { sourcePath: selected });
 }
 
+/** Copy an image from either the system or Resources into durable BRS profile storage. */
+export async function importProfileMediaFile(file: File): Promise<string> {
+  const bytes = Array.from(new Uint8Array(await file.arrayBuffer()));
+  return invoke<string>("import_profile_media_bytes", { fileName: file.name, bytes });
+}
+
 /** Create a high-quality sidebar-only thumbnail; the original and GIF animation stay untouched elsewhere. */
 export async function saveSidebarAvatarThumbnail(path: string, positionX: number, positionY: number, zoom: number): Promise<string> {
   const image = new Image();
