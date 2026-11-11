@@ -21,6 +21,8 @@ type Props = {
   onAddNew: () => void;
   icon?: string;
   compact?: boolean;
+  /** Increment to open the existing workspace list from an external menu. */
+  openRequest?: number;
 };
 
 const RECENTS_FILE = "recent-workspaces.json";
@@ -56,7 +58,7 @@ async function rememberWorkspace(workspace: WorkspaceInfo): Promise<RecentWorksp
   return next;
 }
 
-export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew, icon, compact }: Props) {
+export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew, icon, compact, openRequest = 0 }: Props) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
   const [recentIcons, setRecentIcons] = useState<Record<string, string>>({});
@@ -64,6 +66,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
   const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const lastOpenRequest = useRef(openRequest);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 296 });
   const positionMenu = () => {
     const rect = rootRef.current?.getBoundingClientRect();
@@ -102,6 +105,17 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
       setRecentIcons((current) => ({ ...current, [activeWorkspace.manifest.id]: icon }));
     }
   }, [activeWorkspace?.manifest.id, icon]);
+
+  useEffect(() => {
+    if (openRequest === lastOpenRequest.current) return;
+    lastOpenRequest.current = openRequest;
+    positionMenu();
+    setError("");
+    setOpen(true);
+    void refreshRecent();
+  // This is driven by a user action in the header icon menu, not polling.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest]);
 
   useEffect(() => {
     if (!open) return;
