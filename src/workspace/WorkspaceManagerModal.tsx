@@ -17,6 +17,7 @@ type Props = {
   onClose: () => void;
   onSelect: (workspace: WorkspaceInfo) => void;
   activeWorkspace: WorkspaceInfo | null;
+  initialView?: "home" | "create";
 };
 
 const RECENTS_FILE = "recent-workspaces.json";
@@ -52,12 +53,12 @@ async function loadRecentWorkspaces(): Promise<RecentWorkspace[]> {
   );
 }
 
-export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspace }: Props) {
+export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspace, initialView = "home" }: Props) {
   const [workspaceName, setWorkspaceName] = useState("");
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [view, setView] = useState<"home" | "create">("home");
+  const [view, setView] = useState<"home" | "create">(initialView);
 
   useEffect(() => {
     let cancelled = false;
