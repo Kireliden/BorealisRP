@@ -227,6 +227,51 @@
   --accent-soft: #421827;
 }
 
+/* Crimson Dawn — Light counterpart to Crimson Void */
+:root[data-theme="crimson-dawn"] {
+  color-scheme: light;
+
+  --ctp-rosewater: #aa516b;
+  --ctp-flamingo: #c66b7c;
+  --ctp-pink: #c14c78;
+  --ctp-mauve: #ac224c;
+  --ctp-red: #b62248;
+  --ctp-maroon: #8e2542;
+  --ctp-peach: #c77570;
+  --ctp-yellow: #a77c47;
+  --ctp-green: #598971;
+  --ctp-teal: #478d89;
+  --ctp-sky: #599eaf;
+  --ctp-sapphire: #517c9b;
+  --ctp-blue: #6778a3;
+  --ctp-lavender: #ac224c;
+  --ctp-text: #4b2534;
+  --ctp-subtext1: #68404e;
+  --ctp-subtext0: #875e6b;
+  --ctp-overlay2: #997782;
+  --ctp-overlay1: #b1939e;
+  --ctp-overlay0: #c6abb4;
+  --ctp-surface2: #d8b9c2;
+  --ctp-surface1: #e6cbd3;
+  --ctp-surface0: #efdde2;
+  --ctp-base: #fff4f2;
+  --ctp-mantle: #f9e6e5;
+  --ctp-crust: #f1d7da;
+
+  --app-bg: var(--ctp-base);
+  --sidebar-bg: var(--ctp-mantle);
+  --panel-bg: var(--ctp-base);
+  --surface: var(--ctp-surface0);
+  --surface-hover: #f0d4dc;
+  --border: #dfbfc8;
+  --muted: var(--ctp-subtext0);
+  --accent: #a91e45;
+  --accent-soft: #f6d5df;
+
+  color: var(--ctp-text);
+  background: var(--ctp-base);
+}
+
 /* Coral Bloom — Dark */
 :root[data-theme="coral-bloom"] {
   color-scheme: dark;
