@@ -7,11 +7,15 @@ import {
   type ReactNode,
 } from "react";
 
-import type { AppPreferences } from "./types";
+import type { AppPreferences, CatppuccinFlavor } from "./types";
+import { resolveTheme } from "./themeMode";
 import { getDefaultPreferences, loadPreferences, savePreferences } from "./storage";
 
 interface PreferencesContextValue {
   preferences: AppPreferences;
+  /** Palette currently displayed, including OS-driven switching. */
+  resolvedTheme: CatppuccinFlavor;
+  systemIsDark: boolean;
   isLoaded: boolean;
   error: string | null;
   updatePreferences: (
@@ -37,6 +41,16 @@ export function PreferencesProvider({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveVersion, setSaveVersion] = useState(0);
+  const [systemIsDark, setSystemIsDark] = useState(() => window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const resolvedTheme = resolveTheme(preferences.appearance, systemIsDark);
+
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+    setSystemIsDark(query.matches);
+    const onSystemThemeChange = (event: MediaQueryListEvent) => setSystemIsDark(event.matches);
+    query.addEventListener("change", onSystemThemeChange);
+    return () => query.removeEventListener("change", onSystemThemeChange);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,9 +86,9 @@ export function PreferencesProvider({
 
   useEffect(() => {
   const root = document.documentElement;
-  const { theme, interfaceFont, uiScale, density } = preferences.appearance;
+  const { interfaceFont, uiScale, density } = preferences.appearance;
 
-  root.dataset.theme = theme;
+  root.dataset.theme = resolvedTheme;
   root.dataset.density = density;
   root.dataset.font = interfaceFont;
   root.dataset.animations = preferences.accessibility.animationsEnabled ? "on" : "off";
@@ -89,7 +103,7 @@ export function PreferencesProvider({
   `${preferences.appearance.chatFontSize}px`,
 );
 }, [
-  preferences.appearance.theme,
+  resolvedTheme,
   preferences.appearance.interfaceFont,
   preferences.appearance.uiScale,
   preferences.appearance.density,
@@ -153,6 +167,8 @@ export function PreferencesProvider({
     <PreferencesContext.Provider
       value={{
         preferences,
+        resolvedTheme,
+        systemIsDark,
         isLoaded,
         error,
         updatePreferences,
