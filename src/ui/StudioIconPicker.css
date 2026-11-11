@@ -11,6 +11,7 @@
 .studio-icon-trigger.is-compact { width: 25px; height: 25px; border-color: transparent; background: transparent; }
 .studio-icon-trigger:disabled { opacity: .4; cursor: not-allowed; }
 .studio-icon-image, .studio-icon-emoji { display: inline-grid; place-items: center; width: 18px; height: 18px; flex: 0 0 18px; object-fit: contain; font-size: 17px; line-height: 1; }
+.studio-icon-lucide { display: block; width: 18px; height: 18px; flex: 0 0 18px; color: inherit; }
 .studio-icon-panel {
   z-index: 33000; display: flex; flex-direction: column; gap: 10px;
   padding: 12px; box-sizing: border-box;
@@ -25,7 +26,7 @@
   border: 1px solid var(--border); border-radius: 7px;
   background: var(--surface); color: var(--ctp-text); cursor: pointer;
 }
-.studio-icon-picker-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); flex: 0 0 auto; }
+.studio-icon-picker-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 3px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); flex: 0 0 auto; }
 .studio-icon-picker-modes button { padding: 7px 6px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; }
 .studio-icon-picker-modes button.active { background: color-mix(in srgb, var(--accent) 20%, var(--ctp-mantle)); color: var(--ctp-text); font-weight: 700; }
 .studio-icon-search { display: flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); background: var(--app-bg); flex: 0 0 auto; }
@@ -35,6 +36,8 @@
 .studio-icon-grid button { display: grid; place-items: center; width: 100%; aspect-ratio: 1; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; color: var(--ctp-text); }
 .studio-icon-grid button:hover,.studio-icon-grid button.selected { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-color: var(--accent); }
 .studio-icon-grid img { width: 27px; height: 27px; object-fit: contain; }
+.studio-icon-grid button.lucide { color: var(--ctp-text); }
+.studio-icon-grid button.lucide svg { width: 24px; height: 24px; }
 .studio-icon-grid span { font-size: 25px; }
 .studio-icon-empty { grid-column: 1/-1; color: var(--muted); text-align: center; font-size: 11px; }
 .studio-icon-more { flex: 0 0 auto; padding: 7px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--accent); font-size: 11px; cursor: pointer; }
@@ -42,7 +45,7 @@
 @media (prefers-reduced-motion: reduce) { .studio-icon-trigger { transition: none; } }
 
 /* Workspace icon actions: first level of the hero icon's popup.
-   "Change icon" reveals the existing OpenMoji/system picker in place. */
+   "Change icon" reveals the shared OpenMoji/system emoji/Lucide picker in place. */
 .studio-workspace-actions {
   display: flex;
   flex: 1 1 auto;
