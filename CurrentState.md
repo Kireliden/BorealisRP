@@ -52,7 +52,7 @@ Legacy browser localStorage/IndexedDB libraries have migration paths into a firs
 ## Settings backups (11 November update)
 
 - A new **Settings → About → Backups → Create settings backup** action writes a ZIP containing core application stores and imported profile artwork. It does **not** include the user's workspace folders or all WebView localStorage data.
-- The ZIP contains manual recovery instructions. **There is no in-app Restore action yet.** The feature is implemented in source but not accepted as reliable until a fresh build and actual ZIP creation/manual recovery test pass. See `docs/SETTINGS-BACKUP.md`.
+- The ZIP contains manual recovery instructions, and an in-app **Restore settings backup** action is now implemented. Neither export nor import is accepted as release-ready until round-trip tests succeed on disposable settings. See `docs/SETTINGS-BACKUP.md`.
 
 ### Restoring app settings (11 November update)
 
@@ -63,7 +63,7 @@ Legacy browser localStorage/IndexedDB libraries have migration paths into a firs
 
 - No complete green **fresh checkout → `npm ci` → frontend build → Tauri package** run has been documented for the latest head.
 - No complete regression pass for restart recovery, two-workspace isolation, storage failures, imported media, corrupted data, or large/long-running sessions.
-- No verified full ZIP backup/restore UI or documented migration strategy for future workspace schema versions. A manual copy of the complete closed workspace folder is the interim backup approach; restore must be tested.
+- No verified **Workspace** ZIP backup/restore UI or documented migration strategy for future workspace schema versions. The settings-only ZIP feature is separate. A manual copy of the complete closed workspace folder remains the interim Workspace backup approach; restore must be tested.
 - Windows packaging/clean-install acceptance and Linux packaging/runtime acceptance remain open.
 - App metadata still uses `0.1.0` and some *Borealis Roleplay Studio* identifiers. No Git alpha release/tag is implied.
 - The Markdown exporter should be explicitly checked for **Lucide-only message bodies**: rich-text Lucide markers are not necessarily represented in plain Markdown output.
