@@ -4,6 +4,8 @@ import { Image as ImageIcon, RotateCcw, Trash2, X } from "lucide-react";
 import ImageSourceDialog from "../resources/ImageSourceDialog";
 import SaveImageToResourcesDialog from "../resources/SaveImageToResourcesDialog";
 import { importWorkspaceResource } from "../resources/workspaceResources.storage";
+import { usePreferences } from "../preferences/PreferencesContext";
+import { isLightTheme } from "../preferences/themeMode";
 import {
   DEFAULT_SCENE_BACKGROUND,
   SCENE_OVERLAY_PRESETS,
@@ -36,6 +38,8 @@ const controls: { key: Adjustable; label: string; min: number; max: number; step
 export default function SceneBackgroundSettings({
   workspacePath, sceneName, current, currentPreviewUrl, onSave, onClose,
 }: Props) {
+  const { resolvedTheme } = usePreferences();
+  const themeIsLight = isLightTheme(resolvedTheme);
   const [settings, setSettings] = useState<SceneBackgroundAdjustments>(
     current ? {
       dim: current.dim, blur: current.blur, zoom: current.zoom,
@@ -70,7 +74,7 @@ export default function SceneBackgroundSettings({
   const previewUrl = remove ? null : pendingUrl ?? currentPreviewUrl;
   const hasImage = !remove && Boolean(image || current);
   const imageName = remove ? null : image?.name ?? current?.fileName;
-  const lightOverlay = isLightOverlay(settings);
+  const lightOverlay = isLightOverlay(settings, themeIsLight);
 
   function selectImage(file: File, fromSystem: boolean) {
     setImage(file);
@@ -105,7 +109,7 @@ export default function SceneBackgroundSettings({
         </header>
         <div className="scene-background-content">
           <div className="scene-background-preview" data-scene-overlay-tone={lightOverlay ? "light" : "dark"}
-            style={{ "--scene-overlay-rgb": overlayRgb(settings), "--scene-bg-dim": settings.dim / 100 } as CSSProperties}
+            style={{ "--scene-overlay-rgb": overlayRgb(settings, themeIsLight), "--scene-bg-dim": settings.dim / 100 } as CSSProperties}
             aria-label="Background preview">
             {previewUrl && <div className="scene-background-preview-image" style={{
               backgroundImage: `url("${previewUrl}")`,
@@ -130,14 +134,15 @@ export default function SceneBackgroundSettings({
           <fieldset className="scene-overlay-picker" disabled={busy}>
             <legend>Overlay colour</legend>
             <div className="scene-overlay-presets" aria-label="Overlay colour preset">
-              {(["dark", "light", "custom"] as const).map((mode) =>
+              {(["auto", "dark", "light", "custom"] as const).map((mode) =>
                 <button type="button" key={mode} className={settings.overlayMode === mode ? "is-active" : ""}
                   aria-pressed={settings.overlayMode === mode}
                   onClick={() => setSettings((previous) => ({ ...previous, overlayMode: mode }))}>
-                  <span className="scene-overlay-swatch" style={{ backgroundColor: mode === "custom" ? safeOverlayHex(settings.overlayColor) : SCENE_OVERLAY_PRESETS[mode] }} />
-                  {mode === "dark" ? "Dark" : mode === "light" ? "Light" : "Custom"}
+                  <span className="scene-overlay-swatch" style={{ backgroundColor: mode === "custom" ? safeOverlayHex(settings.overlayColor) : mode === "auto" ? SCENE_OVERLAY_PRESETS[themeIsLight ? "light" : "dark"] : SCENE_OVERLAY_PRESETS[mode] }} />
+                  {mode === "auto" ? "Follow theme" : mode === "dark" ? "Dark" : mode === "light" ? "Light" : "Custom"}
                 </button>)}
             </div>
+            {settings.overlayMode === "auto" && <p className="scene-overlay-auto-info">Using {themeIsLight ? "Light" : "Dark"} for the current BRS theme; updates automatically when your theme changes.</p>}
             {settings.overlayMode === "custom" && <label className="scene-overlay-custom-colour">
               <span>Custom tint</span>
               <input type="color" value={safeOverlayHex(settings.overlayColor)} aria-label="Custom overlay colour"
