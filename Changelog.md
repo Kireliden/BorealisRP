@@ -6,6 +6,16 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Crimson Dawn and theme layout refinements
+
+- Introduced **Crimson Dawn**, the light counterpart to Crimson Void: warm pink-ivory surfaces, garnet typography and saturated crimson highlights, with a complete Catppuccin-compatible semantic variable palette in `src/themes/themes.css`.
+- Added `crimson-dawn` to the typed theme IDs and the shared light-theme registry, which also drives preference validation, Follow system switching, and the per-scene Follow theme overlay.
+- Removed the broad **Borealis Originals** category: all non-Catppuccin palettes are Borealis originals, so they now live in distinct collections: **Crimson Collection** (Dawn + Void), **Sakura Collection** (Dreams), **Coral Collection** (Bloom), alongside Catppuccin, Moonlight and unlockable Emerald.
+- In Settings → Themes, moved the complete **Currently Applied** section (including swatches and the live preview) directly below Theme switching and before the theme collections.
+- Enlarged the Settings dialog from a maximum of 1160 × 820 to **1480 × 980 px**, responsive to the available viewport with adaptive sidebar width and content padding. The small-screen layout is preserved.
+- Existing saved manual/system preferences, the emerald unlock requirement and the four egg discoveries are unchanged.
+- **Pending verification:** `npm run build`, Tauri runtime / visual tests at 1080p and 1440p, Crimson Dawn contrast and theme switching.
+
 ## 2026-11-11 — Emerald theme rewards and theme collections
 
 - Added two visual themes inspired by THE PLUMBOB's emerald-green Skip button: **Emerald Glade** (light: sage/ivory/jade) and **Emerald Nocturne** (dark: deep forest/illuminated mint).
