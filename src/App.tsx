@@ -1,5 +1,6 @@
 import AppColorPicker from "./ui/AppColorPicker";
 import AppSelect from "./ui/AppSelect";
+import { useAppDialog } from "./ui/AppDialogProvider";
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { getCurrentWindow, PhysicalSize } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -260,6 +261,7 @@ function sanitiseHtml(html: string) {
   });
   return output.innerHTML;
 }function App() {
+  const { confirm, prompt } = useAppDialog();
   const [sidebarAvatarThumbnailUrl, setSidebarAvatarThumbnailUrl] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -984,7 +986,7 @@ function sanitiseHtml(html: string) {
 
   async function deleteMessage(message: Message) {
     if (!canDeleteMessage(message)) return;
-    const confirmed = window.confirm("Delete this message? This cannot be undone.");
+    const confirmed = await confirm("Delete this message? This cannot be undone.", { title: "Delete message", confirmLabel: "Delete", destructive: true });
     if (!confirmed) return;
     const nextMessages = messages.filter((item) => item.id !== message.id);
     setOpenMessageActionsId(null);
@@ -1235,7 +1237,7 @@ function sanitiseHtml(html: string) {
 
   async function renameFolder(folder: WorkspaceFolder) {
     if (!activeWorkspace || workspaceLoading) return;
-    const name = window.prompt("Rename folder", folder.name)?.trim();
+    const name = (await prompt("Choose a new name for this folder.", folder.name, { title: "Rename folder" }))?.trim();
     if (!name || name === folder.name) return;
     if (folders.some((item) => item.id !== folder.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
       setWorkspaceError("A folder with that name already exists in this roleplay space.");
@@ -1364,7 +1366,7 @@ function sanitiseHtml(html: string) {
 
   async function renameCategory(category: WorkspaceCategory) {
     if (!activeWorkspace || workspaceLoading) return;
-    const name = window.prompt("Rename category", category.name)?.trim();
+    const name = (await prompt("Choose a new name for this category.", category.name, { title: "Rename category" }))?.trim();
     if (!name || name === category.name) return;
     if (categories.some((item) => item.id !== category.id && item.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
       setWorkspaceError("A category with that name already exists in this roleplay space.");
