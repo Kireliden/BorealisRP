@@ -6,6 +6,19 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Sidebar, editor and profile polish
+
+- Added **/expression commands** to the rich composer (`/smile`, `/cry`, `/smirk`, `/angry`, `/flushed`, `/neutral`, plus aliases `/sad`, `/blush`, `/mad`). Commands are suggested while typed; pressing Enter or adding a trailing space changes the selected character expression without submitting an empty message. Regular passages and manual avatar-expression selection remain intact.
+- Made the sidebar **collapsible into a 76px icon rail** with a persistent compact/expanded preference. Workspace button, library navigation, Search, Collections and Settings remain accessible; the profile avatar stays at the bottom, resized appropriately for each state.
+- Replaced the static sidebar **Borealis** heading with the active workspace name and custom icon. Clicking the header opens the existing recent-workspace picker. Its popup is rendered outside the sidebar clipping region. Workspace icons (OpenMoji or standard Unicode emoji) persist in app-local `workspace-icons.json` keyed by workspace ID.
+- Added reusable `StudioIconPicker` with search, OpenMoji colour SVGs and system-emoji choices. Scene icons are displayed in the tree and chat header, while folders have a backwards-compatible optional `icon` field stored inside workspace content JSON. Edited icons are saved via the existing workspace content storage.
+- Removed the visual vertical hierarchy guide lines; moved the in-category **New folder** shortcut from beneath the folder list into the category action group beside Rename and Delete. Root-level folder creation remains available in the Roleplay Space heading instead of at the bottom.
+- Enlarged the footer user portrait from 42×52.5px to 54×68px in the expanded sidebar (and 44×55px compact). Profile banner now extends further into the user-identity row, with a softer gradient blending into the lower card.
+- Applied a **bottom-fading chat topbar** for regular and image-backed scenes; themed the composer Send passage button (including hover/disabled states) and the titlebar moon application mark using the current palette accent, instead of fixed purple colours.
+- Added a **bounded eight-image LRU cache** for chat background Blob URLs, with reuse between scenes, limited prefetching and invalidation when an image file is deleted. This cache is per running app session and does not alter workspace image files.
+- Added isolated styles in `src/ui/studioPolish.css`, `src/composer/expressionCommands.css`, and `src/ui/StudioIconPicker.css` instead of expanding the legacy App.css.
+- **Verification status:** source-level integrity checks still required, followed by user-run `npm run build` and visual testing at expanded/compact sidebar widths and in multiple themes. Dynamic OS/taskbar application icons are not modified; the in-app titlebar mark is theme-aware.
+
 ## 2026-11-11 — Sakura pairing and native Borealis UI controls
 
 - Merged the former Coral and Sakura groups into **Sakura Collection** with **Sakura Dreams** (light) and **Sakura Dusk** (dark). Sakura Dusk reuses Coral Bloom's existing colours and internal `coral-bloom` theme ID to preserve saved preferences and system dark-theme choices.
