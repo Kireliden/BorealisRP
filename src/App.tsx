@@ -10,12 +10,13 @@ import "./themes/themes.css";
 import "./App.css";
 import "./chat/userMessageHighlight.css";
 import "./composer/Composer.css";
+import "./chat/chatLayout.css";
 import "./composer/AvatarComp.css";
 import SettingsModal from "./settings/SettingsModal";
 import CollectionsModal from "./collection/CollectionModal";
 import PotatoEgg from "./easter-eggs/PotatoEgg";
 import NudgeEgg from "./easter-eggs/NudgeEgg";
-import { Cog, Trophy, Heart, Image as ImageIcon, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
+import { Cog, Trophy, Heart, Image as ImageIcon, ArrowRight, MoreHorizontal, Pencil, ArrowLeftRight, Trash2, Share2, Broom, Folder, FolderPlus, Layers, Plus, ChevronDown, ChevronRight, AlertTriangle, GripVertical, Search, ImagePlus, X } from "lucide-react";
 import { expressions, defaultExpression } from "./composer/expressions";
 import personSilhouette from "openmoji/black/svg/1F464.svg?url";
 import WorkspaceManagerModal from "./workspace/WorkspaceManagerModal";
@@ -1823,7 +1824,7 @@ function sanitiseHtml(html: string) {
           </section>
 
           <footer className="composer-area">
-            <div className="composer-context"><span className="composer-context-dot" />Writing in <strong>{activeScene?.name ?? "no scene selected"}</strong></div>
+            <div className="composer-context"><span className="composer-context-arrow" aria-hidden="true"><ArrowRight size={13} strokeWidth={2.2} /></span><span className="composer-context-caption">Writing in</span><strong className="composer-scene-pill" title={activeScene?.name ?? "no scene selected"}>{activeScene?.name ?? "no scene selected"}</strong></div>
             <div className="composer-layout">
               <aside className="character-panel" ref={characterPanelRef}>
                 <div className={`character-portrait avatar-${character.avatar}`} style={{ "--character-accent": characterAccentColor(character.avatar) } as React.CSSProperties}>
