@@ -242,8 +242,8 @@ export default function EmojiPicker({ editorRef }: Props) {
 
   return (
     <div className="emoji-picker-anchor" ref={rootRef}>
-      <button className={`emoji-picker-trigger ${isOpen ? "active" : ""}`} type="button" title="Insert emoji"
-        aria-label="Insert emoji" aria-haspopup="dialog" aria-expanded={isOpen}
+      <button className={`emoji-picker-trigger ${isOpen ? "active" : ""}`} type="button" title="Insert emoji or icon"
+        aria-label="Insert emoji or icon" aria-haspopup="dialog" aria-expanded={isOpen}
         onMouseDown={rememberSelection} onClick={() => { rememberSelection(); setIsOpen((open) => !open); }}>
         <Smile size={16} />
       </button>
@@ -256,7 +256,7 @@ export default function EmojiPicker({ editorRef }: Props) {
             <button type="button" className={source === "system" ? "active" : ""} aria-pressed={source === "system"} onClick={() => setSource("system")}>System</button>
             <button type="button" className={source === "lucide" ? "active" : ""} aria-pressed={source === "lucide"} onClick={() => setSource("lucide")}>Lucide</button>
           </div>
-          <input className="emoji-picker-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search emojis…" aria-label="Search emojis" autoFocus />
+          <input className="emoji-picker-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={source === "lucide" ? "Search icons…" : "Search emojis…"} aria-label={source === "lucide" ? "Search icons" : "Search emojis"} autoFocus />
           {source !== "lucide" && <>
             <label className="emoji-picker-category-label" htmlFor="emoji-picker-category">Category</label>
             <AppSelect id="emoji-picker-category" className="emoji-picker-category" value={selectedGroup} onChange={(event) => setSelectedGroup(event.target.value)}>
