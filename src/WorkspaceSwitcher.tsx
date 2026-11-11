@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { load } from "@tauri-apps/plugin-store";
-import { Check, ChevronDown, FolderOpen, Plus } from "lucide-react";
+import { Check, ChevronDown, Plus } from "lucide-react";
 import { inspectWorkspace } from "./workspace/workspaceStorage";
+import { getWorkspaceIcon } from "./workspace/workspaceIcons";
 import { StudioIcon } from "./ui/StudioIconPicker";
 import type { WorkspaceInfo } from "./workspace/workspaceTypes";
 import "./WorkspaceSwitcher.css";
@@ -58,6 +59,7 @@ async function rememberWorkspace(workspace: WorkspaceInfo): Promise<RecentWorksp
 export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew, icon, compact }: Props) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
+  const [recentIcons, setRecentIcons] = useState<Record<string, string>>({});
   const [busyPath, setBusyPath] = useState<string | null>(null);
   const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -85,6 +87,21 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
   useEffect(() => {
     void refreshRecent();
   }, [activeWorkspace?.path]);
+
+  useEffect(() => {
+    let stopped = false;
+    void Promise.all(recent.map(async (item) =>
+      [item.id, await getWorkspaceIcon(item.id)] as const))
+      .then((entries) => { if (!stopped) setRecentIcons(Object.fromEntries(entries)); })
+      .catch(() => { /* Icons are cosmetic; keep defaults if storage is unavailable. */ });
+    return () => { stopped = true; };
+  }, [recent]);
+
+  useEffect(() => {
+    if (activeWorkspace && icon) {
+      setRecentIcons((current) => ({ ...current, [activeWorkspace.manifest.id]: icon }));
+    }
+  }, [activeWorkspace?.manifest.id, icon]);
 
   useEffect(() => {
     if (!open) return;
@@ -156,7 +173,7 @@ export default function WorkspaceSwitcher({ activeWorkspace, onSelect, onAddNew,
               disabled={busyPath !== null}
               title={item.path}
             >
-              <FolderOpen size={16} />
+              <StudioIcon value={recentIcons[item.id] ?? "📁"} />
               <span className="workspace-switcher-item-copy">
                 <strong>{item.name}</strong>
                 <small>{item.path}</small>
