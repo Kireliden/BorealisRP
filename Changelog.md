@@ -6,6 +6,15 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-11 — Composer text-colour picker regression fix
+
+- Fixed the rich-text composer colour control after replacing browser-native popovers: a legacy `.colour-picker > span { pointer-events: none }` rule had disabled mouse interaction on the new `AppColorPicker` wrapper.
+- Restored the familiar compact **A with a colour underline** instead of a full swatch / palette icon. The underline follows the most recently chosen colour and remains within the original 28 × 27 px toolbar slot.
+- Added an optional text-toolbar variant to the reusable `AppColorPicker`, leaving other colour controls (character accents, chat background) unchanged.
+- The composer remembers the rich-text selection before entering the picker and restores it for the `foreColor` command. The colour popover stays open while the editor is refocused for colour changes, and can still be closed with Escape or outside click.
+- Added pointer/keyboard range capture from the contenteditable editor to preserve highlighted text across the focus change.
+- **Pending validation:** `npm run build`, clicking the A button, applying swatches and HSL/hex to a selected passage, and confirming the picker remains interactive in Tauri/WebView2.
+
 ## 2026-11-11 — Single workspace header correction
 
 - Removed the redundant small active-workspace capsule above the sidebar hero header altogether; the sidebar has **one** workspace header again.
