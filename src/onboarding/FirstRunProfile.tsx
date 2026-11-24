@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, ImagePlus, RotateCcw, Sparkles, UserRound, X } from "lucide-react";
+import { ArrowRight, GripHorizontal, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, UserRound, X } from "lucide-react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { chooseAndRestoreSettingsBackup } from "../preferences/settingsBackupRestore";
-import { chooseProfileMedia, profileMediaSource } from "../profile/profileMedia";
+import { chooseProfileMedia, profileMediaSource, removeSidebarAvatarThumbnail, saveSidebarAvatarThumbnail } from "../profile/profileMedia";
+import PortraitFramingDialog, { type PortraitFraming } from "./PortraitFramingDialog";
 import { useAppDialog } from "../ui/AppDialogProvider";
 import "./FirstRunProfile.css";
 
@@ -18,6 +19,17 @@ export default function FirstRunProfile() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [avatarFraming, setAvatarFraming] = useState<PortraitFraming>({
+    avatarPositionX: 50, avatarPositionY: 50, avatarZoom: 100,
+  });
+  const [framingDialog, setFramingDialog] = useState<{ path: string; isNew: boolean } | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number; startY: number;
+    offsetX: number; offsetY: number;
+    bounds: DOMRect;
+  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -36,6 +48,8 @@ export default function FirstRunProfile() {
     const oldOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const handleTab = (event: KeyboardEvent) => {
+      // The framing popup has its own focus trap.
+      if (document.querySelector(".first-run-crop-backdrop")) return;
       if (event.key !== "Tab" || !dialogRef.current) return;
       const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
         'button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
@@ -60,6 +74,52 @@ export default function FirstRunProfile() {
     };
   }, [visible]);
 
+  useEffect(() => {
+    if (!visible) return;
+    const keepInsideViewport = () => {
+      const rect = dialogRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const margin = 8;
+      const shiftX = rect.left < margin ? margin - rect.left
+        : rect.right > window.innerWidth - margin ? window.innerWidth - margin - rect.right : 0;
+      const shiftY = rect.top < margin ? margin - rect.top
+        : rect.bottom > window.innerHeight - margin ? window.innerHeight - margin - rect.bottom : 0;
+      if (shiftX || shiftY) setDragOffset((current) => ({ x: current.x + shiftX, y: current.y + shiftY }));
+    };
+    window.addEventListener("resize", keepInsideViewport);
+    return () => window.removeEventListener("resize", keepInsideViewport);
+  }, [visible]);
+
+  function startDrag(event: PointerEvent<HTMLElement>) {
+    if (event.button !== 0 || framingDialog) return;
+    const bounds = dialogRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    dragRef.current = {
+      pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
+      offsetX: dragOffset.x, offsetY: dragOffset.y, bounds,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveDrag(event: PointerEvent<HTMLElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const margin = 8;
+    const dx = Math.max(margin - drag.bounds.left,
+      Math.min(window.innerWidth - margin - drag.bounds.right, event.clientX - drag.startX));
+    const dy = Math.max(margin - drag.bounds.top,
+      Math.min(window.innerHeight - margin - drag.bounds.bottom, event.clientY - drag.startY));
+    setDragOffset({ x: drag.offsetX + dx, y: drag.offsetY + dy });
+  }
+
+  function stopDrag(event: PointerEvent<HTMLElement>) {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
   if (!visible) return null;
   const busy = isSaving || isPickingImage || isRestoring;
   const validName = name.trim().length > 0 && name.trim().length <= 80;
@@ -71,7 +131,7 @@ export default function FirstRunProfile() {
     setError("");
     try {
       const path = await chooseProfileMedia();
-      if (path) setAvatarPath(path);
+      if (path) setFramingDialog({ path, isNew: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -85,9 +145,26 @@ export default function FirstRunProfile() {
     setIsSaving(true);
     setError("");
     try {
+      // Like Profile settings, the optional sidebar thumbnail follows the chosen
+      // portrait framing. A failed thumbnail must not block account setup.
+      try {
+        const isGif = avatarPath?.split(/[?#]/, 1)[0].toLowerCase().endsWith(".gif");
+        if (avatarPath && !isGif) {
+          const thumbnail = await saveSidebarAvatarThumbnail(
+            avatarPath, avatarFraming.avatarPositionX, avatarFraming.avatarPositionY, avatarFraming.avatarZoom,
+          );
+          window.dispatchEvent(new CustomEvent("brd-sidebar-avatar-thumbnail-updated", { detail: thumbnail }));
+        } else {
+          await removeSidebarAvatarThumbnail();
+          window.dispatchEvent(new CustomEvent("brd-sidebar-avatar-thumbnail-updated", { detail: "" }));
+        }
+      } catch (warning) {
+        console.warn("Profile thumbnail could not be generated:", warning);
+      }
       await completeProfileSetup({
         displayName: name.trim(),
         avatarAssetPath: avatarPath,
+        ...avatarFraming,
         title: title.trim(),
         description: description.trim(),
       });
@@ -116,8 +193,13 @@ export default function FirstRunProfile() {
   return createPortal(
     <div className="first-run-backdrop">
       <section className="first-run-window" role="dialog" aria-modal="true"
-        aria-labelledby="first-run-title" aria-describedby="first-run-subtitle" ref={dialogRef}>
-        <div className="first-run-art" aria-hidden="true">
+        aria-labelledby="first-run-title" aria-describedby="first-run-subtitle" ref={dialogRef}
+        style={{ transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)` }}
+        aria-hidden={framingDialog ? true : undefined}
+        inert={Boolean(framingDialog)}>
+        <div className="first-run-art" aria-hidden="true"
+          onPointerDown={startDrag} onPointerMove={moveDrag}
+          onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={() => { dragRef.current = null; }}>
           <div className="first-run-sky">
             <div className="first-run-aurora first-run-aurora-one" />
             <div className="first-run-aurora first-run-aurora-two" />
@@ -135,6 +217,12 @@ export default function FirstRunProfile() {
         </div>
 
         <div className="first-run-main">
+          <button className="first-run-drag-handle" type="button"
+            onPointerDown={startDrag} onPointerMove={moveDrag}
+            onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={() => { dragRef.current = null; }}
+            aria-label="Drag setup window" title="Drag to move this window">
+            <GripHorizontal size={16} aria-hidden="true"/> Drag to move
+          </button>
           <div className="first-run-eyebrow">BOREALIS ROLEPLAY STUDIO <span>· FIRST LAUNCH</span></div>
           <h1 id="first-run-title">Welcome to Borealis.</h1>
           <p id="first-run-subtitle" className="first-run-intro">
@@ -145,7 +233,12 @@ export default function FirstRunProfile() {
             <div className="first-run-identity">
               <div className="first-run-avatar-slot">
                 <div className="first-run-avatar-preview">
-                  {avatar ? <img src={avatar} alt="Your selected profile portrait" /> :
+                  {avatar ? <img src={avatar} alt="Your selected profile portrait"
+                    style={{
+                      objectPosition: `${avatarFraming.avatarPositionX}% ${avatarFraming.avatarPositionY}%`,
+                      transform: `scale(${avatarFraming.avatarZoom / 100})`,
+                      transformOrigin: `${avatarFraming.avatarPositionX}% ${avatarFraming.avatarPositionY}%`,
+                    }}/> :
                     name.trim() ? <span>{name.trim().charAt(0).toUpperCase()}</span> :
                       <UserRound size={36} strokeWidth={1.4} aria-hidden="true" />}
                 </div>
@@ -153,10 +246,16 @@ export default function FirstRunProfile() {
                   <ImagePlus size={15} aria-hidden="true" />
                   {avatar ? "Change portrait" : "Add portrait"}
                 </button>
-                {avatar && <button type="button" className="first-run-avatar-remove"
-                  disabled={busy} onClick={() => setAvatarPath(null)}>
-                  <X size={12} aria-hidden="true" /> Remove
-                </button>}
+                {avatar && <>
+                  <button type="button" className="first-run-avatar-button"
+                    disabled={busy} onClick={() => setFramingDialog({ path: avatarPath!, isNew: false })}>
+                    <SlidersHorizontal size={14} aria-hidden="true"/> Adjust framing
+                  </button>
+                  <button type="button" className="first-run-avatar-remove"
+                    disabled={busy} onClick={() => setAvatarPath(null)}>
+                    <X size={12} aria-hidden="true" /> Remove
+                  </button>
+                </>}
                 <small>Optional · PNG, JPG, WebP or GIF</small>
               </div>
               <div className="first-run-fields">
@@ -192,6 +291,18 @@ export default function FirstRunProfile() {
           </div>
         </div>
       </section>
+      {framingDialog && <PortraitFramingDialog
+        imagePath={framingDialog.path}
+        initial={framingDialog.isNew ? {
+          avatarPositionX: 50, avatarPositionY: 50, avatarZoom: 100,
+        } : avatarFraming}
+        onApply={(framing) => {
+          setAvatarPath(framingDialog.path);
+          setAvatarFraming(framing);
+          setFramingDialog(null);
+        }}
+        onCancel={() => setFramingDialog(null)}
+      />}
     </div>,
     document.body,
   );
