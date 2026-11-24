@@ -472,7 +472,13 @@ function sanitiseHtml(html: string) {
   activeWorkspacePathRef.current = activeWorkspace?.path ?? null;
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
-  const initialWorkspacePromptShownRef = useRef(false);
+  // No workspace means no interactive app. Once preferences and last-workspace
+  // restoration finish, the existing Workspace Manager becomes mandatory.
+  const workspaceRequired =
+    preferencesLoaded && !preferencesLoadError && preferences.profileSetupComplete &&
+    workspaceRestoreComplete && activeWorkspace === null;
+  const appContentLocked =
+    !preferencesLoaded || !preferences.profileSetupComplete || activeWorkspace === null;
 
   useEffect(() => {
     try { localStorage.setItem("brs.sidebar-collapsed", String(sidebarCollapsed)); } catch { /* Optional UI preference. */ }
@@ -729,27 +735,6 @@ function sanitiseHtml(html: string) {
     void restoreLastWorkspace();
     return () => { cancelled = true; };
   }, []);
-
-  // First-run flow: after the local profile is created, immediately offer the
-  // existing workspace chooser. Also show it when an installed profile has no
-  // restorable last workspace. Wait for BOTH async preference loading and
-  // last-workspace recovery so the chooser never races an existing workspace.
-  // Prompt at most once per launch; closing it is a deliberate user choice.
-  useEffect(() => {
-    if (!preferencesLoaded || preferencesLoadError || !preferences.profileSetupComplete) return;
-    if (!workspaceRestoreComplete || activeWorkspace || workspaceSelectionMadeRef.current) return;
-    if (initialWorkspacePromptShownRef.current) return;
-
-    initialWorkspacePromptShownRef.current = true;
-    setWorkspaceManagerInitialView("home");
-    setIsWorkspaceManagerOpen(true);
-  }, [
-    preferencesLoaded,
-    preferencesLoadError,
-    preferences.profileSetupComplete,
-    workspaceRestoreComplete,
-    activeWorkspace,
-  ]);
 
   // Store the active path only after restoration has finished, so the initial
   // empty state cannot overwrite the path we're trying to restore.
@@ -1843,7 +1828,8 @@ function sanitiseHtml(html: string) {
         </div>
       </div>
 
-      <div className="app-content" style={{ "--sidebar-width": `${sidebarCollapsed ? 76 : sidebarWidth}px` } as CSSProperties}>
+      <div className="app-content" inert={appContentLocked} aria-hidden={appContentLocked}
+        style={{ "--sidebar-width": `${sidebarCollapsed ? 76 : sidebarWidth}px` } as CSSProperties}>
         <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`}>
           <div className="brand workspace-brand">
             <div className="workspace-header-row" ref={workspaceHeaderRef}>
@@ -2490,12 +2476,22 @@ function sanitiseHtml(html: string) {
           onClose={() => setIsProfileOpen(false)}
         />
       )}
-      {isWorkspaceManagerOpen && (
+      {(isWorkspaceManagerOpen || workspaceRequired) && (
         <WorkspaceManagerModal
-          initialView={workspaceManagerInitialView}
-          onClose={() => { setIsWorkspaceManagerOpen(false); setWorkspaceManagerInitialView("home"); }}
+          initialView={workspaceRequired ? "home" : workspaceManagerInitialView}
+          required={workspaceRequired}
+          onClose={() => {
+            if (workspaceRequired) return;
+            setIsWorkspaceManagerOpen(false);
+            setWorkspaceManagerInitialView("home");
+          }}
           activeWorkspace={activeWorkspace}
-          onSelect={(workspace: WorkspaceInfo) => { workspaceSelectionMadeRef.current = true; setActiveWorkspace(workspace); }}
+          onSelect={(workspace: WorkspaceInfo) => {
+            workspaceSelectionMadeRef.current = true;
+            setActiveWorkspace(workspace);
+            setIsWorkspaceManagerOpen(false);
+            setWorkspaceManagerInitialView("home");
+          }}
         />
       )}
       {activeLibraryPage === "projects" && <section className="projects-coming-soon"><div className="projects-coming-soon-content"><span className="projects-coming-soon-eyebrow">BOREALIS · WORKSPACE</span><h1>Coming soon!</h1><p>Something lovely is taking shape.</p><svg className="projects-coming-soon-moon" viewBox="0 0 72 72" aria-hidden="true"><path d="M48.7 8.8a27.5 27.5 0 1 0 14.5 48.6A29.4 29.4 0 0 1 48.7 8.8Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></div></section>}{activeLibraryPage === "characters" && <CharactersPage workspacePath={activeWorkspace?.path} onClose={() => { setActiveLibraryPage(null); const refreshCharacters = async () => { const library = activeWorkspace ? await loadWorkspaceCharacters(activeWorkspace.path) : loadCharacters(); const refreshed: Character[] = [...library.map((item) => ({ id: item.id, name: item.name, initials: item.initials, formerNames: item.formerNames, avatar: characterAccentColor(item.accent), description: item.subtitle || item.description, avatarAssetPath: null, portraitResourceId: item.portraitResourceId, portraitFit: item.portraitFit ?? "cover", portraitPositionX: item.portraitPositionX ?? 50, portraitPositionY: item.portraitPositionY ?? 50, portraitZoom: item.portraitZoom ?? 100 })), { name: "You", initials: "Y", avatar: "blue", description: "Write as yourself" }]; setCharacters(refreshed); setSelectedCharacter((previousName) => { const previousCharacter = characters.find((item) => item.name === previousName); const matchingId = previousCharacter?.id ? refreshed.find((item) => item.id === previousCharacter.id) : null; return matchingId?.name ?? (refreshed.some((item) => item.name === previousName) ? previousName : refreshed[0]?.name ?? "You"); }); }; void refreshCharacters().catch((reason) => console.error("Could not refresh workspace characters:", reason)); }} />}
