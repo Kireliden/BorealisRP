@@ -59,6 +59,12 @@ Legacy browser localStorage/IndexedDB libraries have migration paths into a firs
 - **Settings → About → Backups** now offers both **Create settings backup** and **Restore settings backup**. Import previews the ZIP, requires a confirmation, writes a safety copy of current app settings, and requests a restart after restoration. Workspace content stays separate.
 - The restore flow is implemented in source but **not yet runtime-verified**; test against disposable settings before depending on it as an alpha recovery feature. See `docs/SETTINGS-BACKUP.md`.
 
+### First-launch profile setup (24 November update)
+
+- A new **Welcome to Borealis** window appears on first launch when the user has no saved profile preferences. Name is required; avatar, title and description are optional. This uses the existing locally stored global profile, not online account registration.
+- **Restore settings backup** is available directly from the welcome screen. Existing installations and older ZIPs are automatically recognised so they do not repeat onboarding; see `docs/FIRST-RUN-PROFILE.md`.
+- Implemented in source. First-run UI, fresh installation and migration behaviour are not yet runtime-verified; these tests are required before releasing the alpha.
+
 ## 4. Open limitations / not release-verified
 
 - No complete green **fresh checkout → `npm ci` → frontend build → Tauri package** run has been documented for the latest head.
