@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { load } from "@tauri-apps/plugin-store";
 import { FolderOpen, FolderPlus, Trash2, X } from "lucide-react";
@@ -18,6 +18,8 @@ type Props = {
   onSelect: (workspace: WorkspaceInfo) => void;
   activeWorkspace: WorkspaceInfo | null;
   initialView?: "home" | "create";
+  /** Without an active workspace, creation/selection is mandatory. */
+  required?: boolean;
 };
 
 const RECENTS_FILE = "recent-workspaces.json";
@@ -53,12 +55,56 @@ async function loadRecentWorkspaces(): Promise<RecentWorkspace[]> {
   );
 }
 
-export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspace, initialView = "home" }: Props) {
+export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspace, initialView = "home", required = false }: Props) {
   const [workspaceName, setWorkspaceName] = useState("");
   const [recent, setRecent] = useState<RecentWorkspace[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [view, setView] = useState<"home" | "create">(initialView);
+  const dialogRef = useRef<HTMLElement>(null);
+
+  // In the mandatory first-workspace state, keyboard users must remain inside
+  // the chooser, and Escape must not dismiss it. The native titlebar still
+  // supports moving/minimising/maximising/closing the application by mouse.
+  useEffect(() => {
+    if (!required) return;
+    const oldFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => {
+      dialogRef.current?.querySelector<HTMLElement>(
+        '.workspace-action-primary, .workspace-create-form input',
+      )?.focus();
+    });
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled])',
+      ));
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (!dialogRef.current.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", handleKeyDown, true);
+      oldFocus?.focus();
+    };
+  }, [required, view]);
 
   useEffect(() => {
     let cancelled = false;
@@ -144,17 +190,21 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
   }
 
   return (
-    <div className="workspace-modal-backdrop" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget && !busy) onClose();
-    }}>
-      <section className="workspace-modal" role="dialog" aria-modal="true" aria-labelledby="workspace-modal-title">
+    <div className={`workspace-modal-backdrop ${required ? "workspace-modal-required" : ""}`}
+      role="presentation" onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy && !required) onClose();
+      }}>
+      <section ref={dialogRef} className="workspace-modal" role="dialog"
+        aria-modal="true" aria-labelledby="workspace-modal-title">
         <header className="workspace-modal-header">
           <div>
             <span className="workspace-modal-eyebrow">BOREALIS ROLEPLAY STUDIO</span>
             <h2 id="workspace-modal-title">{view === "create" ? "Create a workspace" : "Your workspaces"}</h2>
-            <p>Your projects stay in folders you control.</p>
+            <p>{required
+              ? "Choose or create a workspace to continue. Your projects stay in folders you control."
+              : "Your projects stay in folders you control."}</p>
           </div>
-          <button className="workspace-modal-close" type="button" onClick={onClose} aria-label="Close workspace manager" disabled={busy}><X size={18} /></button>
+          {!required && <button className="workspace-modal-close" type="button" onClick={onClose} aria-label="Close workspace manager" disabled={busy}><X size={18} /></button>}
         </header>
 
         {view === "home" ? (
