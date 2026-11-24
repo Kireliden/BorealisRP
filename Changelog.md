@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-24 — First-launch local profile creation
+
+- Introduced an independent **Welcome to Borealis** first-run window with Frappé-style moonlit artwork, required display name and optional portrait, title and biography.
+- Reused the existing global profile, app-owned media import and settings storage instead of creating online accounts or a second identity system. The setup writes the profile and new `profileSetupComplete` flag durably before closing.
+- Legacy `preferences.json` and older settings ZIPs lacking the flag are treated as **already configured**, preventing existing users from unexpectedly seeing onboarding. Preference reset also preserves completion status.
+- Added **Restore settings backup** directly to the initial screen, allowing clean installations to restore an existing profile without first creating a temporary one. About Settings now reuses the same restore service.
+- Documented implementation and acceptance cases in `docs/FIRST-RUN-PROFILE.md`. Full clean-install / first-run / legacy-upgrade and backup-restore tests remain to be verified.
+
 ## 2026-11-11 — Fix restore restart in Tauri development mode
 
 - Corrected the backup-restore restart behaviour under `npm run tauri dev`: a native `app.request_restart()` terminated the Tauri CLI and its Vite dev server, leaving a WebView showing `localhost:1420` connection refused.
