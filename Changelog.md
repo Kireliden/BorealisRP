@@ -6,6 +6,13 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-24 — Restore the frosted titlebar during first run
+
+- Reused **Borealis's existing custom titlebar** above the first-run welcome screen instead of providing a separate **Move window** button.
+- Onboarding now starts immediately below the 38px titlebar. The titlebar has a soft transparent/blurred Catppuccin backdrop and a fading bottom edge, while minimize, maximize/restore, close and normal native drag regions remain accessible **above** the blurred app content.
+- Removed the temporary onboarding illustration drag and the Move window handle. Instead of making all of `#root` inert, only the app-shell content below its titlebar is inert during onboarding. The app titlebar remains usable; the first-run form continues to scroll on small windows.
+- Desktop acceptance needed: native titlebar dragging and all three window controls during first-run overlay, and no accidental clicks into app content behind the blur.
+
 ## 2026-11-24 — Move native app window from first-run screen
 
 - The previous first-run drag moved only the inner welcome panel, not the real operating-system window. Replaced that approach with Tauri's native `getCurrentWindow().startDragging()`, wired to the illustration and **Move window** handle.
