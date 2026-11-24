@@ -457,7 +457,7 @@ function sanitiseHtml(html: string) {
   const [settingsInitialCategory, setSettingsInitialCategory] = useState<"appearance" | "accessibility" | "themes" | "profile" | "chat" | "characters" | "roleplay" | "editor" | "data">("appearance");
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { preferences, resolvedTheme } = usePreferences();
+  const { preferences, resolvedTheme, isLoaded: preferencesLoaded, error: preferencesLoadError } = usePreferences();
   const themeIsLight = isLightTheme(resolvedTheme);
   const activeSpecialTitle = useActiveSpecialTitle(preferences.profile);
 
@@ -472,6 +472,7 @@ function sanitiseHtml(html: string) {
   activeWorkspacePathRef.current = activeWorkspace?.path ?? null;
   const [workspaceRestoreComplete, setWorkspaceRestoreComplete] = useState(false);
   const workspaceSelectionMadeRef = useRef(false);
+  const initialWorkspacePromptShownRef = useRef(false);
 
   useEffect(() => {
     try { localStorage.setItem("brs.sidebar-collapsed", String(sidebarCollapsed)); } catch { /* Optional UI preference. */ }
@@ -728,6 +729,27 @@ function sanitiseHtml(html: string) {
     void restoreLastWorkspace();
     return () => { cancelled = true; };
   }, []);
+
+  // First-run flow: after the local profile is created, immediately offer the
+  // existing workspace chooser. Also show it when an installed profile has no
+  // restorable last workspace. Wait for BOTH async preference loading and
+  // last-workspace recovery so the chooser never races an existing workspace.
+  // Prompt at most once per launch; closing it is a deliberate user choice.
+  useEffect(() => {
+    if (!preferencesLoaded || preferencesLoadError || !preferences.profileSetupComplete) return;
+    if (!workspaceRestoreComplete || activeWorkspace || workspaceSelectionMadeRef.current) return;
+    if (initialWorkspacePromptShownRef.current) return;
+
+    initialWorkspacePromptShownRef.current = true;
+    setWorkspaceManagerInitialView("home");
+    setIsWorkspaceManagerOpen(true);
+  }, [
+    preferencesLoaded,
+    preferencesLoadError,
+    preferences.profileSetupComplete,
+    workspaceRestoreComplete,
+    activeWorkspace,
+  ]);
 
   // Store the active path only after restoration has finished, so the initial
   // empty state cannot overwrite the path we're trying to restore.
