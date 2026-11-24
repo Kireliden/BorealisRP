@@ -2635,3 +2635,39 @@ body.sidebar-resizing * { cursor: col-resize !important; user-select: none !impo
 }
 :root[data-animations="off"] .message-favourite-target { animation:none; }
 @media(prefers-reduced-motion:reduce){.message-favourite-target{animation:none}}
+
+
+/* First-launch setup: show the REAL app titlebar over the frosted onboarding
+   backdrop. It remains interactive, including minimise/maximise/close, while
+   the rest of the app is inert until profile setup is complete. */
+body.first-run-onboarding-active .custom-titlebar {
+  z-index: 28010;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ctp-crust) 89%, transparent),
+    color-mix(in srgb, var(--ctp-crust) 65%, transparent)
+  );
+  border-bottom-color: transparent;
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  box-shadow: none;
+}
+body.first-run-onboarding-active .custom-titlebar::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ctp-crust) 42%, transparent),
+    transparent
+  );
+}
+body.first-run-onboarding-active .custom-titlebar .titlebar-brand,
+body.first-run-onboarding-active .custom-titlebar .titlebar-controls {
+  position: relative;
+  z-index: 1;
+}
