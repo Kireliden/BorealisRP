@@ -54,6 +54,8 @@ export interface Character {
 
 export interface AppPreferences {
   schemaVersion: 3;
+  /** First-run local profile has been created (not an online account). */
+  profileSetupComplete: boolean;
 
   appearance: {
     theme: CatppuccinFlavor;
