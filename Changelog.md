@@ -6,6 +6,12 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-24 — Open Workspace Manager after creating a profile
+
+- Wired the existing `WorkspaceManagerModal` into the first-run flow: after completing the local profile, if no Workspace is active, Borealis automatically shows **Your workspaces** (Create / Open / Recent) rather than an empty scene.
+- The auto-prompt waits for preference hydration and last-workspace restoration, and runs only once per app launch. A valid restored workspace is left undisturbed; users who dismiss the chooser are not trapped in a reopening modal.
+- Reused all existing workspace creation, validation and recent-workspace persistence logic without duplicating a second manager. Updated `docs/FIRST-RUN-PROFILE.md` with acceptance checks.
+
 ## 2026-11-24 — Restore the frosted titlebar during first run
 
 - Reused **Borealis's existing custom titlebar** above the first-run welcome screen instead of providing a separate **Move window** button.
