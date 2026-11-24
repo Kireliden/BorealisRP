@@ -160,6 +160,11 @@ function normalizePreferences(saved: UnknownRecord): AppPreferences {
 
   return {
     schemaVersion: 3,
+    // Existing installs and older backup ZIPs already have a profile, even if
+    // its display name was still the old default. Never show onboarding again.
+    profileSetupComplete: isBoolean(saved.profileSetupComplete)
+      ? saved.profileSetupComplete
+      : true,
 
     appearance: {
       theme: validOr(
