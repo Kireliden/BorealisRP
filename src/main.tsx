@@ -4,6 +4,7 @@ import App from "./App";
 import { PreferencesProvider } from "./preferences/PreferencesContext";
 import { TriggerRegistryProvider } from "./engine/TriggerRegistryContext";
 import { AppDialogProvider } from "./ui/AppDialogProvider";
+import FirstRunProfile from "./onboarding/FirstRunProfile";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
@@ -11,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <AppDialogProvider>
         <TriggerRegistryProvider>
           <App />
+          <FirstRunProfile />
         </TriggerRegistryProvider>
       </AppDialogProvider>
     </PreferencesProvider>
