@@ -1,27 +1,15 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import { load } from "@tauri-apps/plugin-store";
+import { save } from "@tauri-apps/plugin-dialog";
 import { Archive, Download, Heart, Info, RotateCcw, Users } from "lucide-react";
 import { useAppDialog } from "../ui/AppDialogProvider";
+import { chooseAndRestoreSettingsBackup } from "../preferences/settingsBackupRestore";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { savePreferences } from "../preferences/storage";
 import "./AboutSettings.css";
 
 const APP_VERSION = "0.1.0";
 type BackupResult = { path: string; fileCount: number };
-type RestorePreview = {
-  createdAt: string;
-  applicationVersion: string;
-  fileCount: number;
-  mediaCount: number;
-};
-type RestoreResult = {
-  restoredCount: number;
-  safetyBackupPath: string;
-  restoredStoreNames: string[];
-  reloadWebview: boolean;
-};
 type BackupFeedback = { kind: "success" | "error"; message: string };
 
 export default function AboutSettings() {
@@ -65,57 +53,20 @@ export default function AboutSettings() {
   async function restoreBackup() {
     if (!isLoaded || isBackingUp || isRestoring) return;
     setBackupFeedback(null);
+    setIsRestoring(true);
     try {
-      const source = await open({
-        title: "Choose a Borealis settings backup",
-        multiple: false,
-        directory: false,
-        filters: [{ name: "Borealis backup ZIP", extensions: ["zip"] }],
-      });
-      if (typeof source !== "string") return;
-      setIsRestoring(true);
-      const preview = await invoke<RestorePreview>("inspect_settings_backup", { path: source });
-      const proceed = await confirm(
-        `This Borealis backup was created on ${preview.createdAt} (version ${preview.applicationVersion}). ` +
-        `It contains ${preview.fileCount} settings/profile files, including ${preview.mediaCount} profile images.\n\n` +
-        "Your current application settings will be saved as a safety backup before restoring. " +
-        "Workspaces and their contents will not be changed.\n\n" +
-        "Borealis will restart automatically after the restore. Continue?",
-        { title: "Restore settings backup", confirmLabel: "Restore & restart", destructive: true },
-      );
-      if (!proceed) return;
-      // Flush any queued preference writes first, so the safety snapshot really
-      // captures the settings in use before we replace them.
-      await savePreferences(preferences);
-      // Rust restarts the installed app. A dev build must NOT restart its
-      // executable or it will also kill the Vite server backing localhost:1420.
-      const result = await invoke<RestoreResult>("restore_settings_backup", { path: source });
-      if (result.reloadWebview) {
-        try {
-          // The native plugin-store keeps an in-memory cache. React reloading
-          // alone would read stale values without reloading the restored stores.
-          for (const name of result.restoredStoreNames) {
-            const store = await load(name, { autoSave: false });
-            await store.reload({ ignoreDefaults: true });
-          }
-        } catch (error) {
-          setBackupFeedback({
-            kind: "error",
-            message: "Settings were restored to disk, but the live app could not refresh its cached data. " +
-              "Close this development window and start npm run tauri dev again. " +
-              (error instanceof Error ? error.message : String(error)),
-          });
-          return;
-        }
-        window.location.reload();
-        return;
+      const result = await chooseAndRestoreSettingsBackup(preferences, confirm);
+      if (result) {
+        setBackupFeedback({
+          kind: "success",
+          message: `Restored ${result.restoredCount} files. Safety copy: ${result.safetyBackupPath}`,
+        });
       }
-      setBackupFeedback({
-        kind: "success",
-        message: `Restored ${result.restoredCount} files. Restarting Borealis… Safety copy: ${result.safetyBackupPath}`,
-      });
     } catch (error) {
-      setBackupFeedback({ kind: "error", message: error instanceof Error ? error.message : String(error) });
+      setBackupFeedback({
+        kind: "error",
+        message: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setIsRestoring(false);
     }
