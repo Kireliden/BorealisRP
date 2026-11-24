@@ -104,7 +104,7 @@ export default function WorkspaceManagerModal({ onClose, onSelect, activeWorkspa
       window.removeEventListener("keydown", handleKeyDown, true);
       oldFocus?.focus();
     };
-  }, [required, view]);
+  }, [required]);
 
   useEffect(() => {
     let cancelled = false;
