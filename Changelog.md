@@ -6,6 +6,12 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-24 — Move native app window from first-run screen
+
+- The previous first-run drag moved only the inner welcome panel, not the real operating-system window. Replaced that approach with Tauri's native `getCurrentWindow().startDragging()`, wired to the illustration and **Move window** handle.
+- Removed the local transform offsets, pointer-capture dragging and manual viewport-clamp logic from the welcome panel. The dialog stays centred inside the app while the outer Windows/Linux window moves.
+- No new permissions were required: the main-window capability already includes `core:window:allow-start-dragging`. Native Windows drag needs a desktop smoke test.
+
 ## 2026-11-24 — First-launch portrait framing and window usability
 
 - Added an automatic **Adjust your portrait** popup after selecting an onboarding image, with a live 4:5 preview and Horizontal, Vertical and Zoom sliders. Applying stores the same `avatarPositionX/Y` and `avatarZoom` values used by the full Profile editor; cancelling leaves the existing selection unchanged. The popup can be reopened with **Adjust framing**. GIFs remain animated.
