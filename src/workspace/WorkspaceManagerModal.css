@@ -62,3 +62,15 @@
 .workspace-error { background: color-mix(in srgb, var(--ctp-red) 12%, transparent); color: var(--ctp-red); overflow-wrap: anywhere; }
 .workspace-modal-footer { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--ctp-overlay1); font-size: 10px; line-height: 1.5; }
 @media (max-width: 520px) { .workspace-modal { padding: 18px; } .workspace-modal-actions { grid-template-columns: 1fr; } }
+
+
+/* First-run/empty workspace gate: keep Borealis's custom 38px titlebar
+   accessible, but cover everything else and keep the manager usable even
+   when the outer Windows window is short. */
+.workspace-modal-backdrop.workspace-modal-required {
+  top: 38px;
+  padding: clamp(8px, 2vw, 24px);
+}
+.workspace-modal-backdrop.workspace-modal-required .workspace-modal {
+  max-height: 100%;
+}
