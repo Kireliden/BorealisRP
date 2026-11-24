@@ -1,7 +1,8 @@
 /* First-run local profile wizard — theme-aware Borealis, default Catppuccin Frappé. */
 .first-run-backdrop {
   position: fixed;
-  inset: 0;
+  /* Reveal the existing 38px native app titlebar; blur only app content. */
+  inset: 38px 0 0;
   z-index: 28000;
   display: grid;
   place-items: center;
@@ -17,8 +18,8 @@
   grid-template-columns: minmax(190px, .85fr) minmax(0, 1.15fr);
   grid-template-rows: minmax(0, 1fr);
   width: min(950px, 100%);
-  height: min(630px, calc(100dvh - 32px));
-  max-height: calc(100dvh - 16px);
+  height: min(630px, 100%);
+  max-height: 100%;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
@@ -32,9 +33,6 @@
   position: relative;
   min-width: 0;
   min-height: 0;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
   isolation: isolate;
   overflow: hidden;
   min-height: 100%;
@@ -89,7 +87,6 @@
   background: linear-gradient(160deg, #394664 15%, #222c42 72%);
   clip-path: polygon(0 41%, 17% 63%, 34% 39%, 45% 66%, 67% 26%, 85% 52%, 100% 32%, 100% 100%, 0 100%);
 }
-.first-run-art:active { cursor: grabbing; }
 .first-run-art-footer {
   position: absolute;
   bottom: 30px;
@@ -113,29 +110,6 @@
   padding: clamp(24px, 4vw, 45px);
   box-sizing: border-box;
 }
-.first-run-drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  align-self: flex-end;
-  margin: -19px -19px 12px 0;
-  padding: 5px 10px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 10px;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-}
-.first-run-drag-handle:hover {
-  color: var(--ctp-text);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-.first-run-drag-handle:active { cursor: grabbing; }
 .first-run-eyebrow { color: var(--accent); font-size: 10px; letter-spacing: 1.15px; font-weight: 800; }
 .first-run-eyebrow span { color: var(--muted); }
 .first-run-main h1 {
@@ -267,8 +241,8 @@
   .first-run-window {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(68px, min(140px, 22dvh)) minmax(0, 1fr);
-    height: min(650px, calc(100dvh - 16px));
-    max-height: calc(100dvh - 16px);
+    height: min(650px, 100%);
+    max-height: 100%;
     min-height: 0;
   }
   .first-run-art { min-height: 0; }
@@ -276,7 +250,6 @@
   .first-run-hills.far-hills { height: 120%; bottom: -23%; }
   .first-run-hills.near-hills { height: 85%; bottom: -26%; }
   .first-run-main { padding: 24px; }
-  .first-run-drag-handle { margin: -12px -12px 10px 0; }
 }
 @media (max-width: 420px) {
   .first-run-backdrop { padding: 8px; }
@@ -284,12 +257,10 @@
   .first-run-identity { grid-template-columns: 1fr; }
   .first-run-avatar-slot { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; }
   .first-run-avatar-preview { width: 70px; }
-  .first-run-drag-handle { margin: -7px -7px 9px 0; }
 }
 @media (max-height: 420px) {
-  .first-run-window { height: calc(100dvh - 16px); }
+  .first-run-window { height: 100%; }
   .first-run-main { padding-top: 12px; }
-  .first-run-drag-handle { margin-top: 0; }
 }
 :root[data-animations="off"] .first-run-backdrop,
 :root[data-animations="off"] .first-run-window { animation: none; }
