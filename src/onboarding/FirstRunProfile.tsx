@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { ArrowRight, GripHorizontal, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, UserRound, X } from "lucide-react";
+import { ArrowRight, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, UserRound, X } from "lucide-react";
 import { usePreferences } from "../preferences/PreferencesContext";
 import { chooseAndRestoreSettingsBackup } from "../preferences/settingsBackupRestore";
 import { chooseProfileMedia, profileMediaSource, removeSidebarAvatarThumbnail, saveSidebarAvatarThumbnail } from "../profile/profileMedia";
@@ -34,11 +33,16 @@ export default function FirstRunProfile() {
   const visible = isLoaded && !preferencesError && !preferences.profileSetupComplete;
   useEffect(() => {
     if (!visible) return;
-    // The app may render behind the wizard, but must not be keyboard-accessible
-    // before the owner has created or restored their local profile.
-    const root = document.getElementById("root");
-    const wasInert = root?.inert ?? false;
-    if (root) root.inert = true;
+    // Keep the REAL Tauri titlebar interactive above the frosted overlay.
+    // Block all other app-shell children (not #root itself), so Windows
+    // minimize/maximize/close and native dragging remain available.
+    const shell = document.querySelector<HTMLElement>("#root .app-shell");
+    const blocked = Array.from(shell?.children ?? [])
+      .filter((element): element is HTMLElement =>
+        element instanceof HTMLElement && !element.classList.contains("custom-titlebar"))
+      .map((element) => ({ element, wasInert: element.inert }));
+    for (const entry of blocked) entry.element.inert = true;
+    document.body.classList.add("first-run-onboarding-active");
     const oldOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const handleTab = (event: KeyboardEvent) => {
@@ -63,19 +67,11 @@ export default function FirstRunProfile() {
     nameInputRef.current?.focus();
     return () => {
       window.removeEventListener("keydown", handleTab);
-      if (root) root.inert = wasInert;
+      for (const entry of blocked) entry.element.inert = entry.wasInert;
+      document.body.classList.remove("first-run-onboarding-active");
       document.body.style.overflow = oldOverflow;
     };
   }, [visible]);
-
-  function dragNativeWindow(event: MouseEvent<HTMLElement>) {
-    if (event.button !== 0 || framingDialog) return;
-    // The first-run screen covers our normal custom titlebar. Ask Tauri to
-    // drag the REAL Windows/Linux application window, never the inner dialog.
-    void getCurrentWindow().startDragging().catch((reason: unknown) => {
-      console.error("Could not drag the Borealis window:", reason);
-    });
-  }
 
   if (!visible) return null;
   const busy = isSaving || isPickingImage || isRestoring;
@@ -153,8 +149,7 @@ export default function FirstRunProfile() {
         aria-labelledby="first-run-title" aria-describedby="first-run-subtitle" ref={dialogRef}
         aria-hidden={framingDialog ? true : undefined}
         inert={Boolean(framingDialog)}>
-        <div className="first-run-art" aria-hidden="true"
-          onMouseDown={dragNativeWindow}>
+        <div className="first-run-art" aria-hidden="true">
           <div className="first-run-sky">
             <div className="first-run-aurora first-run-aurora-one" />
             <div className="first-run-aurora first-run-aurora-two" />
@@ -172,11 +167,6 @@ export default function FirstRunProfile() {
         </div>
 
         <div className="first-run-main">
-          <button className="first-run-drag-handle" type="button"
-            onMouseDown={dragNativeWindow}
-            aria-label="Move Borealis window" title="Drag to move the Borealis window">
-            <GripHorizontal size={16} aria-hidden="true"/> Move window
-          </button>
           <div className="first-run-eyebrow">BOREALIS ROLEPLAY STUDIO <span>· FIRST LAUNCH</span></div>
           <h1 id="first-run-title">Welcome to Borealis.</h1>
           <p id="first-run-subtitle" className="first-run-intro">
