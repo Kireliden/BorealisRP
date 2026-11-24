@@ -22,6 +22,8 @@ interface PreferencesContextValue {
     updater: (current: AppPreferences) => AppPreferences,
   ) => void;
   resetPreferences: () => void;
+  /** Save a local profile and complete first-run setup in one durable write. */
+  completeProfileSetup: (profile: Partial<AppPreferences["profile"]>) => Promise<void>;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue | undefined>(
@@ -158,10 +160,31 @@ export function PreferencesProvider({
   );
 
   const resetPreferences = useCallback(() => {
-    setPreferences(getDefaultPreferences());
+    // Resetting preferences is not the same as creating a brand-new account.
+    // Existing users should never see the initial setup screen again.
+    setPreferences((current) => ({
+      ...getDefaultPreferences(),
+      profileSetupComplete: current.profileSetupComplete,
+    }));
     setError(null);
     setSaveVersion((version) => version + 1);
   }, []);
+
+  const completeProfileSetup = useCallback(async (profile: Partial<AppPreferences["profile"]>) => {
+    const displayName = profile.displayName?.trim() ?? "";
+    if (!displayName || displayName.length > 80) {
+      throw new Error("Choose a display name of up to 80 characters.");
+    }
+    const next: AppPreferences = {
+      ...preferences,
+      profile: { ...preferences.profile, ...profile, displayName },
+      profileSetupComplete: true,
+    };
+    // Commit before leaving onboarding so a crash or fast close cannot lose it.
+    await savePreferences(next);
+    setPreferences(next);
+    setError(null);
+  }, [preferences]);
 
   return (
     <PreferencesContext.Provider
@@ -173,6 +196,7 @@ export function PreferencesProvider({
         error,
         updatePreferences,
         resetPreferences,
+        completeProfileSetup,
       }}
     >
       {children}
