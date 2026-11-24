@@ -48,6 +48,14 @@ Use a disposable/copy of the workspace for destructive tests; **never experiment
 
 The About page now has **Create settings backup** and **Restore settings backup** actions (source implemented, runtime acceptance pending). Verify the ZIP manifest, app-local stores, images, confirmation, rollback and automatic restart using disposable app data. This does **not replace** the full Workspace copy/restore gate above. See `docs/SETTINGS-BACKUP.md`.
 
+### First-install onboarding acceptance
+
+- [ ] With no existing profile preferences, launch the packaged installer build; verify the welcome window appears and blocks normal app interaction.
+- [ ] Complete name-only setup and optional photo setup, close/relaunch, and verify Profile and sidebar retain the data.
+- [ ] Upgrade from older `preferences.json` and restore an older settings ZIP; ensure users are **not** forced through initial setup.
+- [ ] On a clean profile choose **Restore settings backup** directly from onboarding; verify restart, restored name/portrait and no Workspace damage.
+- [ ] Check tab navigation, readable contrast and initial window height at small screen sizes.
+
 ## Known candidates for follow-up investigation
 
 - **Markdown/Obsidian export and inline Lucide:** export currently processes rich HTML but does not have an explicit `data-lucide-icon` fallback. Verify that icon-only messages are not silently exported as blank; implement a readable substitute if needed.
