@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type FormEvent, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createPortal } from "react-dom";
 import { ArrowRight, GripHorizontal, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, UserRound, X } from "lucide-react";
 import { usePreferences } from "../preferences/PreferencesContext";
@@ -23,13 +24,6 @@ export default function FirstRunProfile() {
     avatarPositionX: 50, avatarPositionY: 50, avatarZoom: 100,
   });
   const [framingDialog, setFramingDialog] = useState<{ path: string; isNew: boolean } | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const dragRef = useRef<{
-    pointerId: number;
-    startX: number; startY: number;
-    offsetX: number; offsetY: number;
-    bounds: DOMRect;
-  } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -74,50 +68,13 @@ export default function FirstRunProfile() {
     };
   }, [visible]);
 
-  useEffect(() => {
-    if (!visible) return;
-    const keepInsideViewport = () => {
-      const rect = dialogRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const margin = 8;
-      const shiftX = rect.left < margin ? margin - rect.left
-        : rect.right > window.innerWidth - margin ? window.innerWidth - margin - rect.right : 0;
-      const shiftY = rect.top < margin ? margin - rect.top
-        : rect.bottom > window.innerHeight - margin ? window.innerHeight - margin - rect.bottom : 0;
-      if (shiftX || shiftY) setDragOffset((current) => ({ x: current.x + shiftX, y: current.y + shiftY }));
-    };
-    window.addEventListener("resize", keepInsideViewport);
-    return () => window.removeEventListener("resize", keepInsideViewport);
-  }, [visible]);
-
-  function startDrag(event: PointerEvent<HTMLElement>) {
+  function dragNativeWindow(event: MouseEvent<HTMLElement>) {
     if (event.button !== 0 || framingDialog) return;
-    const bounds = dialogRef.current?.getBoundingClientRect();
-    if (!bounds) return;
-    dragRef.current = {
-      pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
-      offsetX: dragOffset.x, offsetY: dragOffset.y, bounds,
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function moveDrag(event: PointerEvent<HTMLElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    const margin = 8;
-    const dx = Math.max(margin - drag.bounds.left,
-      Math.min(window.innerWidth - margin - drag.bounds.right, event.clientX - drag.startX));
-    const dy = Math.max(margin - drag.bounds.top,
-      Math.min(window.innerHeight - margin - drag.bounds.bottom, event.clientY - drag.startY));
-    setDragOffset({ x: drag.offsetX + dx, y: drag.offsetY + dy });
-  }
-
-  function stopDrag(event: PointerEvent<HTMLElement>) {
-    if (dragRef.current?.pointerId !== event.pointerId) return;
-    dragRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
+    // The first-run screen covers our normal custom titlebar. Ask Tauri to
+    // drag the REAL Windows/Linux application window, never the inner dialog.
+    void getCurrentWindow().startDragging().catch((reason: unknown) => {
+      console.error("Could not drag the Borealis window:", reason);
+    });
   }
 
   if (!visible) return null;
@@ -194,12 +151,10 @@ export default function FirstRunProfile() {
     <div className="first-run-backdrop">
       <section className="first-run-window" role="dialog" aria-modal="true"
         aria-labelledby="first-run-title" aria-describedby="first-run-subtitle" ref={dialogRef}
-        style={{ transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)` }}
         aria-hidden={framingDialog ? true : undefined}
         inert={Boolean(framingDialog)}>
         <div className="first-run-art" aria-hidden="true"
-          onPointerDown={startDrag} onPointerMove={moveDrag}
-          onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={() => { dragRef.current = null; }}>
+          onMouseDown={dragNativeWindow}>
           <div className="first-run-sky">
             <div className="first-run-aurora first-run-aurora-one" />
             <div className="first-run-aurora first-run-aurora-two" />
@@ -218,10 +173,9 @@ export default function FirstRunProfile() {
 
         <div className="first-run-main">
           <button className="first-run-drag-handle" type="button"
-            onPointerDown={startDrag} onPointerMove={moveDrag}
-            onPointerUp={stopDrag} onPointerCancel={stopDrag} onLostPointerCapture={() => { dragRef.current = null; }}
-            aria-label="Drag setup window" title="Drag to move this window">
-            <GripHorizontal size={16} aria-hidden="true"/> Drag to move
+            onMouseDown={dragNativeWindow}
+            aria-label="Move Borealis window" title="Drag to move the Borealis window">
+            <GripHorizontal size={16} aria-hidden="true"/> Move window
           </button>
           <div className="first-run-eyebrow">BOREALIS ROLEPLAY STUDIO <span>· FIRST LAUNCH</span></div>
           <h1 id="first-run-title">Welcome to Borealis.</h1>
