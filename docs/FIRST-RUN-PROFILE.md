@@ -1,6 +1,6 @@
 # Borealis Roleplay Studio — First-launch local profile setup
 
-**Updated:** 24 November 2026  
+**Updated:** 24 November 2026 — usability refinements  
 **Branch:** `feature/workspace-persistence`  
 **Status:** Implemented in source; first-run clean-install and backup-restore regression still require a desktop test.
 
@@ -9,9 +9,10 @@
 A new installation without a saved `appPreferences` profile presents a **Welcome to Borealis** wizard at startup. It is a **local identity setup**, not an online account:
 
 - Display name: required (up to 80 characters).
-- Portrait: optional, imported into the existing app-owned profile media directory (PNG/JPG/WebP/GIF). Retains the app's established 25 MiB validation.
+- Portrait: optional, imported into the existing app-owned profile media directory (PNG/JPG/WebP/GIF). Retains the app's established 25 MiB validation. **Selecting an image automatically opens a 4:5 framing popup** with horizontal/vertical position and 100–200% zoom sliders. The preview shows the real crop (including GIF animation); Apply keeps both portrait and framing, Cancel leaves the previous portrait unchanged. The portrait can be readjusted later without selecting another image.
 - Profile title and description: optional and editable later through **Settings → Profile**.
-- The wizard uses a standalone Catppuccin-Frappé-compatible moon/aurora screen; underlying app interactions are disabled until the user completes setup.
+- The wizard uses a standalone Catppuccin-Frappé-compatible moon/aurora screen; underlying app interactions are disabled until the user completes setup. Field focus is indicated by a soft outward lavender glow instead of a hard focus rectangle, while buttons retain keyboard-visible outlines.
+- The setup panel **can be dragged** by its moonlit illustration or the labelled grip handle. Pointer movement is clamped to the available viewport. The dialog scales to short/narrow windows and its form scrolls internally so the primary action remains reachable, even when the host window is small.
 - A **Restore settings backup** option is available before profile creation, so someone reinstalling Borealis can recover their profile directly instead of creating a throwaway identity.
 - No email, account password, remote service, personal analytics or new database is added.
 
@@ -32,7 +33,8 @@ This adds an additive `profileSetupComplete: boolean` to `AppPreferences` while 
 
 ## Source files
 
-- `src/onboarding/FirstRunProfile.tsx` and `FirstRunProfile.css`: welcome UI, local profile form, native image picker, optional restore shortcut and focus management.
+- `src/onboarding/FirstRunProfile.tsx` and `FirstRunProfile.css`: welcome UI, local profile form, native image picker, movable viewport-safe window, soft field-focus treatment, optional restore shortcut and focus management.
+- `src/onboarding/PortraitFramingDialog.tsx` and `PortraitFramingDialog.css`: dedicated, cancellable portrait-framing popup using the same 4:5 placement/zoom semantics as Settings → Profile.
 - `src/main.tsx`: mounts the onboarding screen beside `App` inside the existing providers.
 - `src/preferences/types.ts`, `defaults.ts`, `storage.ts`, `PreferencesContext.tsx`: flag, legacy migration and durable profile completion.
 - `src/preferences/settingsBackupRestore.ts`: shared ZIP restore and safe dev reload used in onboarding and About.
@@ -45,13 +47,15 @@ Use a disposable test environment. Never delete the only copy of existing app se
 
 - [ ] **Fresh user** (no `preferences.json`): wizard appears once, before normal app use.
 - [ ] **Required name:** empty/whitespace name cannot submit; optional fields can be skipped.
-- [ ] **Portrait:** optional image persists after app restart, including GIF; invalid image shows an error without completing setup.
+- [ ] **Portrait:** choosing an image opens the framing popup automatically. Horizontal, vertical and zoom sliders update its 4:5 live preview; Apply preserves framing in profile, Cancel leaves previous picture unchanged, Adjust framing reopens the same controls.
+- [ ] **Portrait persistence:** thumbnail/frame and original still/GIF image survive profile completion and app restart; invalid image shows an error without completing setup.
 - [ ] **Save:** profile, name and title appear in the existing sidebar/profile editor; subsequent launches skip the wizard.
 - [ ] **Quit mid-setup:** wizard returns on the next start and does not pretend setup succeeded.
 - [ ] **Legacy settings:** opening any existing `preferences.json` without `profileSetupComplete` skips the wizard and preserves its profile.
 - [ ] **Restore before creating:** choose existing backup from the welcome screen; confirmation, restore and restart/reload succeed and the original profile appears.
 - [ ] **Reset preferences:** it does not accidentally re-trigger the wizard.
-- [ ] **Theme/accessibility:** Frappé/Latte readable, keyboard tab order and focus, reduced-motion, small windows and 100–150% UI scale.
+- [ ] **Theme/accessibility:** Frappé/Latte readable, softer focus glow visible, keyboard tab order and popup focus trapping, reduced-motion, and 100–150% UI scale.
+- [ ] **Window usability:** drag from illustration and drag handle; cannot lose the panel offscreen; shrink app to short/narrow sizes and check that every button, slider and confirm action remains reachable by scrolling.
 - [ ] **Windows installer:** pack and launch a clean Windows install; verify no settings changes or workspace writes on first run.
 - [ ] **Linux desktop** first-run smoke test before claiming Linux alpha support.
 
