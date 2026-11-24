@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-24 — Require a workspace before granting app access
+
+- Made the existing **Your workspaces** manager mandatory when no real Workspace is active after profile creation, or when a previous Workspace cannot be restored. A real selected workspace is required before chat/sidebar interaction is permitted.
+- In mandatory mode, clicking outside the modal does nothing, the close X is hidden, Escape is intercepted and keyboard Tab is contained inside the chooser. The native Windows/Linux titlebar remains usable.
+- Replaced the former open-once effect with a derived required state, eliminating the route where dismissing the modal exposed a temporary/unbacked roleplay workspace.
+- `app-content` is explicitly inert/hidden from assistive technology until a Workspace exists; the existing first-run profile logic no longer overrides that app-owned inert state.
+- Verified static state wiring and updated first-run documentation. Windows desktop smoke testing is still required.
+
 ## 2026-11-24 — Open Workspace Manager after creating a profile
 
 - Wired the existing `WorkspaceManagerModal` into the first-run flow: after completing the local profile, if no Workspace is active, Borealis automatically shows **Your workspaces** (Create / Open / Recent) rather than an empty scene.
