@@ -6,6 +6,14 @@ This changelog records meaningful project changes, not every Git commit. Dates a
 
 
 
+## 2026-11-24 — First-launch portrait framing and window usability
+
+- Added an automatic **Adjust your portrait** popup after selecting an onboarding image, with a live 4:5 preview and Horizontal, Vertical and Zoom sliders. Applying stores the same `avatarPositionX/Y` and `avatarZoom` values used by the full Profile editor; cancelling leaves the existing selection unchanged. The popup can be reopened with **Adjust framing**. GIFs remain animated.
+- Synced the first-launch profile preview and generated sidebar thumbnail with the chosen crop, while treating thumbnail generation as optional so it cannot block initial setup.
+- Replaced sharp field-focus borders on onboarding text controls with a soft, layered Frappé accent glow. Keyboard focus indication remains visible on action buttons.
+- Added dragging from the welcome artwork or the **Drag to move** grip, clamped to the available viewport. Removed the hard 540px minimum height, added responsive vertical stacking, and made the form scroll internally on short/small windows so `Enter Borealis` cannot be stranded offscreen.
+- Documented expected behaviour in `docs/FIRST-RUN-PROFILE.md`. Visual/short-window, crop round-trip and native installer verification remain pending.
+
 ## 2026-11-24 — First-launch local profile creation
 
 - Introduced an independent **Welcome to Borealis** first-run window with Frappé-style moonlit artwork, required display name and optional portrait, title and biography.
