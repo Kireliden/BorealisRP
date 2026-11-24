@@ -34,12 +34,15 @@ export default function FirstRunProfile() {
   useEffect(() => {
     if (!visible) return;
     // Keep the REAL Tauri titlebar interactive above the frosted overlay.
-    // Block all other app-shell children (not #root itself), so Windows
-    // minimize/maximize/close and native dragging remain available.
+    // App.tsx already controls the main app-content's inert state so it cannot
+    // be accidentally unlocked (or re-locked) when setup completes. Only
+    // suspend other app-shell siblings while this first-run wizard is visible.
     const shell = document.querySelector<HTMLElement>("#root .app-shell");
     const blocked = Array.from(shell?.children ?? [])
       .filter((element): element is HTMLElement =>
-        element instanceof HTMLElement && !element.classList.contains("custom-titlebar"))
+        element instanceof HTMLElement &&
+        !element.classList.contains("custom-titlebar") &&
+        !element.classList.contains("app-content"))
       .map((element) => ({ element, wasInert: element.inert }));
     for (const entry of blocked) entry.element.inert = true;
     document.body.classList.add("first-run-onboarding-active");
